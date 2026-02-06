@@ -15,17 +15,43 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Check if release is already finalized
+        run: |
+          VERSION=${GITHUB_REF_NAME#v}
+          TARBALL_URL="https://github.com/cpfarhood/polaris-headlamp-plugin/releases/download/${GITHUB_REF_NAME}/polaris-headlamp-plugin-${VERSION}.tar.gz"
+          HTTP_CODE=$(curl -sL -o /tmp/release.tar.gz -w "%{http_code}" "$TARBALL_URL" 2>/dev/null)
+          if [ "$HTTP_CODE" = "200" ]; then
+            ACTUAL="sha256:$(sha256sum /tmp/release.tar.gz | awk '{print $1}')"
+            EXPECTED=$(grep 'archive-checksum' artifacthub-pkg.yml | awk '{print $2}')
+            echo "Release tarball checksum: $ACTUAL"
+            echo "Metadata checksum:        $EXPECTED"
+            if [ "$ACTUAL" = "$EXPECTED" ]; then
+              echo "SKIP_BUILD=true" >> $GITHUB_ENV
+              echo "Checksums match - release is finalized, nothing to do"
+            fi
+          else
+            echo "No existing release (HTTP $HTTP_CODE) - will build"
+          fi
+          rm -f /tmp/release.tar.gz
+
       - name: Install dependencies
-        run: npm ci
+        run: |
+          [ "$SKIP_BUILD" = "true" ] && exit 0
+          npm ci
 
       - name: Build plugin
-        run: npx @kinvolk/headlamp-plugin build
+        run: |
+          [ "$SKIP_BUILD" = "true" ] && exit 0
+          npx @kinvolk/headlamp-plugin build
 
       - name: Package tarball
-        run: npx @kinvolk/headlamp-plugin package
+        run: |
+          [ "$SKIP_BUILD" = "true" ] && exit 0
+          npx @kinvolk/headlamp-plugin package
 
       - name: Compute tarball checksum
         run: |
+          [ "$SKIP_BUILD" = "true" ] && exit 0
           TARBALL=$(ls *.tar.gz)
           CHECKSUM=$(sha256sum "$TARBALL" | awk '{print $1}')
           echo "TARBALL=$TARBALL" >> $GITHUB_ENV
@@ -33,45 +59,63 @@ jobs:
           echo "Tarball: $TARBALL"
           echo "Checksum: sha256:$CHECKSUM"
 
-      - name: Update artifacthub-pkg.yml on main
-        run: |
-          VERSION=${GITHUB_REF_NAME#v}
-          git checkout main
-          sed -i "s|headlamp/plugin/archive-checksum:.*|headlamp/plugin/archive-checksum: sha256:${CHECKSUM}|" artifacthub-pkg.yml
-          sed -i "s|headlamp/plugin/archive-url:.*|headlamp/plugin/archive-url: \"https://github.com/cpfarhood/polaris-headlamp-plugin/releases/download/${GITHUB_REF_NAME}/polaris-headlamp-plugin-${VERSION}.tar.gz\"|" artifacthub-pkg.yml
-          sed -i "s|^version:.*|version: ${VERSION}|" artifacthub-pkg.yml
-          git config user.name "gitea-actions[bot]"
-          git config user.email "gitea-actions[bot]@git.farh.net"
-          git add artifacthub-pkg.yml
-          git diff --cached --quiet || {
-            git commit -m "ci: update artifact hub metadata for ${GITHUB_REF_NAME}"
-            git push origin main
-          }
-
       - name: Install Docker CLI
-        run: apt-get update && apt-get install -y docker.io
-
-      - name: Build Docker image
-        run: docker build -t git.farh.net/${{ github.repository }}:${{ github.ref_name }} -t git.farh.net/${{ github.repository }}:latest .
-
-      - name: Push Docker image
         run: |
+          [ "$SKIP_BUILD" = "true" ] && exit 0
+          apt-get update && apt-get install -y docker.io
+
+      - name: Build and push Docker image
+        run: |
+          [ "$SKIP_BUILD" = "true" ] && exit 0
+          docker build -t git.farh.net/${{ github.repository }}:${{ github.ref_name }} -t git.farh.net/${{ github.repository }}:latest .
           echo "${{ secrets.REGISTRY_TOKEN }}" | docker login git.farh.net -u ${{ github.actor }} --password-stdin
           docker push git.farh.net/${{ github.repository }}:${{ github.ref_name }}
           docker push git.farh.net/${{ github.repository }}:latest
 
       - name: Create Gitea release
-        uses: akkuman/gitea-release-action@v1
-        with:
-          files: |
-            *.tar.gz
-          token: ${{ github.token }}
+        run: |
+          [ "$SKIP_BUILD" = "true" ] && exit 0
+          API_URL="${GITHUB_SERVER_URL}/api/v1/repos/${GITHUB_REPOSITORY}"
+          # Create release (or get existing)
+          RELEASE=$(curl -s -X POST \
+            -H "Authorization: token ${{ github.token }}" \
+            -H "Content-Type: application/json" \
+            "${API_URL}/releases" \
+            -d "{\"tag_name\":\"${GITHUB_REF_NAME}\",\"name\":\"${GITHUB_REF_NAME}\"}")
+          RELEASE_ID=$(echo "$RELEASE" | node -e "process.stdin.resume();let d='';process.stdin.on('data',c=>d+=c);process.stdin.on('end',()=>console.log(JSON.parse(d).id))")
+          if [ "$RELEASE_ID" = "undefined" ]; then
+            RELEASE=$(curl -sf \
+              -H "Authorization: token ${{ github.token }}" \
+              "${API_URL}/releases/tags/${GITHUB_REF_NAME}")
+            RELEASE_ID=$(echo "$RELEASE" | node -e "process.stdin.resume();let d='';process.stdin.on('data',c=>d+=c);process.stdin.on('end',()=>console.log(JSON.parse(d).id))")
+          fi
+          echo "Gitea Release ID: $RELEASE_ID"
+          # Delete existing assets
+          ASSETS=$(curl -sf \
+            -H "Authorization: token ${{ github.token }}" \
+            "${API_URL}/releases/${RELEASE_ID}/assets")
+          echo "$ASSETS" | node -e "
+            process.stdin.resume();let d='';
+            process.stdin.on('data',c=>d+=c);
+            process.stdin.on('end',()=>{
+              JSON.parse(d).forEach(a=>console.log(a.id));
+            })" | while read -r ASSET_ID; do
+            curl -sf -X DELETE \
+              -H "Authorization: token ${{ github.token }}" \
+              "${API_URL}/releases/${RELEASE_ID}/assets/${ASSET_ID}"
+          done
+          # Upload tarball
+          curl -sf -X POST \
+            -H "Authorization: token ${{ github.token }}" \
+            -F "attachment=@${TARBALL}" \
+            "${API_URL}/releases/${RELEASE_ID}/assets?name=${TARBALL}"
+          echo "Gitea release updated"
 
       - name: Create GitHub release
         continue-on-error: true
         run: |
+          [ "$SKIP_BUILD" = "true" ] && exit 0
           GH_API="https://api.github.com/repos/cpfarhood/polaris-headlamp-plugin"
-          AUTH="-H \"Authorization: token ${{ secrets.GH_PAT }}\""
           # Create release or fetch existing one
           BODY=$(curl -s -X POST \
             -H "Authorization: token ${{ secrets.GH_PAT }}" \
@@ -87,8 +131,8 @@ jobs:
               "${GH_API}/releases/tags/${GITHUB_REF_NAME}")
             RELEASE_ID=$(echo "$BODY" | node -e "process.stdin.resume();let d='';process.stdin.on('data',c=>d+=c);process.stdin.on('end',()=>console.log(JSON.parse(d).id))")
           fi
-          echo "Release ID: $RELEASE_ID"
-          # Delete any existing assets with the same name
+          echo "GitHub Release ID: $RELEASE_ID"
+          # Delete existing assets with the same name
           ASSETS=$(curl -sf \
             -H "Authorization: token ${{ secrets.GH_PAT }}" \
             -H "Accept: application/vnd.github+json" \
@@ -111,4 +155,30 @@ jobs:
             -H "Content-Type: application/gzip" \
             "https://uploads.github.com/repos/cpfarhood/polaris-headlamp-plugin/releases/${RELEASE_ID}/assets?name=${TARBALL}" \
             --data-binary "@${TARBALL}"
-          echo "GitHub release created with same tarball (checksum guaranteed to match)"
+          echo "GitHub release updated with same tarball"
+
+      - name: Update metadata and align tag
+        run: |
+          [ "$SKIP_BUILD" = "true" ] && exit 0
+          VERSION=${GITHUB_REF_NAME#v}
+          git checkout main
+          sed -i "s|headlamp/plugin/archive-checksum:.*|headlamp/plugin/archive-checksum: sha256:${CHECKSUM}|" artifacthub-pkg.yml
+          sed -i "s|headlamp/plugin/archive-url:.*|headlamp/plugin/archive-url: \"https://github.com/cpfarhood/polaris-headlamp-plugin/releases/download/${GITHUB_REF_NAME}/polaris-headlamp-plugin-${VERSION}.tar.gz\"|" artifacthub-pkg.yml
+          sed -i "s|^version:.*|version: ${VERSION}|" artifacthub-pkg.yml
+          git config user.name "gitea-actions[bot]"
+          git config user.email "gitea-actions[bot]@git.farh.net"
+          git add artifacthub-pkg.yml
+          git diff --cached --quiet || {
+            git commit -m "ci: update artifact hub metadata for ${GITHUB_REF_NAME}"
+            git push origin main
+          }
+          # Force-move tag to the commit with correct checksum.
+          # This triggers a new CI run, but the guard step will detect
+          # that the release checksum already matches and skip the build.
+          git tag -f ${GITHUB_REF_NAME}
+          git push -f origin ${GITHUB_REF_NAME}
+          # Also push to GitHub directly to avoid waiting for mirror sync
+          git remote add github https://x-access-token:${{ secrets.GH_PAT }}@github.com/cpfarhood/polaris-headlamp-plugin.git 2>/dev/null || true
+          git push github main 2>/dev/null || true
+          git push -f github ${GITHUB_REF_NAME} 2>/dev/null || true
+          echo "Tag ${GITHUB_REF_NAME} aligned with updated metadata"
