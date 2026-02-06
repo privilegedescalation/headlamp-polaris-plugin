@@ -12,6 +12,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Install dependencies
         run: npm ci
@@ -34,19 +36,17 @@ jobs:
       - name: Update artifacthub-pkg.yml on main
         run: |
           VERSION=${GITHUB_REF_NAME#v}
+          git checkout main
           sed -i "s|headlamp/plugin/archive-checksum:.*|headlamp/plugin/archive-checksum: sha256:${CHECKSUM}|" artifacthub-pkg.yml
           sed -i "s|headlamp/plugin/archive-url:.*|headlamp/plugin/archive-url: \"https://github.com/cpfarhood/polaris-headlamp-plugin/releases/download/${GITHUB_REF_NAME}/polaris-headlamp-plugin-${VERSION}.tar.gz\"|" artifacthub-pkg.yml
           sed -i "s|^version:.*|version: ${VERSION}|" artifacthub-pkg.yml
-          FILE_SHA=$(curl -sf \
-            -H "Authorization: token ${{ github.token }}" \
-            "${{ github.server_url }}/api/v1/repos/${{ github.repository }}/contents/artifacthub-pkg.yml?ref=main" \
-            | node -e "process.stdin.resume();let d='';process.stdin.on('data',c=>d+=c);process.stdin.on('end',()=>console.log(JSON.parse(d).sha))")
-          CONTENT=$(base64 -w 0 artifacthub-pkg.yml)
-          curl -sf -X PUT \
-            -H "Authorization: token ${{ github.token }}" \
-            -H "Content-Type: application/json" \
-            "${{ github.server_url }}/api/v1/repos/${{ github.repository }}/contents/artifacthub-pkg.yml" \
-            -d "{\"content\":\"${CONTENT}\",\"sha\":\"${FILE_SHA}\",\"message\":\"ci: update artifact hub metadata for ${GITHUB_REF_NAME}\",\"branch\":\"main\"}"
+          git config user.name "gitea-actions[bot]"
+          git config user.email "gitea-actions[bot]@git.farh.net"
+          git add artifacthub-pkg.yml
+          git diff --cached --quiet || {
+            git commit -m "ci: update artifact hub metadata for ${GITHUB_REF_NAME}"
+            git push origin main
+          }
 
       - name: Install Docker CLI
         run: apt-get update && apt-get install -y docker.io
