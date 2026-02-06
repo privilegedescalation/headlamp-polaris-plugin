@@ -1,4 +1,4 @@
-name: GitHub Release
+name: GitHub Release (fallback)
 
 on:
   push:
@@ -12,25 +12,44 @@ jobs:
   release:
     runs-on: ubuntu-latest
     steps:
+      - name: Check if release already exists
+        id: check
+        run: |
+          if gh release view "${{ github.ref_name }}" --repo "${{ github.repository }}" &>/dev/null; then
+            echo "Release ${{ github.ref_name }} already exists (created by Gitea CI), skipping."
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "No existing release found, building as fallback."
+            echo "exists=false" >> "$GITHUB_OUTPUT"
+          fi
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
       - name: Checkout
+        if: steps.check.outputs.exists == 'false'
         uses: actions/checkout@v4
 
       - name: Setup Node.js
+        if: steps.check.outputs.exists == 'false'
         uses: actions/setup-node@v4
         with:
           node-version: '20'
           cache: 'npm'
 
       - name: Install dependencies
+        if: steps.check.outputs.exists == 'false'
         run: npm ci
 
       - name: Build plugin
+        if: steps.check.outputs.exists == 'false'
         run: npx @kinvolk/headlamp-plugin build
 
       - name: Package tarball
+        if: steps.check.outputs.exists == 'false'
         run: npx @kinvolk/headlamp-plugin package
 
       - name: Create GitHub Release
+        if: steps.check.outputs.exists == 'false'
         uses: softprops/action-gh-release@v2
         with:
           files: "*.tar.gz"

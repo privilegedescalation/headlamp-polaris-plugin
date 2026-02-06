@@ -1,4 +1,4 @@
-version: 0.0.1
+version: 0.0.2
 name: polaris-headlamp-plugin
 displayName: Polaris
 createdAt: "2026-02-05T19:00:00Z"
@@ -24,5 +24,5 @@ maintainers:
 annotations:
   headlamp/plugin/archive-url: "https://github.com/cpfarhood/polaris-headlamp-plugin/releases/download/v0.0.1/polaris-headlamp-plugin-0.0.1.tar.gz"
   headlamp/plugin/version-compat: ">=0.26"
-  headlamp/plugin/archive-checksum: sha256:456f09cf8b126816b80c723b6c6f300b2af0c2e1288ee67da13f435b0e35c04d
+  headlamp/plugin/archive-checksum: sha256:f76db2b6f6944341fad3d61e2250d2d73d64529d1c22333ca4678ba16fa5f300
   headlamp/plugin/distro-compat: in-cluster

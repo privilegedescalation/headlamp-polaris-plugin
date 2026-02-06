@@ -22,6 +22,32 @@ jobs:
       - name: Package tarball
         run: npx @kinvolk/headlamp-plugin package
 
+      - name: Compute tarball checksum
+        run: |
+          TARBALL=$(ls *.tar.gz)
+          CHECKSUM=$(sha256sum "$TARBALL" | awk '{print $1}')
+          echo "TARBALL=$TARBALL" >> $GITHUB_ENV
+          echo "CHECKSUM=$CHECKSUM" >> $GITHUB_ENV
+          echo "Tarball: $TARBALL"
+          echo "Checksum: sha256:$CHECKSUM"
+
+      - name: Update artifacthub-pkg.yml on main
+        run: |
+          VERSION=${GITHUB_REF_NAME#v}
+          sed -i "s|headlamp/plugin/archive-checksum:.*|headlamp/plugin/archive-checksum: sha256:${CHECKSUM}|" artifacthub-pkg.yml
+          sed -i "s|headlamp/plugin/archive-url:.*|headlamp/plugin/archive-url: \"https://github.com/cpfarhood/polaris-headlamp-plugin/releases/download/${GITHUB_REF_NAME}/polaris-headlamp-plugin-${VERSION}.tar.gz\"|" artifacthub-pkg.yml
+          sed -i "s|^version:.*|version: ${VERSION}|" artifacthub-pkg.yml
+          FILE_SHA=$(curl -sf \
+            -H "Authorization: token ${{ github.token }}" \
+            "${{ github.server_url }}/api/v1/repos/${{ github.repository }}/contents/artifacthub-pkg.yml?ref=main" \
+            | node -e "process.stdin.resume();let d='';process.stdin.on('data',c=>d+=c);process.stdin.on('end',()=>console.log(JSON.parse(d).sha))")
+          CONTENT=$(base64 -w 0 artifacthub-pkg.yml)
+          curl -sf -X PUT \
+            -H "Authorization: token ${{ github.token }}" \
+            -H "Content-Type: application/json" \
+            "${{ github.server_url }}/api/v1/repos/${{ github.repository }}/contents/artifacthub-pkg.yml" \
+            -d "{\"content\":\"${CONTENT}\",\"sha\":\"${FILE_SHA}\",\"message\":\"ci: update artifact hub metadata for ${GITHUB_REF_NAME}\",\"branch\":\"main\"}"
+
       - name: Install Docker CLI
         run: apt-get update && apt-get install -y docker.io
 
@@ -34,9 +60,35 @@ jobs:
           docker push git.farh.net/${{ github.repository }}:${{ github.ref_name }}
           docker push git.farh.net/${{ github.repository }}:latest
 
-      - name: Create release
+      - name: Create Gitea release
         uses: akkuman/gitea-release-action@v1
         with:
           files: |
             *.tar.gz
           token: ${{ github.token }}
+
+      - name: Create GitHub release
+        continue-on-error: true
+        run: |
+          RELEASE_RESPONSE=$(curl -s -w "\n%{http_code}" -X POST \
+            -H "Authorization: token ${{ secrets.GH_PAT }}" \
+            -H "Accept: application/vnd.github+json" \
+            "https://api.github.com/repos/cpfarhood/polaris-headlamp-plugin/releases" \
+            -d "{\"tag_name\":\"${GITHUB_REF_NAME}\",\"name\":\"${GITHUB_REF_NAME}\",\"generate_release_notes\":true}")
+          HTTP_CODE=$(echo "$RELEASE_RESPONSE" | tail -1)
+          BODY=$(echo "$RELEASE_RESPONSE" | sed '$d')
+          if [ "$HTTP_CODE" = "422" ]; then
+            echo "Release already exists, fetching it..."
+            BODY=$(curl -sf \
+              -H "Authorization: token ${{ secrets.GH_PAT }}" \
+              -H "Accept: application/vnd.github+json" \
+              "https://api.github.com/repos/cpfarhood/polaris-headlamp-plugin/releases/tags/${GITHUB_REF_NAME}")
+          fi
+          RELEASE_ID=$(echo "$BODY" | node -e "process.stdin.resume();let d='';process.stdin.on('data',c=>d+=c);process.stdin.on('end',()=>console.log(JSON.parse(d).id))")
+          echo "Release ID: $RELEASE_ID"
+          curl -sf -X POST \
+            -H "Authorization: token ${{ secrets.GH_PAT }}" \
+            -H "Content-Type: application/gzip" \
+            "https://uploads.github.com/repos/cpfarhood/polaris-headlamp-plugin/releases/${RELEASE_ID}/assets?name=${TARBALL}" \
+            --data-binary "@${TARBALL}"
+          echo "GitHub release created with same tarball (checksum guaranteed to match)"
