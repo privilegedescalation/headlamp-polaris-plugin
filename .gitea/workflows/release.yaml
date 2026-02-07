@@ -115,7 +115,7 @@ jobs:
         continue-on-error: true
         run: |
           [ "$SKIP_BUILD" = "true" ] && exit 0
-          GH_API="https://api.github.com/repos/cpfarhood/polaris-headlamp-plugin"
+          GH_API="https://api.github.com/repos/cpfarhood/headlamp-polaris-plugin"
           # Create release or fetch existing one
           BODY=$(curl -s -X POST \
             -H "Authorization: token ${{ secrets.GH_PAT }}" \
@@ -153,7 +153,7 @@ jobs:
           curl -sf -X POST \
             -H "Authorization: token ${{ secrets.GH_PAT }}" \
             -H "Content-Type: application/gzip" \
-            "https://uploads.github.com/repos/cpfarhood/polaris-headlamp-plugin/releases/${RELEASE_ID}/assets?name=${TARBALL}" \
+            "https://uploads.github.com/repos/cpfarhood/headlamp-polaris-plugin/releases/${RELEASE_ID}/assets?name=${TARBALL}" \
             --data-binary "@${TARBALL}"
           echo "GitHub release updated with same tarball"
 
