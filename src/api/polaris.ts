@@ -77,9 +77,9 @@ function countResultSet(rs: ResultSet, counts: ResultCounts): void {
   }
 }
 
-export function countResults(data: AuditData): ResultCounts {
+function countResultItems(results: Result[]): ResultCounts {
   const counts: ResultCounts = { total: 0, pass: 0, warning: 0, danger: 0 };
-  for (const result of data.Results) {
+  for (const result of results) {
     countResultSet(result.Results, counts);
     if (result.PodResult) {
       countResultSet(result.PodResult.Results, counts);
@@ -89,6 +89,26 @@ export function countResults(data: AuditData): ResultCounts {
     }
   }
   return counts;
+}
+
+export function countResults(data: AuditData): ResultCounts {
+  return countResultItems(data.Results);
+}
+
+export function countResultsForItems(results: Result[]): ResultCounts {
+  return countResultItems(results);
+}
+
+export function getNamespaces(data: AuditData): string[] {
+  const namespaces = new Set<string>();
+  for (const result of data.Results) {
+    namespaces.add(result.Namespace);
+  }
+  return Array.from(namespaces).sort();
+}
+
+export function filterResultsByNamespace(data: AuditData, namespace: string): Result[] {
+  return data.Results.filter(r => r.Namespace === namespace);
 }
 
 // --- Settings ---

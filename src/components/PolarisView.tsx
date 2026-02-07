@@ -6,14 +6,8 @@ import {
   StatusLabel,
 } from '@kinvolk/headlamp-plugin/lib/CommonComponents';
 import React from 'react';
-import {
-  AuditData,
-  computeScore,
-  countResults,
-  getRefreshInterval,
-  ResultCounts,
-  usePolarisData,
-} from '../api/polaris';
+import { usePolarisDataContext } from '../api/PolarisDataContext';
+import { AuditData, computeScore, countResults, ResultCounts } from '../api/polaris';
 
 function scoreStatus(score: number): 'success' | 'warning' | 'error' {
   if (score >= 80) return 'success';
@@ -71,8 +65,7 @@ function OverviewSection(props: { data: AuditData; counts: ResultCounts }) {
 }
 
 export default function PolarisView() {
-  const interval = getRefreshInterval();
-  const { data, loading, error } = usePolarisData(interval);
+  const { data, loading, error } = usePolarisDataContext();
 
   if (loading) {
     return <Loader title="Loading Polaris audit data..." />;
