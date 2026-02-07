@@ -104,9 +104,7 @@ export default function NamespacesListView() {
             },
             {
               label: 'Pass',
-              getter: (row: NamespaceRow) => (
-                <StatusLabel status="success">{row.pass}</StatusLabel>
-              ),
+              getter: (row: NamespaceRow) => <StatusLabel status="success">{row.pass}</StatusLabel>,
             },
             {
               label: 'Warning',
@@ -116,15 +114,11 @@ export default function NamespacesListView() {
             },
             {
               label: 'Danger',
-              getter: (row: NamespaceRow) => (
-                <StatusLabel status="error">{row.danger}</StatusLabel>
-              ),
+              getter: (row: NamespaceRow) => <StatusLabel status="error">{row.danger}</StatusLabel>,
             },
             {
               label: 'Skipped',
-              getter: (row: NamespaceRow) => (
-                <StatusLabel status="">{row.skipped}</StatusLabel>
-              ),
+              getter: (row: NamespaceRow) => <StatusLabel status="">{row.skipped}</StatusLabel>,
             },
           ]}
           data={rows}
