@@ -32,11 +32,7 @@ function OverviewSection(props: { data: AuditData; counts: ResultCounts }) {
           rows={[
             {
               name: 'Cluster Score',
-              value: (
-                <StatusLabel status={status}>
-                  {score}%
-                </StatusLabel>
-              ),
+              value: <StatusLabel status={status}>{score}%</StatusLabel>,
             },
           ]}
         />
@@ -47,27 +43,15 @@ function OverviewSection(props: { data: AuditData; counts: ResultCounts }) {
             { name: 'Total Checks', value: String(props.counts.total) },
             {
               name: 'Pass',
-              value: (
-                <StatusLabel status="success">
-                  {props.counts.pass}
-                </StatusLabel>
-              ),
+              value: <StatusLabel status="success">{props.counts.pass}</StatusLabel>,
             },
             {
               name: 'Warning',
-              value: (
-                <StatusLabel status="warning">
-                  {props.counts.warning}
-                </StatusLabel>
-              ),
+              value: <StatusLabel status="warning">{props.counts.warning}</StatusLabel>,
             },
             {
               name: 'Danger',
-              value: (
-                <StatusLabel status="error">
-                  {props.counts.danger}
-                </StatusLabel>
-              ),
+              value: <StatusLabel status="error">{props.counts.danger}</StatusLabel>,
             },
           ]}
         />
@@ -106,11 +90,7 @@ export default function PolarisView() {
             rows={[
               {
                 name: 'Status',
-                value: (
-                  <StatusLabel status="error">
-                    {error}
-                  </StatusLabel>
-                ),
+                value: <StatusLabel status="error">{error}</StatusLabel>,
               },
             ]}
           />
