@@ -2,7 +2,13 @@ version: 0.0.9
 name: headlamp-polaris-plugin
 displayName: Polaris
 createdAt: "2026-02-05T19:00:00Z"
-description: Surfaces Fairwinds Polaris audit results inside the Headlamp UI.
+description: >-
+  Surfaces Fairwinds Polaris audit results inside the Headlamp UI.
+  Shows cluster score, check summary, and per-namespace drill-downs
+  with per-resource pass/warning/danger breakdowns. Data is fetched
+  read-only via the Kubernetes service proxy to the Polaris dashboard.
+  Requires a Role granting `get` on `services/proxy` for the
+  `polaris-dashboard` service in the `polaris` namespace.
 license: MIT
 homeURL: "https://github.com/cpfarhood/headlamp-polaris-plugin"
 category: security

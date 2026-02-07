@@ -29,14 +29,63 @@ npx eslint src/
 
 ```
 src/
-├── index.tsx                    # Entry point: registerSidebarEntry + registerRoute for /polaris
+├── index.tsx                           # Entry point: registers sidebar entries + routes
 ├── api/
-│   └── polaris.ts               # Types (AuditData schema), usePolarisData hook, countResults utility, refresh settings
+│   ├── polaris.ts                      # Types (AuditData schema), usePolarisData hook, countResults utilities, refresh settings
+│   └── PolarisDataContext.tsx           # React context provider for shared data fetch
 └── components/
-    └── PolarisView.tsx           # Main page: score badge, check summary, cluster info, error states, refresh interval selector
+    ├── DashboardView.tsx                # Overview / Full Audit page (score, check summary, cluster info)
+    ├── NamespaceDetailView.tsx          # Per-namespace drill-down with resource table
+    ├── DynamicSidebarRegistrar.tsx       # Registers namespace sidebar entries from live audit data
+    └── PolarisSettings.tsx              # Plugin settings (refresh interval selector)
 ```
 
-Single sidebar page at `/polaris`. Data is fetched via `ApiProxy.request` to the Polaris dashboard service proxy and refreshed on a user-configurable interval (stored in localStorage under `polaris-plugin-refresh-interval`, default 5 minutes). Score is computed from result counts (pass/total).
+Top-level sidebar section at `/polaris` with sub-routes for full audit (`/polaris/full-audit`) and per-namespace views (`/polaris/ns/:namespace`). Data is fetched via `ApiProxy.request` to the Polaris dashboard service proxy and refreshed on a user-configurable interval (stored in localStorage under `polaris-plugin-refresh-interval`, default 5 minutes). Score is computed from result counts (pass/total).
+
+## Security / RBAC Requirements
+
+The plugin reaches Polaris through the Kubernetes API server's service proxy sub-resource (`/api/v1/namespaces/polaris/services/polaris-dashboard:80/proxy/...`). The Headlamp service account (or the user's bearer token when Headlamp runs in token-auth mode) must be granted:
+
+| Verb | API Group | Resource | Resource Name | Namespace |
+|------|-----------|----------|---------------|-----------|
+| `get` | `""` (core) | `services/proxy` | `polaris-dashboard` | `polaris` |
+
+Minimal RBAC example:
+
+```yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: polaris-proxy-reader
+  namespace: polaris
+rules:
+  - apiGroups: [""]
+    resources: ["services/proxy"]
+    resourceNames: ["polaris-dashboard"]
+    verbs: ["get"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: headlamp-polaris-proxy
+  namespace: polaris
+subjects:
+  - kind: ServiceAccount
+    name: headlamp            # adjust to match your Headlamp SA
+    namespace: kube-system
+roleRef:
+  kind: Role
+  name: polaris-proxy-reader
+  apiGroup: rbac.authorization.k8s.io
+```
+
+Additional considerations:
+
+- **NetworkPolicy**: If the `polaris` namespace enforces network policies, allow ingress from the Headlamp pod (or the API server, since it performs the proxy hop) to `polaris-dashboard` on port 80.
+- **Polaris dashboard listen address**: The Polaris Helm chart exposes the dashboard on a ClusterIP service (`polaris-dashboard:80`). If the chart is installed with `dashboard.enabled: false`, the service won't exist and the proxy request will 404.
+- **No write operations**: The plugin only performs `GET` requests through the proxy. No `create`, `update`, or `delete` verbs are required. Do not grant broader service proxy access than `get`.
+- **Token-auth mode**: When Headlamp is configured for user-supplied tokens (rather than a fixed service account), each user's own RBAC bindings must include the role above. A 403 from the plugin means the logged-in user lacks the binding.
+- **Audit logging**: Kubernetes API audit logs will record every proxied request as a `get` on `services/proxy` in the `polaris` namespace. Set an appropriate audit policy level if request volume from the auto-refresh interval is a concern.
 
 ## Key Constraints
 

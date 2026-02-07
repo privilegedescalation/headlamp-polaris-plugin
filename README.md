@@ -6,23 +6,28 @@ A [Headlamp](https://headlamp.dev/) plugin that surfaces [Fairwinds Polaris](htt
 
 ## What It Does
 
-Adds a **Polaris** sidebar entry to Headlamp that displays:
+Adds a **Polaris** top-level sidebar section to Headlamp with the following views:
 
-- **Cluster Score** -- overall Polaris score as a percentage (color-coded green/amber/red)
-- **Check Summary** -- total, pass, warning, and danger counts across all workloads
-- **Cluster Info** -- node, pod, namespace, and controller counts
+- **Overview** -- cluster score as a percentage (color-coded green/amber/red), check summary (pass/warning/danger counts), and cluster info (nodes, pods, namespaces, controllers)
+- **Full Audit** -- same as overview but includes skipped checks in the totals
+- **Namespace drill-down** -- per-namespace score, check counts, and a resource table showing pass/warning/danger per workload. Namespace entries appear dynamically in the sidebar based on live audit data.
+- **External link** -- quick jump to the native Polaris dashboard via the Kubernetes service proxy
 
-Data is read from the `ConfigMap/polaris-dashboard` in the `polaris` namespace (key: `dashboard.json`), which is created by the standard Polaris Helm chart. The plugin is read-only -- it never writes to the cluster.
+Data is fetched from the Polaris dashboard API through the Kubernetes service proxy (`/api/v1/namespaces/polaris/services/polaris-dashboard:80/proxy/results.json`). The plugin is read-only -- it never writes to the cluster.
 
-Results are cached and refreshed on a user-configurable interval (1 / 5 / 10 / 30 minutes, default 5). The setting persists in the browser's localStorage.
+Results are refreshed on a user-configurable interval (1 / 5 / 10 / 30 minutes, default 5). The setting is available in **Settings > Plugins > Polaris** and persists in the browser's localStorage.
 
-Error states are handled explicitly: RBAC denied (403), Polaris not installed (404), malformed JSON, and loading.
+Error states are handled explicitly: RBAC denied (403), Polaris not installed (404/503), malformed JSON, and loading.
 
 ## Prerequisites
 
-- **Headlamp** >= v0.26 deployed in your cluster
-- **Polaris** installed via the [official Helm chart](https://github.com/FairwindsOps/polaris) with the dashboard component enabled
-- The Headlamp service account must have RBAC permission to `get` ConfigMaps in the `polaris` namespace
+| Requirement | Minimum version |
+|-------------|----------------|
+| Headlamp | v0.26+ |
+| Polaris (with dashboard enabled) | Any recent release |
+| Kubernetes | v1.24+ |
+
+Polaris must be deployed in the `polaris` namespace with the dashboard component enabled (`dashboard.enabled: true` in the Helm chart, which is the default). The plugin reads from the `polaris-dashboard` ClusterIP service on port 80.
 
 ## Installing
 
@@ -78,34 +83,69 @@ npm run build
 npx @kinvolk/headlamp-plugin extract . /headlamp/plugins
 ```
 
-## RBAC
+## RBAC / Security Setup
 
-The plugin reads a single ConfigMap. Minimum RBAC required for the Headlamp service account:
+The plugin fetches audit data through the Kubernetes API server's **service proxy** sub-resource. The identity making the request (Headlamp's service account, or the user's own token in token-auth mode) must be granted:
+
+| Verb | API Group | Resource | Resource Name | Namespace |
+|------|-----------|----------|---------------|-----------|
+| `get` | `""` (core) | `services/proxy` | `polaris-dashboard` | `polaris` |
+
+### Minimal RBAC manifests
 
 ```yaml
 apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRole
+kind: Role
 metadata:
-  name: headlamp-polaris-reader
+  name: polaris-proxy-reader
+  namespace: polaris
 rules:
   - apiGroups: [""]
-    resources: ["configmaps"]
+    resources: ["services/proxy"]
     resourceNames: ["polaris-dashboard"]
     verbs: ["get"]
 ---
 apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRoleBinding
+kind: RoleBinding
 metadata:
-  name: headlamp-polaris-reader
-roleRef:
-  apiGroup: rbac.authorization.k8s.io
-  kind: ClusterRole
-  name: headlamp-polaris-reader
+  name: headlamp-polaris-proxy
+  namespace: polaris
 subjects:
   - kind: ServiceAccount
-    name: headlamp
-    namespace: headlamp
+    name: headlamp              # adjust to match your Headlamp service account
+    namespace: kube-system      # adjust to match the namespace Headlamp runs in
+roleRef:
+  kind: Role
+  name: polaris-proxy-reader
+  apiGroup: rbac.authorization.k8s.io
 ```
+
+Apply with `kubectl apply -f polaris-rbac.yaml`.
+
+### Token-auth mode
+
+When Headlamp is configured for user-supplied tokens (rather than a fixed service account), **each user** must have the RoleBinding above attached to their own identity. A 403 error in the plugin means the currently logged-in user lacks this binding.
+
+### NetworkPolicy
+
+If the `polaris` namespace enforces network policies, ensure ingress is allowed from the Kubernetes API server (which performs the proxy hop) to `polaris-dashboard` on port 80.
+
+### Read-only access
+
+The plugin only performs `GET` requests through the service proxy. No `create`, `update`, `delete`, or `patch` verbs are required. Do not grant broader access than `get` on `services/proxy`.
+
+### Audit logging
+
+Every proxied request is recorded in Kubernetes API audit logs as a `get` on `services/proxy` in the `polaris` namespace. If the auto-refresh interval generates more audit volume than desired, increase the refresh interval in the plugin settings or adjust your audit policy.
+
+## Troubleshooting
+
+| Symptom | Likely cause | Fix |
+|---------|-------------|-----|
+| **403 Access Denied** | Missing RBAC binding for `services/proxy` | Apply the Role + RoleBinding from the RBAC section above |
+| **404 or 503** | Polaris not installed, or dashboard disabled | Install Polaris with `dashboard.enabled: true` in the `polaris` namespace |
+| **No data** | Polaris running but no workloads scanned yet | Wait for the next Polaris audit cycle or restart the Polaris pod |
+| **Stale data** | Refresh interval too long | Lower the interval in **Settings > Plugins > Polaris** |
 
 ## Development
 
@@ -142,29 +182,30 @@ npm run tsc
 
 ```
 src/
-  index.tsx                  -- Entry point. Registers sidebar entry and route at /polaris.
+  index.tsx                           -- Entry point. Registers sidebar entries and routes.
   api/
-    polaris.ts               -- TypeScript types matching the Polaris AuditData schema,
-                                usePolarisData() hook with caching, countResults() utility,
-                                and refresh interval settings (localStorage).
+    polaris.ts                        -- TypeScript types (AuditData schema), usePolarisData hook,
+                                         countResults utilities, refresh interval settings.
+    PolarisDataContext.tsx             -- React context provider; shared data fetch across views.
   components/
-    PolarisView.tsx          -- Main page component. Score badge, check summary cards,
-                                cluster info, error states, refresh interval selector.
+    DashboardView.tsx                 -- Overview / Full Audit page (score, check summary, cluster info).
+    NamespaceDetailView.tsx           -- Per-namespace drill-down with resource table.
+    DynamicSidebarRegistrar.tsx       -- Registers sidebar entries dynamically from audit namespaces.
+    PolarisSettings.tsx               -- Plugin settings page (refresh interval selector).
 ```
 
 ## Data Source
 
-The plugin reads from:
+The plugin fetches live audit results from the Polaris dashboard HTTP API via the Kubernetes service proxy:
 
-- **ConfigMap**: `polaris-dashboard`
-- **Namespace**: `polaris`
-- **Key**: `dashboard.json`
+```
+GET /api/v1/namespaces/polaris/services/polaris-dashboard:80/proxy/results.json
+```
 
-This ConfigMap is created automatically when Polaris is installed with the dashboard enabled. The JSON structure matches Polaris's `AuditData` schema (`pkg/validator/output.go`):
+This endpoint is served by the `polaris-dashboard` ClusterIP service, which is created by the Polaris Helm chart when `dashboard.enabled: true`. The JSON response matches Polaris's `AuditData` schema (`pkg/validator/output.go`):
 
 ```
 AuditData
-  Score            -- cluster score (0-100)
   ClusterInfo      -- nodes, pods, namespaces, controllers
   Results[]        -- per-workload results
     Results{}      -- top-level check results (ResultSet)
@@ -174,7 +215,7 @@ AuditData
         Results{}  -- container-level check results
 ```
 
-Each check in a `ResultSet` has `Success` (bool) and `Severity` (`"warning"` or `"danger"`).
+Each check in a `ResultSet` has `Success` (bool) and `Severity` (`"warning"`, `"danger"`, or `"ignore"`). The cluster score is computed client-side as `pass / total * 100`.
 
 ## Releasing
 
