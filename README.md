@@ -8,10 +8,10 @@ A [Headlamp](https://headlamp.dev/) plugin that surfaces [Fairwinds Polaris](htt
 
 Adds a **Polaris** top-level sidebar section to Headlamp with the following views:
 
-- **Overview** -- cluster score as a percentage (color-coded green/amber/red), check summary (pass/warning/danger counts), and cluster info (nodes, pods, namespaces, controllers)
-- **Full Audit** -- same as overview but includes skipped checks in the totals
-- **Namespace drill-down** -- per-namespace score, check counts, and a resource table showing pass/warning/danger per workload. Namespace entries appear dynamically in the sidebar based on live audit data.
-- **External link** -- quick jump to the native Polaris dashboard via the Kubernetes service proxy
+- **Overview** -- cluster score as a percentage (color-coded green/amber/red), check summary (pass/warning/danger/skipped counts), and cluster info (nodes, pods, namespaces, controllers)
+- **Namespaces** -- table of all namespaces with per-namespace score, pass/warning/danger/skipped counts; click a namespace to drill down
+- **Namespace detail** -- per-namespace score, check counts, and a resource table showing pass/warning/danger per workload
+- **External link** -- quick jump to the native Polaris dashboard via the Kubernetes service proxy (from namespace detail view)
 
 Data is fetched from the Polaris dashboard API through the Kubernetes service proxy (`/api/v1/namespaces/polaris/services/polaris-dashboard:80/proxy/results.json`). The plugin is read-only -- it never writes to the cluster.
 
@@ -52,7 +52,7 @@ Add it as an init container in your Headlamp Helm values:
 ```yaml
 initContainers:
   - name: polaris-plugin
-    image: git.farh.net/farhoodliquor/headlamp-polaris-plugin:v0.0.1
+    image: git.farh.net/farhoodliquor/headlamp-polaris-plugin:latest
     command: ["sh", "-c", "cp -r /plugins/* /headlamp/plugins/"]
     volumeMounts:
       - name: plugins
@@ -72,7 +72,7 @@ volumeMounts:
 Download the `.tar.gz` from the [GitHub releases page](https://github.com/cpfarhood/headlamp-polaris-plugin/releases) or the [Gitea releases page](https://git.farh.net/farhoodliquor/headlamp-polaris-plugin/releases), then extract into Headlamp's plugin directory:
 
 ```bash
-tar xzf headlamp-polaris-plugin-0.0.1.tar.gz -C /headlamp/plugins/
+tar xzf headlamp-polaris-plugin-<version>.tar.gz -C /headlamp/plugins/
 ```
 
 ### Option 4: Build from source
@@ -172,10 +172,13 @@ npm run build        # outputs dist/main.js
 npm run package      # creates headlamp-polaris-plugin-<version>.tar.gz
 ```
 
-### Type-check
+### Type-check, lint, format, and test
 
 ```bash
-npm run tsc
+npm run tsc          # type-check without emitting
+npm run lint         # eslint
+npm run format:check # prettier check
+npm test             # vitest unit tests
 ```
 
 ## Project Structure
@@ -186,12 +189,14 @@ src/
   api/
     polaris.ts                        -- TypeScript types (AuditData schema), usePolarisData hook,
                                          countResults utilities, refresh interval settings.
+    polaris.test.ts                   -- Unit tests for utility functions (vitest).
     PolarisDataContext.tsx             -- React context provider; shared data fetch across views.
   components/
-    DashboardView.tsx                 -- Overview / Full Audit page (score, check summary, cluster info).
+    DashboardView.tsx                 -- Overview page (score, check summary with skipped, cluster info).
+    NamespacesListView.tsx            -- Namespace list with scores and links to detail views.
     NamespaceDetailView.tsx           -- Per-namespace drill-down with resource table.
-    DynamicSidebarRegistrar.tsx       -- Registers sidebar entries dynamically from audit namespaces.
     PolarisSettings.tsx               -- Plugin settings page (refresh interval selector).
+vitest.config.mts                     -- Vitest configuration (jsdom environment).
 ```
 
 ## Data Source
@@ -215,48 +220,38 @@ AuditData
         Results{}  -- container-level check results
 ```
 
-Each check in a `ResultSet` has `Success` (bool) and `Severity` (`"warning"`, `"danger"`, or `"ignore"`). The cluster score is computed client-side as `pass / total * 100`.
+Each check in a `ResultSet` has `Success` (bool) and `Severity` (`"warning"`, `"danger"`, or `"ignore"`). Checks with `Severity: "ignore"` and `Success: false` are counted as skipped. The cluster score is computed client-side as `pass / total * 100`.
 
 ## Releasing
 
 Releases are automated via CI. To cut a release:
 
 ```bash
-# Bump version in package.json and artifacthub-pkg.yml, then:
-git add package.json package-lock.json artifacthub-pkg.yml
-git commit -m "chore: bump version to 0.0.2"
-git tag v0.0.2
-git push origin main v0.0.2
+# Bump version in package.json and artifacthub-pkg.yml (version + archive-url), then:
+git add package.json artifacthub-pkg.yml
+git commit -m "chore: bump version to X.Y.Z"
+git tag vX.Y.Z
+git push origin main vX.Y.Z
 ```
 
-This triggers two CI pipelines:
-
-**Gitea Actions** (`.gitea/workflows/release.yaml`):
+This triggers the **Gitea Actions** release workflow (`.gitea/workflows/release.yaml`):
 1. Build the plugin in a `node:20` container
 2. Package a `.tar.gz` tarball
 3. Build and push a Docker image to `git.farh.net/farhoodliquor/headlamp-polaris-plugin:{tag}` and `:latest`
 4. Create a Gitea release with the tarball attached
+5. Create a GitHub release with the same tarball (for Artifact Hub)
+6. Update `artifacthub-pkg.yml` checksum on main and force-move the tag to match
 
-**GitHub Actions** (`.github/workflows/release.yml`):
-1. Build and package the plugin
-2. Create a GitHub release with the tarball attached (required for Artifact Hub)
-
-The Gitea repo push-mirrors to GitHub automatically, so both pipelines trigger from a single `git push`.
+A guard step prevents infinite loops: if the release tarball checksum already matches the metadata, the build is skipped.
 
 ### CI secrets
 
 | Secret | Where | Purpose |
 |---|---|---|
 | `REGISTRY_TOKEN` | Gitea | Personal access token with `package:write` scope for Docker image push |
+| `GH_PAT` | Gitea | GitHub personal access token for creating GitHub releases |
 
-The Gitea release uses the built-in `github.token`. The GitHub release uses the default `GITHUB_TOKEN` with `contents: write` permission.
-
-### Updating Artifact Hub
-
-When releasing a new version, update `artifacthub-pkg.yml`:
-- `version` field
-- `headlamp/plugin/archive-url` annotation (update the version in the download URL)
-- `headlamp/plugin/archive-checksum` annotation (SHA256 of the new tarball, printed by the CI build)
+The Gitea release uses the built-in `github.token`. The `archive-checksum` in `artifacthub-pkg.yml` is updated automatically by the release workflow.
 
 ## Links
 
