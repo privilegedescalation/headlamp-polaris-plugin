@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Headlamp plugin that surfaces Fairwinds Polaris audit results inside the Headlamp UI. Reads from `ConfigMap/polaris-dashboard` in the `polaris` namespace (key: `dashboard.json`). Target Headlamp ≥ v0.26.
+Headlamp plugin that surfaces Fairwinds Polaris audit results inside the Headlamp UI. Queries the Polaris dashboard API via the Kubernetes service proxy (`/api/v1/namespaces/polaris/services/polaris-dashboard:80/proxy/results.json`). Target Headlamp ≥ v0.26.
 
 ## Build & Development Commands
 
@@ -36,11 +36,11 @@ src/
     └── PolarisView.tsx           # Main page: score badge, check summary, cluster info, error states, refresh interval selector
 ```
 
-Single sidebar page at `/polaris`. Data is cached in React state and refreshed on a user-configurable interval (stored in localStorage under `polaris-plugin-refresh-interval`, default 5 minutes). The `usePolarisData` hook wraps `ConfigMap.useGet` with caching so stale data is shown while refreshing.
+Single sidebar page at `/polaris`. Data is fetched via `ApiProxy.request` to the Polaris dashboard service proxy and refreshed on a user-configurable interval (stored in localStorage under `polaris-plugin-refresh-interval`, default 5 minutes). Score is computed from result counts (pass/total).
 
 ## Key Constraints
 
-- **Data source**: `ConfigMap/polaris-dashboard` in `polaris` namespace, key `dashboard.json`. No CRDs, no external API calls, no cluster write operations.
+- **Data source**: Polaris dashboard API via K8s service proxy. Requires Polaris deployed in the `polaris` namespace with a `polaris-dashboard` service. No CRDs, no cluster write operations.
 - **UI components**: Use only Headlamp-provided components (`@kinvolk/headlamp-plugin/lib/CommonComponents`). Do not import raw MUI packages. No custom theming.
 - **Error handling**: Must handle 403 (RBAC denied), 404 (Polaris not installed), malformed JSON, and loading states with distinct visual states.
 - **TypeScript strictness**: No `any`, no implicit `unknown` casting, no dead code, no unused imports.
