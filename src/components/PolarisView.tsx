@@ -1,5 +1,4 @@
 import {
-  HeaderLabel,
   Loader,
   NameValueTable,
   SectionBox,
@@ -13,30 +12,13 @@ import {
   countResults,
   getRefreshInterval,
   ResultCounts,
-  setRefreshInterval,
   usePolarisData,
 } from '../api/polaris';
-
-const INTERVAL_OPTIONS = [
-  { label: '1 minute', value: 60 },
-  { label: '5 minutes', value: 300 },
-  { label: '10 minutes', value: 600 },
-  { label: '30 minutes', value: 1800 },
-];
 
 function scoreStatus(score: number): 'success' | 'warning' | 'error' {
   if (score >= 80) return 'success';
   if (score >= 50) return 'warning';
   return 'error';
-}
-
-function RefreshSettings(props: { interval: number; onChange: (seconds: number) => void }) {
-  return (
-    <HeaderLabel
-      label="Refresh interval"
-      value={INTERVAL_OPTIONS.find(o => o.value === props.interval)?.label ?? ''}
-    />
-  );
 }
 
 function OverviewSection(props: { data: AuditData; counts: ResultCounts }) {
@@ -105,13 +87,7 @@ function OverviewSection(props: { data: AuditData; counts: ResultCounts }) {
 }
 
 export default function PolarisView() {
-  const [interval, setInterval] = React.useState(getRefreshInterval);
-
-  function handleIntervalChange(seconds: number) {
-    setInterval(seconds);
-    setRefreshInterval(seconds);
-  }
-
+  const interval = getRefreshInterval();
   const { data, loading, error } = usePolarisData(interval);
 
   if (loading) {
@@ -122,12 +98,7 @@ export default function PolarisView() {
 
   return (
     <>
-      <SectionHeader
-        title="Polaris"
-        actions={[
-          <RefreshSettings key="refresh" interval={interval} onChange={handleIntervalChange} />,
-        ]}
-      />
+      <SectionHeader title="Polaris" />
 
       {error && (
         <SectionBox title="Error">

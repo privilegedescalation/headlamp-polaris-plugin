@@ -93,6 +93,13 @@ export function countResults(data: AuditData): ResultCounts {
 
 // --- Settings ---
 
+export const INTERVAL_OPTIONS = [
+  { label: '1 minute', value: 60 },
+  { label: '5 minutes', value: 300 },
+  { label: '10 minutes', value: 600 },
+  { label: '30 minutes', value: 1800 },
+];
+
 const STORAGE_KEY = 'polaris-plugin-refresh-interval';
 const DEFAULT_INTERVAL_SECONDS = 300; // 5 minutes
 

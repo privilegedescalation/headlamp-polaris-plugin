@@ -1,5 +1,10 @@
-import { registerRoute, registerSidebarEntry } from '@kinvolk/headlamp-plugin/lib';
+import {
+  registerPluginSettings,
+  registerRoute,
+  registerSidebarEntry,
+} from '@kinvolk/headlamp-plugin/lib';
 import React from 'react';
+import PolarisSettings from './components/PolarisSettings';
 import PolarisView from './components/PolarisView';
 
 registerSidebarEntry({
@@ -17,3 +22,5 @@ registerRoute({
   exact: true,
   component: () => <PolarisView />,
 });
+
+registerPluginSettings('polaris-headlamp-plugin', PolarisSettings, true);
