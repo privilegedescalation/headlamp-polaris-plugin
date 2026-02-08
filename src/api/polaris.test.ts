@@ -1,44 +1,24 @@
-import { describe, expect, it, vi } from 'vitest';
+import { act, renderHook, waitFor } from '@testing-library/react';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { makeAuditData, makeResult } from '../test-utils';
 
 vi.mock('@kinvolk/headlamp-plugin/lib', () => ({
   ApiProxy: { request: vi.fn() },
 }));
 
+import { ApiProxy } from '@kinvolk/headlamp-plugin/lib';
 import {
-  AuditData,
   computeScore,
   countResults,
   countResultsForItems,
   filterResultsByNamespace,
   getNamespaces,
+  getRefreshInterval,
   Result,
   ResultCounts,
+  setRefreshInterval,
+  usePolarisData,
 } from './polaris';
-
-// --- Fixtures ---
-
-function makeResult(overrides: Partial<Result> = {}): Result {
-  return {
-    Name: 'my-deploy',
-    Namespace: 'default',
-    Kind: 'Deployment',
-    Results: {},
-    CreatedTime: '2025-01-01T00:00:00Z',
-    ...overrides,
-  };
-}
-
-function makeAuditData(results: Result[]): AuditData {
-  return {
-    PolarisOutputVersion: '1.0',
-    AuditTime: '2025-01-01T00:00:00Z',
-    SourceType: 'Cluster',
-    SourceName: 'test',
-    DisplayName: 'test',
-    ClusterInfo: { Version: '1.28', Nodes: 3, Pods: 10, Namespaces: 2, Controllers: 5 },
-    Results: results,
-  };
-}
 
 // --- computeScore ---
 
@@ -241,6 +221,15 @@ describe('getNamespaces', () => {
     ]);
     expect(getNamespaces(data)).toEqual(['alpha', 'beta', 'gamma']);
   });
+
+  it('excludes results with empty namespace (cluster-scoped resources)', () => {
+    const data = makeAuditData([
+      makeResult({ Namespace: '' }),
+      makeResult({ Namespace: 'alpha' }),
+      makeResult({ Namespace: '' }),
+    ]);
+    expect(getNamespaces(data)).toEqual(['alpha']);
+  });
 });
 
 // --- filterResultsByNamespace ---
@@ -260,5 +249,142 @@ describe('filterResultsByNamespace', () => {
   it('returns empty array for non-existent namespace', () => {
     const data = makeAuditData([makeResult({ Namespace: 'ns1' })]);
     expect(filterResultsByNamespace(data, 'ns-missing')).toEqual([]);
+  });
+});
+
+// --- getRefreshInterval / setRefreshInterval ---
+
+describe('getRefreshInterval', () => {
+  beforeEach(() => {
+    window.localStorage.removeItem('polaris-plugin-refresh-interval');
+  });
+
+  it('returns default (300) when nothing stored', () => {
+    expect(getRefreshInterval()).toBe(300);
+  });
+
+  it('returns stored value when valid', () => {
+    localStorage.setItem('polaris-plugin-refresh-interval', '60');
+    expect(getRefreshInterval()).toBe(60);
+  });
+
+  it('returns default for non-numeric stored value', () => {
+    localStorage.setItem('polaris-plugin-refresh-interval', 'abc');
+    expect(getRefreshInterval()).toBe(300);
+  });
+
+  it('returns default for zero stored value', () => {
+    localStorage.setItem('polaris-plugin-refresh-interval', '0');
+    expect(getRefreshInterval()).toBe(300);
+  });
+
+  it('returns default for negative stored value', () => {
+    localStorage.setItem('polaris-plugin-refresh-interval', '-10');
+    expect(getRefreshInterval()).toBe(300);
+  });
+});
+
+describe('setRefreshInterval', () => {
+  beforeEach(() => {
+    window.localStorage.removeItem('polaris-plugin-refresh-interval');
+  });
+
+  it('stores value that getRefreshInterval reads back', () => {
+    setRefreshInterval(1800);
+    expect(getRefreshInterval()).toBe(1800);
+  });
+});
+
+// --- usePolarisData ---
+
+describe('usePolarisData', () => {
+  const mockRequest = ApiProxy.request as ReturnType<typeof vi.fn>;
+
+  beforeEach(() => {
+    mockRequest.mockReset();
+  });
+
+  it('returns data on successful fetch', async () => {
+    const auditData = makeAuditData([makeResult()]);
+    mockRequest.mockResolvedValue(auditData);
+
+    const { result } = renderHook(() => usePolarisData(300));
+
+    await waitFor(() => {
+      expect(result.current.loading).toBe(false);
+    });
+
+    expect(result.current.data).toEqual(auditData);
+    expect(result.current.error).toBeNull();
+  });
+
+  it('returns RBAC error on 403', async () => {
+    mockRequest.mockRejectedValue({ status: 403 });
+
+    const { result } = renderHook(() => usePolarisData(300));
+
+    await waitFor(() => {
+      expect(result.current.loading).toBe(false);
+    });
+
+    expect(result.current.data).toBeNull();
+    expect(result.current.error).toContain('403');
+    expect(result.current.error).toContain('RBAC');
+  });
+
+  it('returns not-installed error on 404', async () => {
+    mockRequest.mockRejectedValue({ status: 404 });
+
+    const { result } = renderHook(() => usePolarisData(300));
+
+    await waitFor(() => {
+      expect(result.current.loading).toBe(false);
+    });
+
+    expect(result.current.error).toContain('not reachable');
+  });
+
+  it('returns not-installed error on 503', async () => {
+    mockRequest.mockRejectedValue({ status: 503 });
+
+    const { result } = renderHook(() => usePolarisData(300));
+
+    await waitFor(() => {
+      expect(result.current.loading).toBe(false);
+    });
+
+    expect(result.current.error).toContain('not reachable');
+  });
+
+  it('returns generic error for other failures', async () => {
+    mockRequest.mockRejectedValue(new Error('network down'));
+
+    const { result } = renderHook(() => usePolarisData(300));
+
+    await waitFor(() => {
+      expect(result.current.loading).toBe(false);
+    });
+
+    expect(result.current.error).toContain('Failed to fetch');
+    expect(result.current.error).toContain('network down');
+  });
+
+  it('does not update state after unmount', async () => {
+    let resolveFetch: (value: unknown) => void = () => {};
+    mockRequest.mockReturnValue(
+      new Promise(resolve => {
+        resolveFetch = resolve;
+      })
+    );
+
+    const { result, unmount } = renderHook(() => usePolarisData(300));
+    expect(result.current.loading).toBe(true);
+
+    unmount();
+
+    // Resolve after unmount — should not throw or update state
+    await act(async () => {
+      resolveFetch(makeAuditData([]));
+    });
   });
 });

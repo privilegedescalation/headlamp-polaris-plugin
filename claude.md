@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Headlamp plugin that surfaces Fairwinds Polaris audit results inside the Headlamp UI. Queries the Polaris dashboard API via the Kubernetes service proxy (`/api/v1/namespaces/polaris/services/polaris-dashboard:80/proxy/results.json`). Target Headlamp ≥ v0.26.
+Headlamp plugin that surfaces Fairwinds Polaris audit results inside the Headlamp UI. Queries the Polaris dashboard API via the Kubernetes service proxy (`/api/v1/namespaces/polaris/services/polaris-dashboard/proxy/results.json`). Target Headlamp ≥ v0.26.
 
 ## Build & Development Commands
 
@@ -50,7 +50,7 @@ Top-level sidebar section at `/polaris` with sub-routes for namespaces list (`/p
 
 ## Security / RBAC Requirements
 
-The plugin reaches Polaris through the Kubernetes API server's service proxy sub-resource (`/api/v1/namespaces/polaris/services/polaris-dashboard:80/proxy/...`). The Headlamp service account (or the user's bearer token when Headlamp runs in token-auth mode) must be granted:
+The plugin reaches Polaris through the Kubernetes API server's service proxy sub-resource (`/api/v1/namespaces/polaris/services/polaris-dashboard/proxy/...`). The Headlamp service account (or the user's bearer token when Headlamp runs in token-auth mode) must be granted:
 
 | Verb | API Group | Resource | Resource Name | Namespace |
 |------|-----------|----------|---------------|-----------|

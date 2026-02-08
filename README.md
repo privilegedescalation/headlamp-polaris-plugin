@@ -13,7 +13,7 @@ Adds a **Polaris** top-level sidebar section to Headlamp with the following view
 - **Namespace detail** -- per-namespace score, check counts, and a resource table showing pass/warning/danger per workload
 - **External link** -- quick jump to the native Polaris dashboard via the Kubernetes service proxy (from namespace detail view)
 
-Data is fetched from the Polaris dashboard API through the Kubernetes service proxy (`/api/v1/namespaces/polaris/services/polaris-dashboard:80/proxy/results.json`). The plugin is read-only -- it never writes to the cluster.
+Data is fetched from the Polaris dashboard API through the Kubernetes service proxy (`/api/v1/namespaces/polaris/services/polaris-dashboard/proxy/results.json`). The plugin is read-only -- it never writes to the cluster.
 
 Results are refreshed on a user-configurable interval (1 / 5 / 10 / 30 minutes, default 5). The setting is available in **Settings > Plugins > Polaris** and persists in the browser's localStorage.
 
@@ -204,7 +204,7 @@ vitest.config.mts                     -- Vitest configuration (jsdom environment
 The plugin fetches live audit results from the Polaris dashboard HTTP API via the Kubernetes service proxy:
 
 ```
-GET /api/v1/namespaces/polaris/services/polaris-dashboard:80/proxy/results.json
+GET /api/v1/namespaces/polaris/services/polaris-dashboard/proxy/results.json
 ```
 
 This endpoint is served by the `polaris-dashboard` ClusterIP service, which is created by the Polaris Helm chart when `dashboard.enabled: true`. The JSON response matches Polaris's `AuditData` schema (`pkg/validator/output.go`):
