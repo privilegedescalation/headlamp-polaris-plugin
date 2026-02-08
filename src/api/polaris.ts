@@ -157,8 +157,7 @@ export function computeScore(counts: ResultCounts): number {
 
 // --- Data fetching hook ---
 
-const POLARIS_API_PATH =
-  '/api/v1/namespaces/polaris/services/polaris-dashboard/proxy/results.json';
+const POLARIS_API_PATH = '/api/v1/namespaces/polaris/services/polaris-dashboard/proxy/results.json';
 
 interface PolarisDataState {
   data: AuditData | null;
