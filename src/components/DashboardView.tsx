@@ -51,7 +51,14 @@ function OverviewSection(props: { data: AuditData; counts: ResultCounts }) {
               name: 'Danger',
               value: <StatusLabel status="error">{counts.danger}</StatusLabel>,
             },
-            { name: 'Skipped', value: String(counts.skipped) },
+            {
+              name: 'Skipped',
+              value: (
+                <span title="Only counts checks with Severity=ignore. Annotation-based exemptions are not included.">
+                  {counts.skipped}
+                </span>
+              ),
+            },
           ]}
         />
       </SectionBox>

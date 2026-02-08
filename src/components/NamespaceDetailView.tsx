@@ -120,7 +120,11 @@ export default function NamespaceDetailView() {
             },
             {
               name: 'Skipped',
-              value: String(counts.skipped),
+              value: (
+                <span title="Only counts checks with Severity=ignore. Annotation-based exemptions are not included.">
+                  {counts.skipped}
+                </span>
+              ),
             },
           ]}
         />
