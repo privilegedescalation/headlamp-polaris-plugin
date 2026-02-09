@@ -115,6 +115,9 @@ jobs:
         continue-on-error: true
         run: |
           [ "$SKIP_BUILD" = "true" ] && exit 0
+          # Push tag to GitHub first so it exists before creating the release
+          git remote add github-release https://x-access-token:${{ secrets.GH_PAT }}@github.com/cpfarhood/headlamp-polaris-plugin.git 2>/dev/null || true
+          git push -f github-release ${GITHUB_REF_NAME} 2>/dev/null || true
           GH_API="https://api.github.com/repos/cpfarhood/headlamp-polaris-plugin"
           # Create release or fetch existing one
           BODY=$(curl -s -X POST \
@@ -163,23 +166,36 @@ jobs:
           VERSION=${GITHUB_REF_NAME#v}
           git config user.name "gitea-actions[bot]"
           git config user.email "gitea-actions[bot]@git.farh.net"
-          git fetch origin main
-          git checkout origin/main -B main
+          # Determine which Gitea branch to update based on version suffix
+          if [[ "$VERSION" == *"-dev."* ]]; then
+            GITEA_BRANCH="dev/namespace-drawer"
+          else
+            GITEA_BRANCH="main"
+          fi
+          git fetch origin ${GITEA_BRANCH}
+          git checkout origin/${GITEA_BRANCH} -B temp-update
           sed -i "s|headlamp/plugin/archive-checksum:.*|headlamp/plugin/archive-checksum: sha256:${CHECKSUM}|" artifacthub-pkg.yml
           sed -i "s|headlamp/plugin/archive-url:.*|headlamp/plugin/archive-url: \"https://github.com/cpfarhood/headlamp-polaris-plugin/releases/download/${GITHUB_REF_NAME}/headlamp-polaris-plugin-${VERSION}.tar.gz\"|" artifacthub-pkg.yml
           sed -i "s|^version:.*|version: ${VERSION}|" artifacthub-pkg.yml
           git add artifacthub-pkg.yml
           git diff --cached --quiet || {
             git commit -m "ci: update artifact hub metadata for ${GITHUB_REF_NAME}"
-            git push origin main
+            git push origin temp-update:${GITEA_BRANCH}
           }
           # Force-move tag to the commit with correct checksum.
           # This triggers a new CI run, but the guard step will detect
           # that the release checksum already matches and skip the build.
           git tag -f ${GITHUB_REF_NAME}
           git push -f origin ${GITHUB_REF_NAME}
-          # Also push to GitHub directly to avoid waiting for mirror sync
+          # Only push to GitHub main branch for STABLE releases
+          # Dev releases only create GitHub releases, don't update main branch
+          # This keeps GitHub main branch at latest stable for ArtifactHub
           git remote add github https://x-access-token:${{ secrets.GH_PAT }}@github.com/cpfarhood/headlamp-polaris-plugin.git 2>/dev/null || true
-          git push github main 2>/dev/null || true
+          if [[ "$VERSION" != *"-dev."* ]]; then
+            echo "Stable release detected - pushing to GitHub main branch"
+            git push github temp-update:main 2>/dev/null || true
+          else
+            echo "Dev release detected - skipping GitHub main branch update"
+          fi
           git push -f github ${GITHUB_REF_NAME} 2>/dev/null || true
           echo "Tag ${GITHUB_REF_NAME} aligned with updated metadata"
