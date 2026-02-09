@@ -83,6 +83,59 @@ npm run build
 npx @kinvolk/headlamp-plugin extract . /headlamp/plugins
 ```
 
+## Installing Dev/Preview Versions
+
+Dev preview versions (e.g., `v0.2.0-dev.4`) are published to [GitHub Releases](https://github.com/cpfarhood/headlamp-polaris-plugin/releases) but are **not available via ArtifactHub**. These versions contain experimental features and are intended for testing.
+
+To install a dev version, use the direct URL method:
+
+### Sidecar container pattern (recommended)
+
+Create a ConfigMap with the dev version URL:
+
+```yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: headlamp-plugin-config
+  namespace: kube-system
+data:
+  plugin.yml: |
+    plugins:
+      - url: https://github.com/cpfarhood/headlamp-polaris-plugin/releases/download/v0.2.0-dev.4/headlamp-polaris-plugin-0.2.0-dev.4.tar.gz
+```
+
+Then configure Headlamp to use a sidecar container that installs from this config:
+
+```yaml
+# In Headlamp Helm values or deployment
+containers:
+  - name: headlamp-plugin-installer
+    image: node:lts-alpine
+    command: ["/bin/sh", "-c"]
+    args:
+      - |
+        npm install -g @kinvolk/headlamp-plugin
+        headlamp-plugin install --config /config/plugin.yml
+    volumeMounts:
+      - name: plugins
+        mountPath: /headlamp/plugins
+      - name: plugin-config
+        mountPath: /config
+volumes:
+  - name: plugins
+    emptyDir: {}
+  - name: plugin-config
+    configMap:
+      name: headlamp-plugin-config
+```
+
+### Manual download
+
+Browse [GitHub Releases](https://github.com/cpfarhood/headlamp-polaris-plugin/releases), download the dev version tarball, and extract it to your Headlamp plugins directory.
+
+**Note:** Dev versions are tagged with the `-dev.N` suffix and may introduce breaking changes or unstable features. Use stable versions for production deployments.
+
 ## RBAC / Security Setup
 
 The plugin fetches audit data through the Kubernetes API server's **service proxy** sub-resource. The identity making the request (Headlamp's service account, or the user's own token in token-auth mode) must be granted:
