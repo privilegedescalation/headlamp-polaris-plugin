@@ -168,7 +168,7 @@ jobs:
           git config user.email "gitea-actions[bot]@git.farh.net"
           # Determine which Gitea branch to update based on version suffix
           if [[ "$VERSION" == *"-dev."* ]]; then
-            GITEA_BRANCH="dev/namespace-drawer"
+            GITEA_BRANCH="dev"
           else
             GITEA_BRANCH="main"
           fi
