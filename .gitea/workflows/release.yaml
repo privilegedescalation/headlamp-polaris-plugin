@@ -163,15 +163,21 @@ jobs:
           VERSION=${GITHUB_REF_NAME#v}
           git config user.name "gitea-actions[bot]"
           git config user.email "gitea-actions[bot]@git.farh.net"
-          git fetch origin main
-          git checkout origin/main -B main
+          # Determine which Gitea branch to update based on version suffix
+          if [[ "$VERSION" == *"-dev."* ]]; then
+            GITEA_BRANCH="dev/namespace-drawer"
+          else
+            GITEA_BRANCH="main"
+          fi
+          git fetch origin ${GITEA_BRANCH}
+          git checkout origin/${GITEA_BRANCH} -B temp-update
           sed -i "s|headlamp/plugin/archive-checksum:.*|headlamp/plugin/archive-checksum: sha256:${CHECKSUM}|" artifacthub-pkg.yml
-          sed -i "s|headlamp/plugin/archive-url:.*|headlamp/plugin/archive-url: \"https://github.com/cpfarhood/headlamp-polaris-plugin/releases/download/${GITHUB_REF_NAME}/headlamp-polaris-plugin-${VERSION}.tar.gz\"|" artifacthub-pkg.yml
+          sed -i "s|headlamp/plugin/archive-url:.*|headlamp/plugin/archive-url: \"https://github.com/${GITHUB_REPO}/releases/download/${GITHUB_REF_NAME}/headlamp-polaris-plugin-${VERSION}.tar.gz\"|" artifacthub-pkg.yml
           sed -i "s|^version:.*|version: ${VERSION}|" artifacthub-pkg.yml
           git add artifacthub-pkg.yml
           git diff --cached --quiet || {
             git commit -m "ci: update artifact hub metadata for ${GITHUB_REF_NAME}"
-            git push origin main
+            git push origin temp-update:${GITEA_BRANCH}
           }
           # Force-move tag to the commit with correct checksum.
           # This triggers a new CI run, but the guard step will detect
@@ -179,7 +185,8 @@ jobs:
           git tag -f ${GITHUB_REF_NAME}
           git push -f origin ${GITHUB_REF_NAME}
           # Also push to GitHub directly to avoid waiting for mirror sync
-          git remote add github https://x-access-token:${{ secrets.GH_PAT }}@github.com/cpfarhood/headlamp-polaris-plugin.git 2>/dev/null || true
-          git push github main 2>/dev/null || true
+          # Dev versions go to main branch of dev repo, stable versions to main of main repo
+          git remote add github https://x-access-token:${{ secrets.GH_PAT }}@github.com/${GITHUB_REPO}.git 2>/dev/null || true
+          git push github temp-update:main 2>/dev/null || true
           git push -f github ${GITHUB_REF_NAME} 2>/dev/null || true
           echo "Tag ${GITHUB_REF_NAME} aligned with updated metadata"
