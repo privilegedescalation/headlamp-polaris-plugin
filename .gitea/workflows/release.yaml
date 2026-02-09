@@ -18,14 +18,7 @@ jobs:
       - name: Check if release is already finalized
         run: |
           VERSION=${GITHUB_REF_NAME#v}
-          # Determine which GitHub repo to use based on version suffix
-          if [[ "$VERSION" == *"-dev."* ]]; then
-            GITHUB_REPO="cpfarhood/headlamp-polaris-plugin-dev"
-          else
-            GITHUB_REPO="cpfarhood/headlamp-polaris-plugin"
-          fi
-          echo "GITHUB_REPO=$GITHUB_REPO" >> $GITHUB_ENV
-          TARBALL_URL="https://github.com/${GITHUB_REPO}/releases/download/${GITHUB_REF_NAME}/headlamp-polaris-plugin-${VERSION}.tar.gz"
+          TARBALL_URL="https://github.com/cpfarhood/headlamp-polaris-plugin/releases/download/${GITHUB_REF_NAME}/headlamp-polaris-plugin-${VERSION}.tar.gz"
           HTTP_CODE=$(curl -sL -o /tmp/release.tar.gz -w "%{http_code}" "$TARBALL_URL" 2>/dev/null)
           if [ "$HTTP_CODE" = "200" ]; then
             ACTUAL="sha256:$(sha256sum /tmp/release.tar.gz | awk '{print $1}')"
@@ -122,10 +115,7 @@ jobs:
         continue-on-error: true
         run: |
           [ "$SKIP_BUILD" = "true" ] && exit 0
-          # Push tag to GitHub first so it exists before creating the release
-          git remote add github-release https://x-access-token:${{ secrets.GH_PAT }}@github.com/${GITHUB_REPO}.git 2>/dev/null || true
-          git push -f github-release ${GITHUB_REF_NAME} 2>/dev/null || true
-          GH_API="https://api.github.com/repos/${GITHUB_REPO}"
+          GH_API="https://api.github.com/repos/cpfarhood/headlamp-polaris-plugin"
           # Create release or fetch existing one
           BODY=$(curl -s -X POST \
             -H "Authorization: token ${{ secrets.GH_PAT }}" \
@@ -163,7 +153,7 @@ jobs:
           curl -sf -X POST \
             -H "Authorization: token ${{ secrets.GH_PAT }}" \
             -H "Content-Type: application/gzip" \
-            "https://uploads.github.com/repos/${GITHUB_REPO}/releases/${RELEASE_ID}/assets?name=${TARBALL}" \
+            "https://uploads.github.com/repos/cpfarhood/headlamp-polaris-plugin/releases/${RELEASE_ID}/assets?name=${TARBALL}" \
             --data-binary "@${TARBALL}"
           echo "GitHub release updated with same tarball"
 
@@ -173,23 +163,21 @@ jobs:
           VERSION=${GITHUB_REF_NAME#v}
           git config user.name "gitea-actions[bot]"
           git config user.email "gitea-actions[bot]@git.farh.net"
-
           # Determine which Gitea branch to update based on version suffix
           if [[ "$VERSION" == *"-dev."* ]]; then
             GITEA_BRANCH="dev/namespace-drawer"
           else
             GITEA_BRANCH="main"
           fi
-
           git fetch origin ${GITEA_BRANCH}
-          git checkout origin/${GITEA_BRANCH} -B ${GITEA_BRANCH}
+          git checkout origin/${GITEA_BRANCH} -B temp-update
           sed -i "s|headlamp/plugin/archive-checksum:.*|headlamp/plugin/archive-checksum: sha256:${CHECKSUM}|" artifacthub-pkg.yml
           sed -i "s|headlamp/plugin/archive-url:.*|headlamp/plugin/archive-url: \"https://github.com/${GITHUB_REPO}/releases/download/${GITHUB_REF_NAME}/headlamp-polaris-plugin-${VERSION}.tar.gz\"|" artifacthub-pkg.yml
           sed -i "s|^version:.*|version: ${VERSION}|" artifacthub-pkg.yml
           git add artifacthub-pkg.yml
           git diff --cached --quiet || {
             git commit -m "ci: update artifact hub metadata for ${GITHUB_REF_NAME}"
-            git push origin ${GITEA_BRANCH}
+            git push origin temp-update:${GITEA_BRANCH}
           }
           # Force-move tag to the commit with correct checksum.
           # This triggers a new CI run, but the guard step will detect
@@ -199,6 +187,6 @@ jobs:
           # Also push to GitHub directly to avoid waiting for mirror sync
           # Dev versions go to main branch of dev repo, stable versions to main of main repo
           git remote add github https://x-access-token:${{ secrets.GH_PAT }}@github.com/${GITHUB_REPO}.git 2>/dev/null || true
-          git push github ${GITEA_BRANCH}:main 2>/dev/null || true
+          git push github temp-update:main 2>/dev/null || true
           git push -f github ${GITHUB_REF_NAME} 2>/dev/null || true
           echo "Tag ${GITHUB_REF_NAME} aligned with updated metadata"
