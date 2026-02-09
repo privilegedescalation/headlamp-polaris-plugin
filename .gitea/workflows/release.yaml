@@ -196,6 +196,6 @@ jobs:
           # Also push to GitHub directly to avoid waiting for mirror sync
           # Dev versions go to main branch of dev repo, stable versions to main of main repo
           git remote add github https://x-access-token:${{ secrets.GH_PAT }}@github.com/${GITHUB_REPO}.git 2>/dev/null || true
-          git push github main 2>/dev/null || true
+          git push github ${GITEA_BRANCH}:main 2>/dev/null || true
           git push -f github ${GITHUB_REF_NAME} 2>/dev/null || true
           echo "Tag ${GITHUB_REF_NAME} aligned with updated metadata"
