@@ -6,7 +6,8 @@ import {
   SimpleTable,
   StatusLabel,
 } from '@kinvolk/headlamp-plugin/lib/CommonComponents';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
+import { useHistory, useLocation } from 'react-router-dom';
 import {
   computeScore,
   countResultsForItems,
@@ -213,8 +214,45 @@ function NamespaceDetailPanel({ namespace, onClose }: NamespaceDetailPanelProps)
 }
 
 export default function NamespacesListView() {
+  const location = useLocation();
+  const history = useHistory();
   const { data, loading, error } = usePolarisDataContext();
-  const [selectedNamespace, setSelectedNamespace] = useState<string | null>(null);
+
+  // Initialize from URL hash
+  const [selectedNamespace, setSelectedNamespace] = useState<string | null>(
+    location.hash.slice(1) || null
+  );
+
+  // Sync drawer state when URL hash changes (browser back/forward)
+  useEffect(() => {
+    const hashNs = location.hash.slice(1);
+    setSelectedNamespace(hashNs || null);
+  }, [location.hash]);
+
+  const openNamespace = (ns: string) => {
+    setSelectedNamespace(ns);
+    history.push(`${location.pathname}#${ns}`);
+  };
+
+  const closeNamespace = () => {
+    setSelectedNamespace(null);
+    history.push(location.pathname);
+  };
+
+  // Handle keyboard navigation (Escape key closes drawer)
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && selectedNamespace) {
+        closeNamespace();
+      }
+    };
+
+    if (selectedNamespace) {
+      window.addEventListener('keydown', handleKeyDown);
+      return () => window.removeEventListener('keydown', handleKeyDown);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedNamespace]);
 
   if (loading) {
     return <Loader title="Loading Polaris audit data..." />;
@@ -274,7 +312,7 @@ export default function NamespacesListView() {
               label: 'Namespace',
               getter: (row: NamespaceRow) => (
                 <button
-                  onClick={() => setSelectedNamespace(row.namespace)}
+                  onClick={() => openNamespace(row.namespace)}
                   style={{
                     border: 'none',
                     background: 'transparent',
@@ -322,7 +360,7 @@ export default function NamespacesListView() {
       {selectedNamespace && (
         <>
           <div
-            onClick={() => setSelectedNamespace(null)}
+            onClick={closeNamespace}
             style={{
               position: 'fixed',
               top: 0,
@@ -334,10 +372,7 @@ export default function NamespacesListView() {
             }}
             aria-label="Close panel backdrop"
           />
-          <NamespaceDetailPanel
-            namespace={selectedNamespace}
-            onClose={() => setSelectedNamespace(null)}
-          />
+          <NamespaceDetailPanel namespace={selectedNamespace} onClose={closeNamespace} />
         </>
       )}
     </>

@@ -1,4 +1,5 @@
 import { render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import React from 'react';
 import { MemoryRouter } from 'react-router-dom';
 import { describe, expect, it, vi } from 'vitest';
@@ -217,5 +218,75 @@ describe('NamespacesListView', () => {
 
     const errorScore = scoreLabels.find(el => el.textContent === '0%');
     expect(errorScore).toHaveAttribute('data-status', 'error');
+  });
+
+  it('opens drawer when namespace button is clicked and URL hash is updated', async () => {
+    const user = userEvent.setup();
+    const data = makeAuditData([
+      makeResult({
+        Name: 'deploy-a',
+        Namespace: 'alpha',
+        Results: {
+          c1: {
+            ID: 'c1',
+            Message: '',
+            Details: [],
+            Success: true,
+            Severity: 'warning',
+            Category: 'X',
+          },
+        },
+      }),
+    ]);
+
+    mockUsePolarisDataContext.mockReturnValue({
+      data,
+      loading: false,
+      error: null,
+    });
+
+    renderWithRouter(<NamespacesListView />);
+
+    // Click the namespace button
+    const alphaButton = screen.getByText('alpha');
+    await user.click(alphaButton);
+
+    // Drawer should open (check for the panel title)
+    expect(screen.getByText(/Polaris — alpha/)).toBeInTheDocument();
+  });
+
+  it('initializes drawer from URL hash', () => {
+    const data = makeAuditData([
+      makeResult({
+        Name: 'deploy-a',
+        Namespace: 'test-ns',
+        Results: {
+          c1: {
+            ID: 'c1',
+            Message: '',
+            Details: [],
+            Success: true,
+            Severity: 'warning',
+            Category: 'X',
+          },
+        },
+      }),
+    ]);
+
+    mockUsePolarisDataContext.mockReturnValue({
+      data,
+      loading: false,
+      error: null,
+    });
+
+    // Render with initial hash in URL
+    render(
+      <MemoryRouter initialEntries={['/polaris/namespaces#test-ns']}>
+        <NamespacesListView />
+      </MemoryRouter>
+    );
+
+    // Drawer should be open with the namespace from hash
+    expect(screen.getByText(/Polaris — test-ns/)).toBeInTheDocument();
   });
 });
