@@ -1,0 +1,102 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      packages: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Check if release is already finalized
+        run: |
+          VERSION=${GITHUB_REF_NAME#v}
+          TARBALL_URL="https://github.com/${{ github.repository }}/releases/download/${GITHUB_REF_NAME}/headlamp-polaris-plugin-${VERSION}.tar.gz"
+          HTTP_CODE=$(curl -sL -o /tmp/release.tar.gz -w "%{http_code}" "$TARBALL_URL" 2>/dev/null)
+          if [ "$HTTP_CODE" = "200" ]; then
+            ACTUAL="sha256:$(sha256sum /tmp/release.tar.gz | awk '{print $1}')"
+            EXPECTED=$(grep 'archive-checksum' artifacthub-pkg.yml | awk '{print $2}')
+            echo "Release tarball checksum: $ACTUAL"
+            echo "Metadata checksum:        $EXPECTED"
+            if [ "$ACTUAL" = "$EXPECTED" ]; then
+              echo "SKIP_BUILD=true" >> $GITHUB_ENV
+              echo "Checksums match - release is finalized, nothing to do"
+            fi
+          else
+            echo "No existing release (HTTP $HTTP_CODE) - will build"
+          fi
+          rm -f /tmp/release.tar.gz
+
+      - name: Setup Node.js
+        if: env.SKIP_BUILD != 'true'
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install dependencies
+        if: env.SKIP_BUILD != 'true'
+        run: npm ci
+
+      - name: Build plugin
+        if: env.SKIP_BUILD != 'true'
+        run: npx @kinvolk/headlamp-plugin build
+
+      - name: Package tarball
+        if: env.SKIP_BUILD != 'true'
+        run: npx @kinvolk/headlamp-plugin package
+
+      - name: Compute tarball checksum
+        if: env.SKIP_BUILD != 'true'
+        run: |
+          TARBALL=$(ls *.tar.gz)
+          CHECKSUM=$(sha256sum "$TARBALL" | awk '{print $1}')
+          echo "TARBALL=$TARBALL" >> $GITHUB_ENV
+          echo "CHECKSUM=$CHECKSUM" >> $GITHUB_ENV
+          echo "Tarball: $TARBALL"
+          echo "Checksum: sha256:$CHECKSUM"
+
+      - name: Create GitHub release and upload tarball
+        if: env.SKIP_BUILD != 'true'
+        uses: softprops/action-gh-release@v1
+        with:
+          files: ${{ env.TARBALL }}
+          fail_on_unmatched_files: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Update metadata and align tag
+        if: env.SKIP_BUILD != 'true'
+        run: |
+          VERSION=${GITHUB_REF_NAME#v}
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          # Update metadata
+          git fetch origin main
+          git checkout origin/main -B temp-update
+          sed -i "s|headlamp/plugin/archive-checksum:.*|headlamp/plugin/archive-checksum: sha256:${CHECKSUM}|" artifacthub-pkg.yml
+          sed -i "s|headlamp/plugin/archive-url:.*|headlamp/plugin/archive-url: \"https://github.com/${{ github.repository }}/releases/download/${GITHUB_REF_NAME}/headlamp-polaris-plugin-${VERSION}.tar.gz\"|" artifacthub-pkg.yml
+          sed -i "s|^version:.*|version: ${VERSION}|" artifacthub-pkg.yml
+          git add artifacthub-pkg.yml
+
+          if ! git diff --cached --quiet; then
+            git commit -m "ci: update artifact hub metadata for ${GITHUB_REF_NAME}"
+            git push origin temp-update:main
+          fi
+
+          # Force-move tag to the commit with correct checksum.
+          # This triggers a new CI run, but the guard step will detect
+          # that the release checksum already matches and skip the build.
+          git tag -f ${GITHUB_REF_NAME}
+          git push -f origin ${GITHUB_REF_NAME}
+          echo "Tag ${GITHUB_REF_NAME} aligned with updated metadata"
