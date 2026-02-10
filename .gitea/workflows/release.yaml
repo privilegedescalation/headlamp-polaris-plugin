@@ -187,15 +187,17 @@ jobs:
           # that the release checksum already matches and skip the build.
           git tag -f ${GITHUB_REF_NAME}
           git push -f origin ${GITHUB_REF_NAME}
-          # Only push to GitHub main branch for STABLE releases
-          # Dev releases only create GitHub releases, don't update main branch
-          # This keeps GitHub main branch at latest stable for ArtifactHub
+          # Push branches and tags to GitHub
+          # - Stable releases: push to main branch
+          # - Dev releases: push to dev branch
+          # This allows separate ArtifactHub packages for stable (main) and dev (dev branch)
           git remote add github https://x-access-token:${{ secrets.GH_PAT }}@github.com/cpfarhood/headlamp-polaris-plugin.git 2>/dev/null || true
           if [[ "$VERSION" != *"-dev."* ]]; then
             echo "Stable release detected - pushing to GitHub main branch"
             git push github temp-update:main 2>/dev/null || true
           else
-            echo "Dev release detected - skipping GitHub main branch update"
+            echo "Dev release detected - pushing to GitHub dev branch"
+            git push github temp-update:dev 2>/dev/null || true
           fi
           git push -f github ${GITHUB_REF_NAME} 2>/dev/null || true
           echo "Tag ${GITHUB_REF_NAME} aligned with updated metadata"
