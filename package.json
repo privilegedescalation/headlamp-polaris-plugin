@@ -1,6 +1,6 @@
 {
   "name": "headlamp-polaris-plugin",
-  "version": "0.1.7",
+  "version": "0.2.0-dev.5",
   "description": "Headlamp plugin for Fairwinds Polaris audit results",
   "scripts": {
     "start": "headlamp-plugin start",

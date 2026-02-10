@@ -1,4 +1,5 @@
 import { render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import React from 'react';
 import { MemoryRouter } from 'react-router-dom';
 import { describe, expect, it, vi } from 'vitest';
@@ -117,7 +118,7 @@ describe('NamespacesListView', () => {
     expect(screen.getByText('No Polaris audit results found.')).toBeInTheDocument();
   });
 
-  it('renders namespace rows with correct scores and links', () => {
+  it('renders namespace rows with correct scores and buttons', () => {
     const data = makeAuditData([
       makeResult({
         Name: 'deploy-a',
@@ -157,12 +158,14 @@ describe('NamespacesListView', () => {
 
     renderWithRouter(<NamespacesListView />);
 
-    // Namespace links
-    const alphaLink = screen.getByText('alpha');
-    expect(alphaLink.closest('a')).toHaveAttribute('href', '/polaris/ns/alpha');
+    // Namespace buttons (now buttons instead of links for drawer)
+    const alphaButton = screen.getByText('alpha');
+    expect(alphaButton).toBeInTheDocument();
+    expect(alphaButton.tagName).toBe('BUTTON');
 
-    const betaLink = screen.getByText('beta');
-    expect(betaLink.closest('a')).toHaveAttribute('href', '/polaris/ns/beta');
+    const betaButton = screen.getByText('beta');
+    expect(betaButton).toBeInTheDocument();
+    expect(betaButton.tagName).toBe('BUTTON');
   });
 
   it('uses correct scoreStatus: >=80 success, >=50 warning, <50 error', () => {
@@ -215,5 +218,75 @@ describe('NamespacesListView', () => {
 
     const errorScore = scoreLabels.find(el => el.textContent === '0%');
     expect(errorScore).toHaveAttribute('data-status', 'error');
+  });
+
+  it('opens drawer when namespace button is clicked and URL hash is updated', async () => {
+    const user = userEvent.setup();
+    const data = makeAuditData([
+      makeResult({
+        Name: 'deploy-a',
+        Namespace: 'alpha',
+        Results: {
+          c1: {
+            ID: 'c1',
+            Message: '',
+            Details: [],
+            Success: true,
+            Severity: 'warning',
+            Category: 'X',
+          },
+        },
+      }),
+    ]);
+
+    mockUsePolarisDataContext.mockReturnValue({
+      data,
+      loading: false,
+      error: null,
+    });
+
+    renderWithRouter(<NamespacesListView />);
+
+    // Click the namespace button
+    const alphaButton = screen.getByText('alpha');
+    await user.click(alphaButton);
+
+    // Drawer should open (check for the panel title)
+    expect(screen.getByText(/Polaris — alpha/)).toBeInTheDocument();
+  });
+
+  it('initializes drawer from URL hash', () => {
+    const data = makeAuditData([
+      makeResult({
+        Name: 'deploy-a',
+        Namespace: 'test-ns',
+        Results: {
+          c1: {
+            ID: 'c1',
+            Message: '',
+            Details: [],
+            Success: true,
+            Severity: 'warning',
+            Category: 'X',
+          },
+        },
+      }),
+    ]);
+
+    mockUsePolarisDataContext.mockReturnValue({
+      data,
+      loading: false,
+      error: null,
+    });
+
+    // Render with initial hash in URL
+    render(
+      <MemoryRouter initialEntries={['/polaris/namespaces#test-ns']}>
+        <NamespacesListView />
+      </MemoryRouter>
+    );
+
+    // Drawer should be open with the namespace from hash
+    expect(screen.getByText(/Polaris — test-ns/)).toBeInTheDocument();
   });
 });

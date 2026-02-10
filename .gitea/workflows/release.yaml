@@ -111,54 +111,6 @@ jobs:
             "${API_URL}/releases/${RELEASE_ID}/assets?name=${TARBALL}"
           echo "Gitea release updated"
 
-      - name: Create GitHub release
-        continue-on-error: true
-        run: |
-          [ "$SKIP_BUILD" = "true" ] && exit 0
-          # Push tag to GitHub first so it exists before creating the release
-          git remote add github-release https://x-access-token:${{ secrets.GH_PAT }}@github.com/cpfarhood/headlamp-polaris-plugin.git 2>/dev/null || true
-          git push -f github-release ${GITHUB_REF_NAME} 2>/dev/null || true
-          GH_API="https://api.github.com/repos/cpfarhood/headlamp-polaris-plugin"
-          # Create release or fetch existing one
-          BODY=$(curl -s -X POST \
-            -H "Authorization: token ${{ secrets.GH_PAT }}" \
-            -H "Accept: application/vnd.github+json" \
-            "${GH_API}/releases" \
-            -d "{\"tag_name\":\"${GITHUB_REF_NAME}\",\"name\":\"${GITHUB_REF_NAME}\",\"generate_release_notes\":true}")
-          RELEASE_ID=$(echo "$BODY" | node -e "process.stdin.resume();let d='';process.stdin.on('data',c=>d+=c);process.stdin.on('end',()=>console.log(JSON.parse(d).id))")
-          if [ "$RELEASE_ID" = "undefined" ]; then
-            echo "Release already exists, fetching it..."
-            BODY=$(curl -sf \
-              -H "Authorization: token ${{ secrets.GH_PAT }}" \
-              -H "Accept: application/vnd.github+json" \
-              "${GH_API}/releases/tags/${GITHUB_REF_NAME}")
-            RELEASE_ID=$(echo "$BODY" | node -e "process.stdin.resume();let d='';process.stdin.on('data',c=>d+=c);process.stdin.on('end',()=>console.log(JSON.parse(d).id))")
-          fi
-          echo "GitHub Release ID: $RELEASE_ID"
-          # Delete existing assets with the same name
-          ASSETS=$(curl -sf \
-            -H "Authorization: token ${{ secrets.GH_PAT }}" \
-            -H "Accept: application/vnd.github+json" \
-            "${GH_API}/releases/${RELEASE_ID}/assets")
-          echo "$ASSETS" | node -e "
-            process.stdin.resume();let d='';
-            process.stdin.on('data',c=>d+=c);
-            process.stdin.on('end',()=>{
-              const assets=JSON.parse(d);
-              assets.filter(a=>a.name==='${TARBALL}').forEach(a=>console.log(a.id));
-            })" | while read -r ASSET_ID; do
-            echo "Deleting existing asset $ASSET_ID..."
-            curl -sf -X DELETE \
-              -H "Authorization: token ${{ secrets.GH_PAT }}" \
-              "${GH_API}/releases/assets/${ASSET_ID}"
-          done
-          # Upload tarball
-          curl -sf -X POST \
-            -H "Authorization: token ${{ secrets.GH_PAT }}" \
-            -H "Content-Type: application/gzip" \
-            "https://uploads.github.com/repos/cpfarhood/headlamp-polaris-plugin/releases/${RELEASE_ID}/assets?name=${TARBALL}" \
-            --data-binary "@${TARBALL}"
-          echo "GitHub release updated with same tarball"
 
       - name: Update metadata and align tag
         run: |
@@ -187,15 +139,5 @@ jobs:
           # that the release checksum already matches and skip the build.
           git tag -f ${GITHUB_REF_NAME}
           git push -f origin ${GITHUB_REF_NAME}
-          # Only push to GitHub main branch for STABLE releases
-          # Dev releases only create GitHub releases, don't update main branch
-          # This keeps GitHub main branch at latest stable for ArtifactHub
-          git remote add github https://x-access-token:${{ secrets.GH_PAT }}@github.com/cpfarhood/headlamp-polaris-plugin.git 2>/dev/null || true
-          if [[ "$VERSION" != *"-dev."* ]]; then
-            echo "Stable release detected - pushing to GitHub main branch"
-            git push github temp-update:main 2>/dev/null || true
-          else
-            echo "Dev release detected - skipping GitHub main branch update"
-          fi
-          git push -f github ${GITHUB_REF_NAME} 2>/dev/null || true
           echo "Tag ${GITHUB_REF_NAME} aligned with updated metadata"
+          echo "Note: GitHub sync handled by Gitea mirror configuration"

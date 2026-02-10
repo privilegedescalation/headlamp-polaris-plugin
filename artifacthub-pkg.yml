@@ -1,9 +1,11 @@
-version: 0.1.7
+version: 0.2.0-dev.5
 name: headlamp-polaris-plugin
 displayName: Polaris
 createdAt: "2026-02-05T19:00:00Z"
+prerelease: true
 description: >-
-  Surfaces Fairwinds Polaris audit results inside the Headlamp UI.
+  [DEV PREVIEW] Surfaces Fairwinds Polaris audit results inside the Headlamp UI
+  with a new drawer-based namespace navigation pattern.
   Shows cluster score, check summary, and per-namespace drill-downs
   with per-resource pass/warning/danger breakdowns. Data is fetched
   read-only via the Kubernetes service proxy to the Polaris dashboard.
@@ -28,7 +30,7 @@ maintainers:
   - name: cpfarhood
     email: "chris@farhood.org"
 annotations:
-  headlamp/plugin/archive-url: "https://github.com/cpfarhood/headlamp-polaris-plugin/releases/download/v0.1.7/headlamp-polaris-plugin-0.1.7.tar.gz"
+  headlamp/plugin/archive-url: "https://github.com/cpfarhood/headlamp-polaris-plugin/releases/download/v0.2.0-dev.5/headlamp-polaris-plugin-0.2.0-dev.5.tar.gz"
   headlamp/plugin/version-compat: ">=0.26"
-  headlamp/plugin/archive-checksum: sha256:0000000000000000000000000000000000000000000000000000000000000000
+  headlamp/plugin/archive-checksum: sha256:cb8d03f52022590fce5565b4f08a3fb99d0e264f3ff6a1c99ab59bf48b33ef79
   headlamp/plugin/distro-compat: in-cluster

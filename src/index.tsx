@@ -6,7 +6,6 @@ import {
 import React from 'react';
 import { PolarisDataProvider } from './api/PolarisDataContext';
 import DashboardView from './components/DashboardView';
-import NamespaceDetailView from './components/NamespaceDetailView';
 import NamespacesListView from './components/NamespacesListView';
 import PolarisSettings from './components/PolarisSettings';
 
@@ -58,18 +57,6 @@ registerRoute({
   component: () => (
     <PolarisDataProvider>
       <NamespacesListView />
-    </PolarisDataProvider>
-  ),
-});
-
-registerRoute({
-  path: '/polaris/ns/:namespace',
-  sidebar: 'polaris-namespaces',
-  name: 'polaris-namespace',
-  exact: true,
-  component: () => (
-    <PolarisDataProvider>
-      <NamespaceDetailView />
     </PolarisDataProvider>
   ),
 });
