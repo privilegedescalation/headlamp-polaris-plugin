@@ -118,14 +118,14 @@ jobs:
           GITHUB_API="https://api.github.com/repos/cpfarhood/headlamp-polaris-plugin"
           # Check if release exists
           RELEASE_DATA=$(curl -sf \
-            -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+            -H "Authorization: token ${{ secrets.GH_TOKEN }}" \
             "${GITHUB_API}/releases/tags/${GITHUB_REF_NAME}" || echo "{}")
           RELEASE_ID=$(echo "$RELEASE_DATA" | node -e "process.stdin.resume();let d='';process.stdin.on('data',c=>d+=c);process.stdin.on('end',()=>console.log(JSON.parse(d).id||''))")
 
           if [ -z "$RELEASE_ID" ]; then
             # Create new release
             RELEASE_DATA=$(curl -sf -X POST \
-              -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+              -H "Authorization: token ${{ secrets.GH_TOKEN }}" \
               -H "Content-Type: application/json" \
               "${GITHUB_API}/releases" \
               -d "{\"tag_name\":\"${GITHUB_REF_NAME}\",\"name\":\"${GITHUB_REF_NAME}\",\"draft\":false,\"prerelease\":false}")
@@ -136,7 +136,7 @@ jobs:
           # Upload tarball to GitHub
           UPLOAD_URL=$(echo "$RELEASE_DATA" | node -e "process.stdin.resume();let d='';process.stdin.on('data',c=>d+=c);process.stdin.on('end',()=>{const r=JSON.parse(d);console.log(r.upload_url||'https://uploads.github.com/repos/cpfarhood/headlamp-polaris-plugin/releases/${RELEASE_ID}/assets')})" | sed 's/{.*}//')
           curl -sf -X POST \
-            -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+            -H "Authorization: token ${{ secrets.GH_TOKEN }}" \
             -H "Content-Type: application/gzip" \
             --data-binary "@${TARBALL}" \
             "${UPLOAD_URL}?name=${TARBALL}"
