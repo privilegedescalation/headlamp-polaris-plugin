@@ -43,19 +43,26 @@ export default function PolarisSettings(props: PluginSettingsProps) {
           {
             name: 'Dashboard URL',
             value: (
-              <input
-                type="text"
-                value={currentUrl}
-                onChange={handleUrlChange}
-                placeholder="/api/v1/namespaces/polaris/services/polaris-dashboard:80/proxy/"
-                style={{
-                  width: '100%',
-                  padding: '4px 8px',
-                  border: '1px solid #ccc',
-                  borderRadius: '4px',
-                  fontSize: '14px',
-                }}
-              />
+              <div>
+                <input
+                  type="text"
+                  value={currentUrl}
+                  onChange={handleUrlChange}
+                  placeholder="/api/v1/namespaces/polaris/services/polaris-dashboard:80/proxy/"
+                  style={{
+                    width: '100%',
+                    padding: '4px 8px',
+                    border: '1px solid #ccc',
+                    borderRadius: '4px',
+                    fontSize: '14px',
+                  }}
+                />
+                <div style={{ fontSize: '12px', color: '#666', marginTop: '4px' }}>
+                  Examples:<br />
+                  • K8s proxy: <code>/api/v1/namespaces/polaris/services/polaris-dashboard:80/proxy/</code><br />
+                  • Full URL: <code>https://my-polaris.example.com</code>
+                </div>
+              </div>
             ),
           },
         ]}

@@ -178,6 +178,10 @@ function getPolarisApiPath(): string {
   return baseUrl.endsWith('/') ? `${baseUrl}results.json` : `${baseUrl}/results.json`;
 }
 
+function isFullUrl(url: string): boolean {
+  return url.startsWith('http://') || url.startsWith('https://');
+}
+
 interface PolarisDataState {
   data: AuditData | null;
   loading: boolean;
@@ -195,7 +199,21 @@ export function usePolarisData(refreshIntervalSeconds: number): PolarisDataState
 
     async function fetchData() {
       try {
-        const result: AuditData = await ApiProxy.request(getPolarisApiPath());
+        const apiPath = getPolarisApiPath();
+        let result: AuditData;
+
+        if (isFullUrl(apiPath)) {
+          // Direct fetch for full URLs
+          const response = await fetch(apiPath);
+          if (!response.ok) {
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+          }
+          result = await response.json();
+        } else {
+          // Kubernetes proxy for relative URLs
+          result = await ApiProxy.request(apiPath);
+        }
+
         if (!cancelled) {
           setData(result);
           setError(null);
@@ -203,17 +221,31 @@ export function usePolarisData(refreshIntervalSeconds: number): PolarisDataState
         }
       } catch (err: unknown) {
         if (cancelled) return;
+        const apiPath = getPolarisApiPath();
         const status = (err as { status?: number }).status;
-        if (status === 403) {
-          setError(
-            'Access denied (403). Check that your RBAC permissions allow proxying to the Polaris service.'
-          );
-        } else if (status === 404 || status === 503) {
-          setError(
-            'Polaris dashboard not reachable. Ensure Polaris is installed in the polaris namespace.'
-          );
+
+        if (isFullUrl(apiPath)) {
+          // Full URL errors
+          if (status === 403) {
+            setError('Access denied (403). Check authentication and CORS configuration.');
+          } else if (status === 404) {
+            setError('Polaris dashboard not found (404). Verify the URL is correct.');
+          } else {
+            setError(`Failed to fetch from ${apiPath}: ${String(err)}`);
+          }
         } else {
-          setError(`Failed to fetch Polaris data: ${String(err)}`);
+          // Kubernetes proxy errors
+          if (status === 403) {
+            setError(
+              'Access denied (403). Check that your RBAC permissions allow proxying to the Polaris service.'
+            );
+          } else if (status === 404 || status === 503) {
+            setError(
+              'Polaris dashboard not reachable. Ensure Polaris is installed in the configured namespace.'
+            );
+          } else {
+            setError(`Failed to fetch Polaris data: ${String(err)}`);
+          }
         }
         setLoading(false);
       }
