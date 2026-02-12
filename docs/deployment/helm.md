@@ -185,7 +185,7 @@ data:
   plugin.yml: |
     - name: headlamp-polaris-plugin
       version: 0.3.5
-      url: https://github.com/privilegedescalation/headlamp-polaris-plugin/releases/download/v0.3.5/headlamp-polaris-plugin-0.3.5.tar.gz
+      url: https://github.com/privilegedescalation/headlamp-polaris-plugin/releases/download/v0.3.10/polaris-0.3.10.tar.gz
 ```
 
 Apply ConfigMap then deploy Headlamp:
@@ -373,7 +373,7 @@ kubectl -n kube-system edit configmap headlamp-plugin-config
 
 # Update version and URL:
 # version: 0.3.6
-# url: https://github.com/.../v0.3.6/headlamp-polaris-plugin-0.3.6.tar.gz
+# url: https://github.com/.../v0.3.6/polaris-0.3.10.tar.gz
 
 # Restart deployment to trigger init container
 kubectl -n kube-system rollout restart deployment/headlamp

@@ -9,7 +9,7 @@ description: >-
   read-only via the Kubernetes service proxy to the Polaris dashboard.
   Requires a Role granting `get` on `services/proxy` for the
   `polaris-dashboard` service in the `polaris` namespace.
-license: MIT
+license: Apache-2.0
 homeURL: "https://github.com/privilegedescalation/headlamp-polaris-plugin"
 category: security
 keywords:

@@ -113,7 +113,7 @@ data:
   plugin.yml: |
     - name: headlamp-polaris-plugin
       version: 0.3.4
-      url: https://github.com/privilegedescalation/headlamp-polaris-plugin/releases/download/v0.3.4/headlamp-polaris-plugin-0.3.4.tar.gz
+      url: https://github.com/privilegedescalation/headlamp-polaris-plugin/releases/download/v0.3.10/polaris-0.3.10.tar.gz
 ```
 
 ### Method 3: Volume Mount (Development)

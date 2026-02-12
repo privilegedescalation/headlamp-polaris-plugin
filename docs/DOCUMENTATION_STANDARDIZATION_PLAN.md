@@ -54,7 +54,7 @@ README.md              # Main entry point with badges, quick links
 CHANGELOG.md           # Keep a Changelog format, semantic versioning
 CONTRIBUTING.md        # Development workflow, branching, PR process
 SECURITY.md            # Security model, vulnerability reporting, RBAC
-LICENSE               # MIT License
+LICENSE               # Apache-2.0 License
 package.json          # Plugin metadata
 ```
 

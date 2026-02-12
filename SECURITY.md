@@ -355,4 +355,4 @@ When a security vulnerability is identified:
 
 ## License
 
-This plugin is provided under the MIT License. See [LICENSE](LICENSE) for details.
+This plugin is provided under the Apache-2.0 License. See [LICENSE](LICENSE) for details.

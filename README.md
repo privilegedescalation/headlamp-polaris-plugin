@@ -3,7 +3,7 @@
 [![Artifact Hub](https://img.shields.io/endpoint?url=https://artifacthub.io/badge/repository/polaris)](https://artifacthub.io/packages/headlamp/polaris/headlamp-polaris-plugin)
 [![CI](https://github.com/privilegedescalation/headlamp-polaris-plugin/actions/workflows/ci.yaml/badge.svg)](https://github.com/privilegedescalation/headlamp-polaris-plugin/actions/workflows/ci.yaml)
 [![E2E Tests](https://github.com/privilegedescalation/headlamp-polaris-plugin/actions/workflows/e2e.yaml/badge.svg)](https://github.com/privilegedescalation/headlamp-polaris-plugin/actions/workflows/e2e.yaml)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![License: Apache-2.0](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 
 A [Headlamp](https://headlamp.dev/) plugin that surfaces [Fairwinds Polaris](https://polaris.docs.fairwinds.com/) audit results directly in the Headlamp UI.
 
@@ -62,7 +62,7 @@ config:
 pluginsManager:
   sources:
     - name: headlamp-polaris-plugin
-      url: https://github.com/privilegedescalation/headlamp-polaris-plugin/releases/download/v0.3.5/headlamp-polaris-plugin-0.3.5.tar.gz
+      url: https://github.com/privilegedescalation/headlamp-polaris-plugin/releases/download/v0.3.10/polaris-0.3.10.tar.gz
 ```
 
 Or install via the Headlamp UI:
@@ -99,8 +99,8 @@ sidecars:
 Download the `.tar.gz` from the [GitHub releases page](https://github.com/privilegedescalation/headlamp-polaris-plugin/releases), then extract into Headlamp's plugin directory:
 
 ```bash
-wget https://github.com/privilegedescalation/headlamp-polaris-plugin/releases/download/v0.3.5/headlamp-polaris-plugin-0.3.5.tar.gz
-tar xzf headlamp-polaris-plugin-0.3.5.tar.gz -C /headlamp/plugins/
+wget https://github.com/privilegedescalation/headlamp-polaris-plugin/releases/download/v0.3.10/polaris-0.3.10.tar.gz
+tar xzf polaris-0.3.10.tar.gz -C /headlamp/plugins/
 ```
 
 ### Option 4: Build from Source
@@ -372,7 +372,7 @@ Contributions are welcome! Please read [CONTRIBUTING.md](CONTRIBUTING.md) for:
 
 ## License
 
-[MIT License](LICENSE) - see LICENSE file for details.
+[Apache-2.0 License](LICENSE) - see LICENSE file for details.
 
 ---
 
