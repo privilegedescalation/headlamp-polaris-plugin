@@ -172,21 +172,28 @@ Every proxied request is recorded in Kubernetes API audit logs as a `get` on `se
 
 ## Documentation
 
-Comprehensive documentation is available in the `docs/` directory:
+📚 **[Complete Documentation](docs/README.md)** - Documentation hub with all guides
 
-| Document                                          | Description                                                           |
-| ------------------------------------------------- | --------------------------------------------------------------------- |
-| **[ARCHITECTURE.md](docs/ARCHITECTURE.md)**       | System architecture, data flow, component hierarchy, design decisions |
-| **[DEPLOYMENT.md](docs/DEPLOYMENT.md)**           | Complete deployment guide with Helm, FluxCD, RBAC, network policies   |
-| **[SECURITY.md](SECURITY.md)**                    | Security model, RBAC requirements, vulnerability reporting            |
-| **[TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md)** | Common issues, debugging, RBAC testing, network debugging             |
-| **[TESTING.md](docs/TESTING.md)**                 | Unit tests, E2E tests, CI/CD, best practices                          |
-| **[CONTRIBUTING.md](CONTRIBUTING.md)**            | Development workflow, branching strategy, PR process                  |
-| **[CHANGELOG.md](CHANGELOG.md)**                  | Complete release history (v0.0.1 to current)                          |
+### Quick Links
+
+- **[Quick Start](docs/getting-started/quick-start.md)** - Get up and running in 5 minutes
+- **[Installation Guide](docs/getting-started/installation.md)** - All installation methods (Plugin Manager, Sidecar, Manual, Source)
+- **[Troubleshooting](docs/troubleshooting/README.md)** - Quick diagnosis and common issues
+
+### Comprehensive Guides
+
+| Guide | Description |
+|-------|-------------|
+| **[Architecture](docs/architecture/overview.md)** | System architecture, data flow, component hierarchy, design decisions |
+| **[Deployment](docs/deployment/helm.md)** | Production deployment with Helm, Kubernetes, FluxCD |
+| **[Security](SECURITY.md)** | Security model, RBAC requirements, vulnerability reporting |
+| **[Testing](docs/development/testing.md)** | Unit tests, E2E tests, CI/CD, best practices |
+| **[Contributing](CONTRIBUTING.md)** | Development workflow, branching strategy, PR process |
+| **[Changelog](CHANGELOG.md)** | Complete release history (v0.0.1 to current) |
 
 ## Troubleshooting
 
-**For comprehensive troubleshooting, see [docs/TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md).**
+**For comprehensive troubleshooting, see [docs/troubleshooting/README.md](docs/troubleshooting/README.md).**
 
 Quick reference:
 
