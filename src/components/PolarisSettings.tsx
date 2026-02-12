@@ -105,12 +105,20 @@ export default function PolarisSettings(props: PluginSettingsProps) {
                   style={{
                     width: '100%',
                     padding: '4px 8px',
-                    border: '1px solid #ccc',
+                    border: '1px solid var(--mui-palette-divider, #e0e0e0)',
                     borderRadius: '4px',
                     fontSize: '14px',
+                    backgroundColor: 'var(--mui-palette-background-paper, #fff)',
+                    color: 'var(--mui-palette-text-primary, #000)',
                   }}
                 />
-                <div style={{ fontSize: '12px', color: '#666', marginTop: '4px' }}>
+                <div
+                  style={{
+                    fontSize: '12px',
+                    color: 'var(--mui-palette-text-secondary, #666)',
+                    marginTop: '4px',
+                  }}
+                >
                   Examples:
                   <br />• K8s proxy:{' '}
                   <code>/api/v1/namespaces/polaris/services/polaris-dashboard:80/proxy/</code>
@@ -128,8 +136,12 @@ export default function PolarisSettings(props: PluginSettingsProps) {
                   disabled={testing}
                   style={{
                     padding: '6px 16px',
-                    backgroundColor: testing ? '#ccc' : '#1976d2',
-                    color: 'white',
+                    backgroundColor: testing
+                      ? 'var(--mui-palette-action-disabledBackground, #e0e0e0)'
+                      : 'var(--mui-palette-primary-main, #1976d2)',
+                    color: testing
+                      ? 'var(--mui-palette-action-disabled, #9e9e9e)'
+                      : 'var(--mui-palette-primary-contrastText, #fff)',
                     border: 'none',
                     borderRadius: '4px',
                     cursor: testing ? 'not-allowed' : 'pointer',

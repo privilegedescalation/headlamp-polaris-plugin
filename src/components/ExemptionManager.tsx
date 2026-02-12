@@ -149,8 +149,8 @@ export default function ExemptionManager({
                 <button
                   style={{
                     padding: '4px 12px',
-                    backgroundColor: '#f44336',
-                    color: 'white',
+                    backgroundColor: 'var(--mui-palette-error-main, #f44336)',
+                    color: 'var(--mui-palette-error-contrastText, #fff)',
                     border: 'none',
                     borderRadius: '4px',
                     cursor: 'pointer',
@@ -176,10 +176,19 @@ export default function ExemptionManager({
           style={{
             marginTop: '8px',
             padding: '6px 16px',
-            backgroundColor: failingChecks.length === 0 ? '#ccc' : 'transparent',
-            color: failingChecks.length === 0 ? '#999' : '#1976d2',
+            backgroundColor:
+              failingChecks.length === 0
+                ? 'var(--mui-palette-action-disabledBackground, #e0e0e0)'
+                : 'transparent',
+            color:
+              failingChecks.length === 0
+                ? 'var(--mui-palette-action-disabled, #9e9e9e)'
+                : 'var(--mui-palette-primary-main, #1976d2)',
             border: '1px solid',
-            borderColor: failingChecks.length === 0 ? '#ccc' : '#1976d2',
+            borderColor:
+              failingChecks.length === 0
+                ? 'var(--mui-palette-divider, #e0e0e0)'
+                : 'var(--mui-palette-primary-main, #1976d2)',
             borderRadius: '4px',
             cursor: failingChecks.length === 0 ? 'not-allowed' : 'pointer',
             fontSize: '13px',
@@ -237,7 +246,7 @@ export default function ExemptionManager({
               style={{
                 padding: '6px 16px',
                 backgroundColor: 'transparent',
-                color: '#1976d2',
+                color: 'var(--mui-palette-primary-main, #1976d2)',
                 border: 'none',
                 borderRadius: '4px',
                 cursor: 'pointer',
@@ -252,8 +261,13 @@ export default function ExemptionManager({
               style={{
                 padding: '6px 16px',
                 backgroundColor:
-                  applying || (!exemptAll && selectedChecks.size === 0) ? '#ccc' : '#1976d2',
-                color: 'white',
+                  applying || (!exemptAll && selectedChecks.size === 0)
+                    ? 'var(--mui-palette-action-disabledBackground, #e0e0e0)'
+                    : 'var(--mui-palette-primary-main, #1976d2)',
+                color:
+                  applying || (!exemptAll && selectedChecks.size === 0)
+                    ? 'var(--mui-palette-action-disabled, #9e9e9e)'
+                    : 'var(--mui-palette-primary-contrastText, #fff)',
                 border: 'none',
                 borderRadius: '4px',
                 cursor:

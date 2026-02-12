@@ -117,8 +117,8 @@ export default function DashboardView() {
               style={{
                 padding: '6px 16px',
                 backgroundColor: 'transparent',
-                color: '#1976d2',
-                border: '1px solid #1976d2',
+                color: 'var(--mui-palette-primary-main, #1976d2)',
+                border: '1px solid var(--mui-palette-primary-main, #1976d2)',
                 borderRadius: '4px',
                 cursor: 'pointer',
                 fontSize: '13px',
