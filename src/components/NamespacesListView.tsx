@@ -95,126 +95,139 @@ function NamespaceDetailPanel({ namespace, onClose }: NamespaceDetailPanelProps)
     return countsPerResource.get(`${row.Namespace}/${row.Kind}/${row.Name}`) ?? resourceCounts(row);
   }
 
+  // Generate a unique class name for this drawer to avoid conflicts
+  const drawerClass = `polaris-namespace-drawer-${namespace}`;
+
   return (
-    <div
-      style={{
-        position: 'fixed',
-        right: 0,
-        top: 0,
-        bottom: 0,
-        width: '1000px',
-        backgroundColor: 'var(--mui-palette-background-paper)',
-        color: 'var(--mui-palette-text-primary)',
-        boxShadow: '-2px 0 8px rgba(0,0,0,0.15)',
-        overflowY: 'auto',
-        zIndex: 1200,
-        padding: '20px',
-        opacity: 1,
-      }}
-    >
-      <div
-        style={{
-          marginBottom: '20px',
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-        }}
-      >
-        <h2 style={{ margin: 0, color: 'var(--mui-palette-text-primary)' }}>
-          Polaris — {namespace}
-        </h2>
-        <button
-          onClick={onClose}
+    <>
+      <style>
+        {`
+          .${drawerClass} {
+            position: fixed;
+            right: 0;
+            top: 0;
+            bottom: 0;
+            width: 1000px;
+            background-color: #ffffff;
+            color: var(--mui-palette-text-primary, #000);
+            box-shadow: -2px 0 8px rgba(0,0,0,0.15);
+            overflow-y: auto;
+            z-index: 1200;
+            padding: 20px;
+          }
+          @media (prefers-color-scheme: dark) {
+            .${drawerClass} {
+              background-color: #1e1e1e;
+              color: var(--mui-palette-text-primary, #fff);
+            }
+          }
+        `}
+      </style>
+      <div className={drawerClass}>
+        <div
           style={{
-            border: 'none',
-            background: 'transparent',
-            fontSize: '24px',
-            cursor: 'pointer',
-            padding: '0 8px',
-            color: 'var(--mui-palette-text-primary)',
+            marginBottom: '20px',
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
           }}
-          aria-label="Close panel"
         >
-          ×
-        </button>
+          <h2 style={{ margin: 0, color: 'var(--mui-palette-text-primary)' }}>
+            Polaris — {namespace}
+          </h2>
+          <button
+            onClick={onClose}
+            style={{
+              border: 'none',
+              background: 'transparent',
+              fontSize: '24px',
+              cursor: 'pointer',
+              padding: '0 8px',
+              color: 'var(--mui-palette-text-primary)',
+            }}
+            aria-label="Close panel"
+          >
+            ×
+          </button>
+        </div>
+
+        <SectionBox title="External">
+          <NameValueTable
+            rows={[
+              {
+                name: 'Polaris Dashboard',
+                value: (
+                  <a href={getPolarisProxyUrl()} target="_blank" rel="noopener noreferrer">
+                    View in Polaris Dashboard
+                  </a>
+                ),
+              },
+            ]}
+          />
+        </SectionBox>
+
+        <SectionBox title="Namespace Score">
+          <NameValueTable
+            rows={[
+              {
+                name: 'Score',
+                value: <StatusLabel status={status}>{score}%</StatusLabel>,
+              },
+              { name: 'Total Checks', value: String(counts.total) },
+              {
+                name: 'Pass',
+                value: <StatusLabel status="success">{counts.pass}</StatusLabel>,
+              },
+              {
+                name: 'Warning',
+                value: <StatusLabel status="warning">{counts.warning}</StatusLabel>,
+              },
+              {
+                name: 'Danger',
+                value: <StatusLabel status="error">{counts.danger}</StatusLabel>,
+              },
+              {
+                name: 'Skipped',
+                value: (
+                  <span title="Only counts checks with Severity=ignore. Annotation-based exemptions are not included.">
+                    {counts.skipped}
+                  </span>
+                ),
+              },
+            ]}
+          />
+        </SectionBox>
+
+        <SectionBox title="Resources">
+          <SimpleTable
+            columns={[
+              { label: 'Name', getter: (row: Result) => row.Name },
+              { label: 'Kind', getter: (row: Result) => row.Kind },
+              {
+                label: 'Pass',
+                getter: (row: Result) => (
+                  <StatusLabel status="success">{getResourceCounts(row).pass}</StatusLabel>
+                ),
+              },
+              {
+                label: 'Warning',
+                getter: (row: Result) => (
+                  <StatusLabel status="warning">{getResourceCounts(row).warning}</StatusLabel>
+                ),
+              },
+              {
+                label: 'Danger',
+                getter: (row: Result) => (
+                  <StatusLabel status="error">{getResourceCounts(row).danger}</StatusLabel>
+                ),
+              },
+            ]}
+            data={results}
+            emptyMessage={`No resources found in namespace "${namespace}".`}
+          />
+        </SectionBox>
       </div>
-
-      <SectionBox title="External">
-        <NameValueTable
-          rows={[
-            {
-              name: 'Polaris Dashboard',
-              value: (
-                <a href={getPolarisProxyUrl()} target="_blank" rel="noopener noreferrer">
-                  View in Polaris Dashboard
-                </a>
-              ),
-            },
-          ]}
-        />
-      </SectionBox>
-
-      <SectionBox title="Namespace Score">
-        <NameValueTable
-          rows={[
-            {
-              name: 'Score',
-              value: <StatusLabel status={status}>{score}%</StatusLabel>,
-            },
-            { name: 'Total Checks', value: String(counts.total) },
-            {
-              name: 'Pass',
-              value: <StatusLabel status="success">{counts.pass}</StatusLabel>,
-            },
-            {
-              name: 'Warning',
-              value: <StatusLabel status="warning">{counts.warning}</StatusLabel>,
-            },
-            {
-              name: 'Danger',
-              value: <StatusLabel status="error">{counts.danger}</StatusLabel>,
-            },
-            {
-              name: 'Skipped',
-              value: (
-                <span title="Only counts checks with Severity=ignore. Annotation-based exemptions are not included.">
-                  {counts.skipped}
-                </span>
-              ),
-            },
-          ]}
-        />
-      </SectionBox>
-
-      <SectionBox title="Resources">
-        <SimpleTable
-          columns={[
-            { label: 'Name', getter: (row: Result) => row.Name },
-            { label: 'Kind', getter: (row: Result) => row.Kind },
-            {
-              label: 'Pass',
-              getter: (row: Result) => (
-                <StatusLabel status="success">{getResourceCounts(row).pass}</StatusLabel>
-              ),
-            },
-            {
-              label: 'Warning',
-              getter: (row: Result) => (
-                <StatusLabel status="warning">{getResourceCounts(row).warning}</StatusLabel>
-              ),
-            },
-            {
-              label: 'Danger',
-              getter: (row: Result) => (
-                <StatusLabel status="error">{getResourceCounts(row).danger}</StatusLabel>
-              ),
-            },
-          ]}
-          data={results}
-          emptyMessage={`No resources found in namespace "${namespace}".`}
-        />
-      </SectionBox>
-    </div>
+    </>
   );
 }
 
