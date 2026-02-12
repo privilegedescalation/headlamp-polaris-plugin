@@ -1,28 +1,46 @@
 name: Release
 
 on:
-  push:
-    tags:
-      - 'v*'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to release (without v prefix, e.g., 0.4.0)'
+        required: true
+        type: string
 
 jobs:
-  build-and-release:
+  release:
     runs-on: local-ubuntu-latest
     permissions:
       contents: write
-    outputs:
-      version: ${{ steps.extract_version.outputs.version }}
-      checksum: ${{ steps.compute_checksum.outputs.checksum }}
     steps:
+      - name: Validate version format
+        run: |
+          if ! echo "${{ inputs.version }}" | grep -qE '^[0-9]+\.[0-9]+\.[0-9]+$'; then
+            echo "::error::Version must be in format X.Y.Z (e.g., 0.4.0)"
+            exit 1
+          fi
+
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Extract version from tag
-        id: extract_version
+      - name: Configure git
         run: |
-          VERSION=${GITHUB_REF_NAME#v}
-          echo "version=${VERSION}" >> $GITHUB_OUTPUT
-          echo "Version: ${VERSION}"
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Update package.json version
+        run: |
+          jq --arg version "${{ inputs.version }}" '.version = $version' package.json > package.json.tmp
+          mv package.json.tmp package.json
+
+      - name: Update artifacthub-pkg.yml version
+        run: |
+          VERSION="${{ inputs.version }}"
+          RELEASE_URL="https://github.com/${{ github.repository }}/releases/download/v${VERSION}/polaris-${VERSION}.tar.gz"
+
+          sed -i "s|^version:.*|version: ${VERSION}|" artifacthub-pkg.yml
+          sed -i "s|headlamp/plugin/archive-url:.*|headlamp/plugin/archive-url: \"${RELEASE_URL}\"|" artifacthub-pkg.yml
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -41,7 +59,7 @@ jobs:
 
       - name: Validate tarball name
         run: |
-          EXPECTED="polaris-${{ steps.extract_version.outputs.version }}.tar.gz"
+          EXPECTED="polaris-${{ inputs.version }}.tar.gz"
           ACTUAL=$(ls *.tar.gz)
           if [ "$EXPECTED" != "$ACTUAL" ]; then
             echo "::error::Tarball name mismatch! Expected: $EXPECTED, Got: $ACTUAL"
@@ -52,15 +70,32 @@ jobs:
       - name: Compute checksum
         id: compute_checksum
         run: |
-          TARBALL="polaris-${{ steps.extract_version.outputs.version }}.tar.gz"
+          TARBALL="polaris-${{ inputs.version }}.tar.gz"
           CHECKSUM=$(sha256sum "$TARBALL" | awk '{print $1}')
           echo "checksum=${CHECKSUM}" >> $GITHUB_OUTPUT
           echo "Checksum: sha256:${CHECKSUM}"
 
+      - name: Update checksum in metadata
+        run: |
+          CHECKSUM="${{ steps.compute_checksum.outputs.checksum }}"
+          sed -i "s|headlamp/plugin/archive-checksum:.*|headlamp/plugin/archive-checksum: sha256:${CHECKSUM}|" artifacthub-pkg.yml
+
+      - name: Commit version bump and metadata
+        run: |
+          git add package.json artifacthub-pkg.yml
+          git commit -m "chore: release v${{ inputs.version }}"
+          git push origin main
+
+      - name: Create and push tag
+        run: |
+          git tag "v${{ inputs.version }}"
+          git push origin "v${{ inputs.version }}"
+
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          files: polaris-${{ steps.extract_version.outputs.version }}.tar.gz
+          tag_name: "v${{ inputs.version }}"
+          files: polaris-${{ inputs.version }}.tar.gz
           fail_on_unmatched_files: true
           draft: false
           prerelease: false
@@ -68,35 +103,9 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-  update-metadata:
-    needs: build-and-release
-    runs-on: local-ubuntu-latest
-    permissions:
-      contents: write
-    steps:
-      - name: Checkout main branch
-        uses: actions/checkout@v4
-        with:
-          ref: main
-          token: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Configure git
+      - name: Summary
         run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-
-      - name: Update checksum in metadata
-        run: |
-          VERSION="${{ needs.build-and-release.outputs.version }}"
-          CHECKSUM="${{ needs.build-and-release.outputs.checksum }}"
-
-          sed -i "s|headlamp/plugin/archive-checksum:.*|headlamp/plugin/archive-checksum: sha256:${CHECKSUM}|" artifacthub-pkg.yml
-
-          git add artifacthub-pkg.yml
-          if ! git diff --cached --quiet; then
-            git commit -m "ci: update checksum for v${VERSION}"
-            git push origin main
-            echo "✓ Checksum updated on main branch"
-          else
-            echo "✓ Checksum already up to date"
-          fi
+          echo "✓ Version bumped to ${{ inputs.version }}"
+          echo "✓ Metadata updated with checksum sha256:${{ steps.compute_checksum.outputs.checksum }}"
+          echo "✓ Tag v${{ inputs.version }} created"
+          echo "✓ GitHub release published with tarball"
