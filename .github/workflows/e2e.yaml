@@ -1,11 +1,13 @@
 name: E2E Tests
 
 on:
-  push:
-    branches: [main]
-  pull_request:
-    branches: [main]
+  # Only run E2E tests manually or when explicitly requested
+  # Disabled for PR/push because test environment requires private network access
   workflow_dispatch:
+  # pull_request:
+  #   branches: [main]
+  # push:
+  #   branches: [main]
 
 jobs:
   e2e:
