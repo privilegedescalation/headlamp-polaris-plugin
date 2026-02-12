@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.5] - 2026-02-12
+
+### Fixed
+- Fixed drawer background remaining white in dark mode by using correct CSS variable (`--mui-palette-background-default`)
+
+### Documentation
+- Added comprehensive Priority 2 documentation (ARCHITECTURE.md, DEPLOYMENT.md, SECURITY.md)
+- Added CONTRIBUTING.md with development workflow, branching strategy, and code style guidelines
+- Added complete CHANGELOG.md documenting all releases from v0.0.1 to current
+
 ## [0.3.4] - 2026-02-12
 
 ### Fixed
@@ -233,7 +243,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Automated release workflow
 - Basic CI/CD pipeline
 
-[Unreleased]: https://github.com/cpfarhood/headlamp-polaris-plugin/compare/v0.3.4...HEAD
+[Unreleased]: https://github.com/cpfarhood/headlamp-polaris-plugin/compare/v0.3.5...HEAD
+[0.3.5]: https://github.com/cpfarhood/headlamp-polaris-plugin/releases/tag/v0.3.5
 [0.3.4]: https://github.com/cpfarhood/headlamp-polaris-plugin/releases/tag/v0.3.4
 [0.3.3]: https://github.com/cpfarhood/headlamp-polaris-plugin/releases/tag/v0.3.3
 [0.3.2]: https://github.com/cpfarhood/headlamp-polaris-plugin/releases/tag/v0.3.2
