@@ -30,5 +30,5 @@ maintainers:
 annotations:
   headlamp/plugin/archive-url: "https://github.com/privilegedescalation/headlamp-polaris-plugin/releases/download/v0.4.0/polaris-0.4.0.tar.gz"
   headlamp/plugin/version-compat: ">=0.26"
-  headlamp/plugin/archive-checksum: sha256:PLACEHOLDER_WILL_BE_UPDATED_AFTER_RELEASE
+  headlamp/plugin/archive-checksum: sha256:db2f2772ad0d8561afef81ebc80369f269fb814cb9353d27d7fb3a4b0fa8d599
   headlamp/plugin/distro-compat: in-cluster
