@@ -7,7 +7,7 @@
 
 A [Headlamp](https://headlamp.dev/) plugin that surfaces [Fairwinds Polaris](https://polaris.docs.fairwinds.com/) audit results directly in the Headlamp UI.
 
-**📚 [Documentation](#documentation) | 🚀 [Installation](#installing) | 🔒 [Security](#rbac--security-setup) | 🛠️ [Development](#development)**
+**[Documentation](#documentation) | [Installation](#installing) | [Security](#rbac--security-setup) | [Development](#development)**
 
 ## What It Does
 
@@ -172,7 +172,7 @@ Every proxied request is recorded in Kubernetes API audit logs as a `get` on `se
 
 ## Documentation
 
-📚 **[Complete Documentation](docs/README.md)** - Documentation hub with all guides
+**[Complete Documentation](docs/README.md)** - Documentation hub with all guides
 
 ### Quick Links
 
@@ -374,6 +374,3 @@ Contributions are welcome! Please read [CONTRIBUTING.md](CONTRIBUTING.md) for:
 
 [Apache-2.0 License](LICENSE) - see LICENSE file for details.
 
----
-
-**Made with ❤️ for the Kubernetes community**

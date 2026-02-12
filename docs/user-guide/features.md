@@ -117,13 +117,13 @@ Top-right corner of Headlamp shows a persistent cluster score badge.
 
 **Features:**
 - **Color-Coded Chip** - Green/Yellow/Red based on score
-- **Shield Emoji (🛡️)** - Visual indicator
+- **Shield Icon** - Visual indicator
 - **Score Percentage** - e.g., "85%"
 - **Clickable** - Click to navigate to Polaris overview
 - **Real-Time Updates** - Updates on auto-refresh interval
 - **Always Visible** - Appears on all Headlamp pages
 
-**Example:** `🛡️ 85%` (green chip)
+**Example:** Shield icon with "85%" (green chip)
 
 ## Settings & Configuration
 

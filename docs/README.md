@@ -4,11 +4,11 @@ Central hub for Headlamp Polaris Plugin documentation.
 
 ## Quick Links
 
-- 🚀 [Quick Start](getting-started/quick-start.md)
-- 📖 [Installation Guide](getting-started/installation.md)
-- 🔧 [Troubleshooting](troubleshooting/README.md)
-- 🏗️ [Architecture](architecture/overview.md)
-- 💻 [Development](development/workflow.md)
+- [Quick Start](getting-started/quick-start.md)
+- [Installation Guide](getting-started/installation.md)
+- [Troubleshooting](troubleshooting/README.md)
+- [Architecture](architecture/overview.md)
+- [Development](development/workflow.md)
 
 ## Getting Started
 

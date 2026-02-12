@@ -32,7 +32,7 @@ The Headlamp Polaris Plugin is a **read-only dashboard** that surfaces Fairwinds
 │                   └────────┬────────┘                        │
 │                            │                                 │
 │              ┌─────────────▼──────────────┐                 │
-│              │  Polaris Plugin (This!)    │                 │
+│              │  Polaris Plugin     │                 │
 │              ├────────────────────────────┤                 │
 │              │ • registerSidebarEntry     │                 │
 │              │ • registerRoute            │                 │

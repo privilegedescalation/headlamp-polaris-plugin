@@ -6,9 +6,9 @@ Get the Headlamp Polaris Plugin up and running in 5 minutes.
 
 Before starting, ensure:
 
-- ✅ Kubernetes cluster is running
-- ✅ Headlamp v0.26+ is deployed
-- ✅ Polaris is installed with dashboard enabled
+- Kubernetes cluster is running
+- Headlamp v0.26+ is deployed
+- Polaris is installed with dashboard enabled
 
 Don't have these? See [Prerequisites](prerequisites.md) for installation instructions.
 
@@ -276,6 +276,4 @@ If test fails, see [Troubleshooting](../troubleshooting/README.md).
 
 ---
 
-**Congratulations!** You're now running the Headlamp Polaris Plugin. 🎉
-
-Visit the **Polaris** section in Headlamp to explore your cluster's security, reliability, and efficiency audit results.
+You're now running the Headlamp Polaris Plugin. Visit the **Polaris** section in Headlamp to explore your cluster's security, reliability, and efficiency audit results.
