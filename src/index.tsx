@@ -66,7 +66,7 @@ registerRoute({
 });
 
 // Register plugin settings
-registerPluginSettings('headlamp-polaris-plugin', PolarisSettings, true);
+registerPluginSettings('polaris', PolarisSettings, true);
 
 // Register details view section for supported controller types
 registerDetailsViewSection(({ resource }) => {
