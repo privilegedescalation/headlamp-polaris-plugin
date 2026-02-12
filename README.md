@@ -1,8 +1,13 @@
-# headlamp-polaris-plugin
+# Headlamp Polaris Plugin
 
 [![Artifact Hub](https://img.shields.io/endpoint?url=https://artifacthub.io/badge/repository/polaris)](https://artifacthub.io/packages/headlamp/polaris/headlamp-polaris-plugin)
+[![CI](https://github.com/cpfarhood/headlamp-polaris-plugin/actions/workflows/ci.yaml/badge.svg)](https://github.com/cpfarhood/headlamp-polaris-plugin/actions/workflows/ci.yaml)
+[![E2E Tests](https://github.com/cpfarhood/headlamp-polaris-plugin/actions/workflows/e2e.yaml/badge.svg)](https://github.com/cpfarhood/headlamp-polaris-plugin/actions/workflows/e2e.yaml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 A [Headlamp](https://headlamp.dev/) plugin that surfaces [Fairwinds Polaris](https://polaris.docs.fairwinds.com/) audit results directly in the Headlamp UI.
+
+**📚 [Documentation](#documentation) | 🚀 [Installation](#installing) | 🔒 [Security](#rbac--security-setup) | 🛠️ [Development](#development)**
 
 ## What It Does
 
@@ -21,6 +26,7 @@ Adds a **Polaris** top-level sidebar section to Headlamp with comprehensive secu
 - **Exemption Management** -- add or remove Polaris exemptions via annotation patches directly from the UI; supports per-check exemptions or exempt-all
 - **Configurable Dashboard URL** -- supports both Kubernetes service proxy URLs and full HTTP/HTTPS URLs for external Polaris deployments
 - **Connection Testing** -- test button in settings to verify Polaris dashboard connectivity and show version info
+- **Dark Mode Support** -- full theme adaptation using MUI CSS variables; drawer, settings, and all UI elements respect system/Headlamp theme
 
 ### Data & Refresh
 
@@ -32,78 +38,89 @@ Error states are handled explicitly with context-specific messages: RBAC denied 
 
 ## Prerequisites
 
-| Requirement | Minimum version |
-|-------------|----------------|
-| Headlamp | v0.26+ |
+| Requirement                      | Minimum version    |
+| -------------------------------- | ------------------ |
+| Headlamp                         | v0.26+             |
 | Polaris (with dashboard enabled) | Any recent release |
-| Kubernetes | v1.24+ |
+| Kubernetes                       | v1.24+             |
 
 Polaris must be deployed in the `polaris` namespace with the dashboard component enabled (`dashboard.enabled: true` in the Helm chart, which is the default). The plugin reads from the `polaris-dashboard` ClusterIP service on port 80.
 
 ## Installing
 
-### Option 1: Artifact Hub + Headlamp plugin manager (recommended)
+### Option 1: Headlamp Plugin Manager (Recommended)
 
-The plugin is published on [Artifact Hub](https://artifacthub.io/packages/headlamp/polaris/headlamp-polaris-plugin). Configure Headlamp's `pluginsManager` in your Helm values to install it automatically:
+**⚠️ CRITICAL for Headlamp v0.39.0+:** You **must** set `config.watchPlugins: false` or the plugin will not load. See [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md#critical-headlamp-v0390-configuration) for details.
+
+The plugin is published on [Artifact Hub](https://artifacthub.io/packages/headlamp/polaris/headlamp-polaris-plugin). Configure Headlamp via Helm:
 
 ```yaml
+config:
+  pluginsDir: /headlamp/plugins
+  watchPlugins: false # CRITICAL for v0.39.0+
+
 pluginsManager:
   sources:
-    - url: https://artifacthub.io/packages/headlamp/polaris/headlamp-polaris-plugin
+    - name: headlamp-polaris-plugin
+      url: https://github.com/cpfarhood/headlamp-polaris-plugin/releases/download/v0.3.5/headlamp-polaris-plugin-0.3.5.tar.gz
 ```
 
-Headlamp will fetch and install the plugin on startup.
+Or install via the Headlamp UI:
 
-### Option 2: Docker init container
+1. Go to **Settings → Plugins**
+2. Click **Catalog** tab
+3. Search for "Polaris"
+4. Click **Install**
 
-The plugin ships as a container image at `git.farh.net/farhoodliquor/headlamp-polaris-plugin`.
+### Option 2: Sidecar Container (Alternative)
 
-Add it as an init container in your Headlamp Helm values:
+For detailed sidecar installation instructions, see [docs/DEPLOYMENT.md#installation-method-2-sidecar-container](docs/DEPLOYMENT.md#installation-method-2-sidecar-container).
 
 ```yaml
-initContainers:
-  - name: polaris-plugin
-    image: git.farh.net/farhoodliquor/headlamp-polaris-plugin:latest
-    command: ["sh", "-c", "cp -r /plugins/* /headlamp/plugins/"]
+sidecars:
+  - name: headlamp-plugin
+    image: node:lts-alpine
+    command: ['/bin/sh']
+    args:
+      - -c
+      - |
+        npm install -g @kinvolk/headlamp-plugin
+        headlamp-plugin install --config /config/plugin.yml
+        tail -f /dev/null
     volumeMounts:
       - name: plugins
         mountPath: /headlamp/plugins
-
-volumes:
-  - name: plugins
-    emptyDir: {}
-
-volumeMounts:
-  - name: plugins
-    mountPath: /headlamp/plugins
+      - name: plugin-config
+        mountPath: /config
 ```
 
-### Option 3: Manual tarball install
+### Option 3: Manual Tarball Install
 
-Download the `.tar.gz` from the [GitHub releases page](https://github.com/cpfarhood/headlamp-polaris-plugin/releases) or the [Gitea releases page](https://git.farh.net/farhoodliquor/headlamp-polaris-plugin/releases), then extract into Headlamp's plugin directory:
+Download the `.tar.gz` from the [GitHub releases page](https://github.com/cpfarhood/headlamp-polaris-plugin/releases), then extract into Headlamp's plugin directory:
 
 ```bash
-tar xzf headlamp-polaris-plugin-<version>.tar.gz -C /headlamp/plugins/
+wget https://github.com/cpfarhood/headlamp-polaris-plugin/releases/download/v0.3.5/headlamp-polaris-plugin-0.3.5.tar.gz
+tar xzf headlamp-polaris-plugin-0.3.5.tar.gz -C /headlamp/plugins/
 ```
 
-### Option 4: Build from source
+### Option 4: Build from Source
 
 ```bash
+git clone https://github.com/cpfarhood/headlamp-polaris-plugin.git
+cd headlamp-polaris-plugin
 npm install
 npm run build
 npx @kinvolk/headlamp-plugin extract . /headlamp/plugins
 ```
 
-## Installing Dev/Preview Versions
-
-Dev preview versions are **not currently available** through the Headlamp plugin manager. Stable versions can be installed from ArtifactHub via the plugin manager UI.
+For complete installation instructions including Helm integration, FluxCD examples, and production deployment checklist, see **[docs/DEPLOYMENT.md](docs/DEPLOYMENT.md)**.
 
 ## RBAC / Security Setup
 
 The plugin fetches audit data through the Kubernetes API server's **service proxy** sub-resource. The identity making the request (Headlamp's service account, or the user's own token in token-auth mode) must be granted:
 
-| Verb | API Group | Resource | Resource Name | Namespace |
-|------|-----------|----------|---------------|-----------|
+| Verb  | API Group   | Resource         | Resource Name       | Namespace |
+| ----- | ----------- | ---------------- | ------------------- | --------- |
 | `get` | `""` (core) | `services/proxy` | `polaris-dashboard` | `polaris` |
 
 ### Minimal RBAC manifests
@@ -115,10 +132,10 @@ metadata:
   name: polaris-proxy-reader
   namespace: polaris
 rules:
-  - apiGroups: [""]
-    resources: ["services/proxy"]
-    resourceNames: ["polaris-dashboard"]
-    verbs: ["get"]
+  - apiGroups: ['']
+    resources: ['services/proxy']
+    resourceNames: ['polaris-dashboard']
+    verbs: ['get']
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
@@ -127,8 +144,8 @@ metadata:
   namespace: polaris
 subjects:
   - kind: ServiceAccount
-    name: headlamp              # adjust to match your Headlamp service account
-    namespace: kube-system      # adjust to match the namespace Headlamp runs in
+    name: headlamp # adjust to match your Headlamp service account
+    namespace: kube-system # adjust to match the namespace Headlamp runs in
 roleRef:
   kind: Role
   name: polaris-proxy-reader
@@ -153,48 +170,80 @@ The plugin only performs `GET` requests through the service proxy. No `create`, 
 
 Every proxied request is recorded in Kubernetes API audit logs as a `get` on `services/proxy` in the `polaris` namespace. If the auto-refresh interval generates more audit volume than desired, increase the refresh interval in the plugin settings or adjust your audit policy.
 
+## Documentation
+
+Comprehensive documentation is available in the `docs/` directory:
+
+| Document                                          | Description                                                           |
+| ------------------------------------------------- | --------------------------------------------------------------------- |
+| **[ARCHITECTURE.md](docs/ARCHITECTURE.md)**       | System architecture, data flow, component hierarchy, design decisions |
+| **[DEPLOYMENT.md](docs/DEPLOYMENT.md)**           | Complete deployment guide with Helm, FluxCD, RBAC, network policies   |
+| **[SECURITY.md](SECURITY.md)**                    | Security model, RBAC requirements, vulnerability reporting            |
+| **[TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md)** | Common issues, debugging, RBAC testing, network debugging             |
+| **[TESTING.md](docs/TESTING.md)**                 | Unit tests, E2E tests, CI/CD, best practices                          |
+| **[CONTRIBUTING.md](CONTRIBUTING.md)**            | Development workflow, branching strategy, PR process                  |
+| **[CHANGELOG.md](CHANGELOG.md)**                  | Complete release history (v0.0.1 to current)                          |
+
 ## Troubleshooting
 
-| Symptom | Likely cause | Fix |
-|---------|-------------|-----|
-| **403 Access Denied** | Missing RBAC binding for `services/proxy` | Apply the Role + RoleBinding from the RBAC section above |
-| **404 or 503** | Polaris not installed, or dashboard disabled | Install Polaris with `dashboard.enabled: true` in the `polaris` namespace |
-| **No data** | Polaris running but no workloads scanned yet | Wait for the next Polaris audit cycle or restart the Polaris pod |
-| **Stale data** | Refresh interval too long | Lower the interval in **Settings > Plugins > Polaris** |
+**For comprehensive troubleshooting, see [docs/TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md).**
+
+Quick reference:
+
+| Symptom                         | Likely Cause                                 | Quick Fix                                                             |
+| ------------------------------- | -------------------------------------------- | --------------------------------------------------------------------- |
+| **Plugin not in sidebar**       | Headlamp v0.39.0+ plugin loading issue       | Set `config.watchPlugins: false` and hard refresh (Cmd+Shift+R)       |
+| **403 Access Denied**           | Missing RBAC binding for `services/proxy`    | Apply Role + RoleBinding from RBAC section                            |
+| **404 or 503**                  | Polaris not installed, or dashboard disabled | Install Polaris with `dashboard.enabled: true` in `polaris` namespace |
+| **Dark mode white backgrounds** | Old plugin version                           | Upgrade to v0.3.5+ and hard refresh browser                           |
+| **Settings page empty**         | Old plugin version                           | Upgrade to v0.3.3+                                                    |
+| **No data / infinite spinner**  | Network policy or Polaris pod down           | Check network policies and `kubectl get pods -n polaris`              |
 
 ## Development
 
-### Setup
+**For detailed development guide, see [CONTRIBUTING.md](CONTRIBUTING.md).**
+
+### Quick Start
 
 ```bash
+# Clone repository
 git clone https://github.com/cpfarhood/headlamp-polaris-plugin.git
 cd headlamp-polaris-plugin
+
+# Install dependencies
 npm install
-```
 
-### Run locally (hot reload)
+# Run with hot reload
+npm start  # Opens Headlamp at http://localhost:4466
 
-```bash
-npm start
-```
-
-This starts the Headlamp plugin dev server. Point a running Headlamp instance at the dev server to see changes live.
-
-### Build for production
-
-```bash
+# Build for production
 npm run build        # outputs dist/main.js
 npm run package      # creates headlamp-polaris-plugin-<version>.tar.gz
+
+# Run tests
+npm test             # unit tests
+npm run e2e          # E2E tests (requires Headlamp instance)
+
+# Code quality
+npm run lint         # eslint
+npm run tsc          # type-check
+npm run format       # prettier format
 ```
 
-### Type-check, lint, format, and test
+### Running Tests
 
 ```bash
-npm run tsc          # type-check without emitting
-npm run lint         # eslint
-npm run format:check # prettier check
-npm test             # vitest unit tests
+# Unit tests (Vitest)
+npm test
+npm run test:watch
+
+# E2E tests (Playwright)
+export HEADLAMP_TOKEN=$(kubectl create token headlamp -n kube-system --duration=24h)
+npm run e2e
+npm run e2e:headed   # see browser
 ```
+
+For complete testing guide including CI/CD integration, see **[docs/TESTING.md](docs/TESTING.md)**.
 
 ## Project Structure
 
@@ -244,11 +293,13 @@ Each check in a `ResultSet` has `Success` (bool) and `Severity` (`"warning"`, `"
 The **Skipped** count shown in the plugin only reflects checks with `Severity: "ignore"` in the Polaris API response. It does **not** include annotation-based exemptions (e.g., `polaris.fairwinds.com/privilegeEscalationAllowed-exempt: "true"`).
 
 **Why?** Polaris completely omits exempted checks from the `results.json` endpoint. The native Polaris dashboard UI computes the "skipped" count client-side by:
+
 1. Querying Kubernetes resources (Deployments, DaemonSets, StatefulSets, Pods) directly
 2. Parsing their annotations for `polaris.fairwinds.com/*-exempt` keys
 3. Counting how many checks were exempted
 
 This plugin only has access to the processed audit results via the service proxy and does not query raw Kubernetes resources. To show accurate exemption counts, the plugin would need to:
+
 - Request cluster-wide read access to all workload types (requires additional RBAC grants beyond `services/proxy`)
 - Parse annotations on every workload in every namespace
 - Cross-reference with the Polaris check catalog to count exemptions
@@ -259,43 +310,63 @@ This is a significant architectural change and is not currently implemented. Hov
 
 ## Releasing
 
-Releases are automated via CI. To cut a release:
+Releases are automated via **GitHub Actions**. To cut a release:
 
 ```bash
-# Bump version in package.json and artifacthub-pkg.yml (version + archive-url), then:
-git add package.json artifacthub-pkg.yml
+# 1. Update CHANGELOG.md with new version
+# 2. Bump version in package.json and artifacthub-pkg.yml:
+git add package.json artifacthub-pkg.yml CHANGELOG.md
 git commit -m "chore: bump version to X.Y.Z"
+git push origin main
+
+# 3. Create and push tag:
 git tag vX.Y.Z
-git push origin main vX.Y.Z
+git push origin vX.Y.Z
 ```
 
-This triggers the **Gitea Actions** release workflow (`.gitea/workflows/release.yaml`):
+This triggers the **GitHub Actions** release workflow (`.github/workflows/release.yaml`):
+
 1. Build the plugin in a `node:20` container
 2. Package a `.tar.gz` tarball
-3. Build and push a Docker image to `git.farh.net/farhoodliquor/headlamp-polaris-plugin:{tag}` and `:latest`
-4. Create a Gitea release with the tarball attached
-5. Create a GitHub release with the same tarball (for Artifact Hub)
-6. Update `artifacthub-pkg.yml` checksum on main and force-move the tag to match
+3. Create a GitHub release with the tarball attached
+4. Calculate SHA256 checksum
+5. Update `artifacthub-pkg.yml` checksum on main branch
+6. Force-move the tag to include checksum update
 
-A guard step prevents infinite loops: if the release tarball checksum already matches the metadata, the build is skipped.
+A guard step prevents infinite loops: if the release tarball checksum already matches the metadata, the workflow is skipped.
 
-### CI secrets
+### ArtifactHub Sync
 
-| Secret | Where | Purpose |
-|---|---|---|
-| `REGISTRY_TOKEN` | Gitea | Personal access token with `package:write` scope for Docker image push |
-| `GH_PAT` | Gitea | GitHub personal access token for creating GitHub releases |
+ArtifactHub pulls plugin metadata from GitHub every **30 minutes**. After creating a release:
 
-The Gitea release uses the built-in `github.token`. The `archive-checksum` in `artifacthub-pkg.yml` is updated automatically by the release workflow.
+- Wait 30 minutes for sync
+- Check [ArtifactHub package page](https://artifacthub.io/packages/headlamp/polaris/headlamp-polaris-plugin)
+- New version should appear in Headlamp plugin catalog
+
+For complete release process and version numbering guidelines, see **[CONTRIBUTING.md#release-process](CONTRIBUTING.md#release-process)**.
+
+## Contributing
+
+Contributions are welcome! Please read [CONTRIBUTING.md](CONTRIBUTING.md) for:
+
+- Development workflow
+- Branching strategy (feature branches required for code changes)
+- Commit message conventions (Conventional Commits)
+- PR process and review checklist
+- Code style guidelines
+- Testing requirements
 
 ## Links
 
-- [Artifact Hub](https://artifacthub.io/packages/headlamp/polaris/headlamp-polaris-plugin)
-- [GitHub (mirror)](https://github.com/cpfarhood/headlamp-polaris-plugin)
-- [Gitea (source of truth)](https://git.farh.net/farhoodliquor/headlamp-polaris-plugin)
-- [Headlamp](https://headlamp.dev/)
-- [Fairwinds Polaris](https://polaris.docs.fairwinds.com/)
+- **[GitHub Repository](https://github.com/cpfarhood/headlamp-polaris-plugin)** - Source code, issues, releases
+- **[Artifact Hub](https://artifacthub.io/packages/headlamp/polaris/headlamp-polaris-plugin)** - Plugin catalog listing
+- **[Headlamp](https://headlamp.dev/)** - Kubernetes web UI
+- **[Fairwinds Polaris](https://polaris.docs.fairwinds.com/)** - Kubernetes best practices audit tool
 
 ## License
 
-MIT
+[MIT License](LICENSE) - see LICENSE file for details.
+
+---
+
+**Made with ❤️ for the Kubernetes community**
