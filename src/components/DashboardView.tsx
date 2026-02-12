@@ -8,8 +8,6 @@ import {
   SimpleTable,
   StatusLabel,
 } from '@kinvolk/headlamp-plugin/lib/CommonComponents';
-import { Button } from '@mui/material';
-import { Refresh as RefreshIcon } from '@mui/icons-material';
 import React from 'react';
 import { AuditData, computeScore, countResults, ResultCounts } from '../api/polaris';
 import { usePolarisDataContext } from '../api/PolarisDataContext';
@@ -114,9 +112,25 @@ export default function DashboardView() {
             <span style={{ fontSize: '14px', color: 'var(--mui-palette-text-secondary, #666)' }}>
               Last updated: {formatAuditTime(data.AuditTime)}
             </span>
-            <Button variant="outlined" startIcon={<RefreshIcon />} onClick={refresh} size="small">
-              Refresh
-            </Button>
+            <button
+              onClick={refresh}
+              style={{
+                padding: '6px 16px',
+                backgroundColor: 'transparent',
+                color: '#1976d2',
+                border: '1px solid #1976d2',
+                borderRadius: '4px',
+                cursor: 'pointer',
+                fontSize: '13px',
+                fontWeight: 500,
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '4px',
+              }}
+            >
+              <span>🔄</span>
+              <span>Refresh</span>
+            </button>
           </div>
         )}
       </div>

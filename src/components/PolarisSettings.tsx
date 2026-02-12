@@ -4,7 +4,6 @@ import {
   StatusLabel,
 } from '@kinvolk/headlamp-plugin/lib/CommonComponents';
 import { ApiProxy } from '@kinvolk/headlamp-plugin/lib';
-import { Button } from '@mui/material';
 import React from 'react';
 import {
   getDashboardUrl,
@@ -124,14 +123,22 @@ export default function PolarisSettings(props: PluginSettingsProps) {
             name: 'Connection Test',
             value: (
               <div>
-                <Button
-                  variant="contained"
+                <button
                   onClick={testConnection}
                   disabled={testing}
-                  size="small"
+                  style={{
+                    padding: '6px 16px',
+                    backgroundColor: testing ? '#ccc' : '#1976d2',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '4px',
+                    cursor: testing ? 'not-allowed' : 'pointer',
+                    fontSize: '13px',
+                    fontWeight: 500,
+                  }}
                 >
                   {testing ? 'Testing...' : 'Test Connection'}
-                </Button>
+                </button>
                 {testResult && (
                   <div style={{ marginTop: '8px' }}>
                     <StatusLabel status={testResult.success ? 'success' : 'error'}>

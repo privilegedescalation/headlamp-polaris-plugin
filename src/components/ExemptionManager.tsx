@@ -1,6 +1,5 @@
 import { NameValueTable, SectionBox, Dialog } from '@kinvolk/headlamp-plugin/lib/CommonComponents';
 import { ApiProxy } from '@kinvolk/headlamp-plugin/lib';
-import { Button, Checkbox, FormControlLabel, FormGroup } from '@mui/material';
 import React from 'react';
 import { Result } from '../api/polaris';
 import { getCheckName } from '../api/checkMapping';
@@ -147,16 +146,23 @@ export default function ExemptionManager({
             rows={currentExemptions.map(exemption => ({
               name: exemption,
               value: (
-                <Button
-                  size="small"
-                  color="error"
+                <button
+                  style={{
+                    padding: '4px 12px',
+                    backgroundColor: '#f44336',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '4px',
+                    cursor: 'pointer',
+                    fontSize: '12px',
+                  }}
                   onClick={() => {
                     // Remove exemption logic
                     alert('Remove exemption: ' + exemption);
                   }}
                 >
                   Remove
-                </Button>
+                </button>
               ),
             }))}
           />
@@ -164,58 +170,100 @@ export default function ExemptionManager({
           <p>No exemptions configured</p>
         )}
 
-        <Button
-          variant="outlined"
+        <button
           onClick={() => setDialogOpen(true)}
           disabled={failingChecks.length === 0}
-          style={{ marginTop: '8px' }}
+          style={{
+            marginTop: '8px',
+            padding: '6px 16px',
+            backgroundColor: failingChecks.length === 0 ? '#ccc' : 'transparent',
+            color: failingChecks.length === 0 ? '#999' : '#1976d2',
+            border: '1px solid',
+            borderColor: failingChecks.length === 0 ? '#ccc' : '#1976d2',
+            borderRadius: '4px',
+            cursor: failingChecks.length === 0 ? 'not-allowed' : 'pointer',
+            fontSize: '13px',
+          }}
         >
           Add Exemption
-        </Button>
+        </button>
       </SectionBox>
 
       <Dialog open={dialogOpen} onClose={() => setDialogOpen(false)} title="Add Exemptions">
         <div style={{ padding: '16px', minWidth: '400px' }}>
-          <FormControlLabel
-            control={
-              <Checkbox checked={exemptAll} onChange={e => setExemptAll(e.target.checked)} />
-            }
-            label="Exempt from all checks"
-          />
+          <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
+            <input
+              type="checkbox"
+              checked={exemptAll}
+              onChange={e => setExemptAll(e.target.checked)}
+            />
+            <span>Exempt from all checks</span>
+          </label>
 
           {!exemptAll && (
             <>
               <div style={{ marginTop: '16px', marginBottom: '8px', fontWeight: 600 }}>
                 Select checks to exempt:
               </div>
-              <FormGroup>
+              <div>
                 {failingChecks.map(check => (
-                  <FormControlLabel
+                  <label
                     key={check.checkId}
-                    control={
-                      <Checkbox
-                        checked={selectedChecks.has(check.checkId)}
-                        onChange={() => handleCheckToggle(check.checkId)}
-                      />
-                    }
-                    label={check.checkName}
-                  />
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '8px',
+                      marginBottom: '8px',
+                      cursor: 'pointer',
+                    }}
+                  >
+                    <input
+                      type="checkbox"
+                      checked={selectedChecks.has(check.checkId)}
+                      onChange={() => handleCheckToggle(check.checkId)}
+                    />
+                    <span>{check.checkName}</span>
+                  </label>
                 ))}
-              </FormGroup>
+              </div>
             </>
           )}
 
           <div
             style={{ marginTop: '16px', display: 'flex', gap: '8px', justifyContent: 'flex-end' }}
           >
-            <Button onClick={() => setDialogOpen(false)}>Cancel</Button>
-            <Button
-              variant="contained"
+            <button
+              onClick={() => setDialogOpen(false)}
+              style={{
+                padding: '6px 16px',
+                backgroundColor: 'transparent',
+                color: '#1976d2',
+                border: 'none',
+                borderRadius: '4px',
+                cursor: 'pointer',
+                fontSize: '13px',
+              }}
+            >
+              Cancel
+            </button>
+            <button
               onClick={applyExemptions}
               disabled={applying || (!exemptAll && selectedChecks.size === 0)}
+              style={{
+                padding: '6px 16px',
+                backgroundColor:
+                  applying || (!exemptAll && selectedChecks.size === 0) ? '#ccc' : '#1976d2',
+                color: 'white',
+                border: 'none',
+                borderRadius: '4px',
+                cursor:
+                  applying || (!exemptAll && selectedChecks.size === 0) ? 'not-allowed' : 'pointer',
+                fontSize: '13px',
+                fontWeight: 500,
+              }}
             >
               {applying ? 'Applying...' : 'Apply'}
-            </Button>
+            </button>
           </div>
         </div>
       </Dialog>

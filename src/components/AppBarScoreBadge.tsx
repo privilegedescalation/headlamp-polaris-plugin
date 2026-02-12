@@ -1,5 +1,3 @@
-import { Chip } from '@mui/material';
-import { Shield as ShieldIcon } from '@mui/icons-material';
 import React from 'react';
 import { useHistory } from 'react-router-dom';
 import { usePolarisDataContext } from '../api/PolarisDataContext';
@@ -21,10 +19,10 @@ export default function AppBarScoreBadge() {
   const score = computeScore(counts);
 
   // Color based on score
-  const getColor = (score: number): 'success' | 'warning' | 'error' => {
-    if (score >= 80) return 'success';
-    if (score >= 50) return 'warning';
-    return 'error';
+  const getColor = (score: number): string => {
+    if (score >= 80) return '#4caf50'; // green
+    if (score >= 50) return '#ff9800'; // orange
+    return '#f44336'; // red
   };
 
   const handleClick = () => {
@@ -32,13 +30,26 @@ export default function AppBarScoreBadge() {
   };
 
   return (
-    <Chip
-      icon={<ShieldIcon />}
-      label={`Polaris: ${score}%`}
-      color={getColor(score)}
-      size="small"
+    <button
       onClick={handleClick}
-      style={{ cursor: 'pointer', marginRight: '8px' }}
-    />
+      style={{
+        cursor: 'pointer',
+        marginRight: '8px',
+        padding: '4px 12px',
+        borderRadius: '16px',
+        border: 'none',
+        backgroundColor: getColor(score),
+        color: 'white',
+        fontSize: '13px',
+        fontWeight: 500,
+        display: 'inline-flex',
+        alignItems: 'center',
+        gap: '4px',
+      }}
+      aria-label={`Polaris cluster score: ${score}%`}
+    >
+      <span>🛡️</span>
+      <span>Polaris: {score}%</span>
+    </button>
   );
 }
