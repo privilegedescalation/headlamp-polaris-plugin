@@ -109,6 +109,7 @@ function NamespaceDetailPanel({ namespace, onClose }: NamespaceDetailPanelProps)
         overflowY: 'auto',
         zIndex: 1200,
         padding: '20px',
+        opacity: 1,
       }}
     >
       <div
