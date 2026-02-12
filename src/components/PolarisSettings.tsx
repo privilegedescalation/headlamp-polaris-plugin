@@ -58,7 +58,9 @@ export default function PolarisSettings(props: PluginSettingsProps) {
         }
         result = await response.json();
       } else {
-        result = await ApiProxy.request(apiPath);
+        result = await ApiProxy.request(apiPath, {
+          method: 'GET',
+        });
       }
 
       setTestResult({

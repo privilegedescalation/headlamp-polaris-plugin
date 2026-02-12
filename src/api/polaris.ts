@@ -373,7 +373,9 @@ export function usePolarisData(refreshIntervalSeconds: number): PolarisDataState
           result = await response.json();
         } else {
           // Kubernetes proxy for relative URLs
-          result = await ApiProxy.request(apiPath);
+          result = await ApiProxy.request(apiPath, {
+            method: 'GET',
+          });
         }
 
         if (!cancelled) {

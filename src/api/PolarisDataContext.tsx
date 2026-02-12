@@ -35,8 +35,20 @@ const PolarisDataContext = React.createContext<PolarisDataContextValue | null>(n
  * ```
  */
 export function PolarisDataProvider(props: { children: React.ReactNode }) {
-  const interval = getRefreshInterval();
-  const state = usePolarisData(interval);
+  // Re-read interval on every render to pick up changes from settings
+  const [refreshInterval, setRefreshInterval] = React.useState(getRefreshInterval());
+
+  // Poll for interval changes (localStorage changes from settings)
+  React.useEffect(() => {
+    const intervalId = window.setInterval(() => {
+      const newInterval = getRefreshInterval();
+      setRefreshInterval(prev => (prev !== newInterval ? newInterval : prev));
+    }, 1000); // Check every second
+
+    return () => window.clearInterval(intervalId);
+  }, []);
+
+  const state = usePolarisData(refreshInterval);
 
   // Rename triggerRefresh to refresh for consistency
   const value = React.useMemo(
