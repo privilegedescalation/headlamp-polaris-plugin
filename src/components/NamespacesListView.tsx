@@ -118,7 +118,11 @@ function NamespaceDetailPanel({ namespace, onClose }: NamespaceDetailPanelProps)
           alignItems: 'center',
         }}
       >
-        <h2 style={{ margin: 0, color: 'var(--mui-palette-text-primary, var(--text-primary, #000))' }}>Polaris — {namespace}</h2>
+        <h2
+          style={{ margin: 0, color: 'var(--mui-palette-text-primary, var(--text-primary, #000))' }}
+        >
+          Polaris — {namespace}
+        </h2>
         <button
           onClick={onClose}
           style={{

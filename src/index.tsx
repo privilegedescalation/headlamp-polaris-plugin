@@ -69,7 +69,7 @@ registerRoute({
 registerPluginSettings('polaris', PolarisSettings);
 
 // Register details view section for supported controller types
-registerDetailsViewSection('polaris-audit', ({ resource }) => {
+registerDetailsViewSection(({ resource }) => {
   const supportedKinds = ['Deployment', 'StatefulSet', 'DaemonSet', 'Job', 'CronJob'];
 
   if (!supportedKinds.includes(resource?.kind)) {
@@ -84,7 +84,7 @@ registerDetailsViewSection('polaris-audit', ({ resource }) => {
 });
 
 // Register app bar score badge
-registerAppBarAction('polaris-score', () => (
+registerAppBarAction(() => (
   <PolarisDataProvider>
     <AppBarScoreBadge />
   </PolarisDataProvider>

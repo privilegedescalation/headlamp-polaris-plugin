@@ -34,6 +34,17 @@ vi.mock('@kinvolk/headlamp-plugin/lib/CommonComponents', () => ({
       </tbody>
     </table>
   ),
+  SimpleTable: ({ data }: { data: Array<any> }) => (
+    <table data-testid="simple-table">
+      <tbody>
+        {data.map((item, idx) => (
+          <tr key={idx}>
+            <td>{JSON.stringify(item)}</td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  ),
   PercentageCircle: ({ label }: { label: string }) => (
     <div data-testid="percentage-circle">{label}</div>
   ),

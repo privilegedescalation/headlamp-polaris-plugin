@@ -1,8 +1,19 @@
-import { NameValueTable, SectionBox, StatusLabel } from '@kinvolk/headlamp-plugin/lib/CommonComponents';
+import {
+  NameValueTable,
+  SectionBox,
+  StatusLabel,
+} from '@kinvolk/headlamp-plugin/lib/CommonComponents';
 import { ApiProxy } from '@kinvolk/headlamp-plugin/lib';
 import { Button } from '@mui/material';
 import React from 'react';
-import { getDashboardUrl, getRefreshInterval, INTERVAL_OPTIONS, setDashboardUrl, setRefreshInterval, AuditData } from '../api/polaris';
+import {
+  getDashboardUrl,
+  getRefreshInterval,
+  INTERVAL_OPTIONS,
+  setDashboardUrl,
+  setRefreshInterval,
+  AuditData,
+} from '../api/polaris';
 
 interface PluginSettingsProps {
   data?: { [key: string]: string | number | boolean };
@@ -14,7 +25,9 @@ export default function PolarisSettings(props: PluginSettingsProps) {
   const currentInterval = (data?.refreshInterval as number) ?? getRefreshInterval();
   const currentUrl = (data?.dashboardUrl as string) ?? getDashboardUrl();
   const [testing, setTesting] = React.useState(false);
-  const [testResult, setTestResult] = React.useState<{ success: boolean; message: string } | null>(null);
+  const [testResult, setTestResult] = React.useState<{ success: boolean; message: string } | null>(
+    null
+  );
 
   function handleIntervalChange(e: React.ChangeEvent<HTMLSelectElement>) {
     const seconds = Number(e.target.value);
@@ -51,7 +64,9 @@ export default function PolarisSettings(props: PluginSettingsProps) {
 
       setTestResult({
         success: true,
-        message: `Connected successfully! Version: ${result.PolarisOutputVersion}, Last audit: ${new Date(result.AuditTime).toLocaleString()}`,
+        message: `Connected successfully! Version: ${
+          result.PolarisOutputVersion
+        }, Last audit: ${new Date(result.AuditTime).toLocaleString()}`,
       });
     } catch (err) {
       setTestResult({
@@ -97,9 +112,10 @@ export default function PolarisSettings(props: PluginSettingsProps) {
                   }}
                 />
                 <div style={{ fontSize: '12px', color: '#666', marginTop: '4px' }}>
-                  Examples:<br />
-                  • K8s proxy: <code>/api/v1/namespaces/polaris/services/polaris-dashboard:80/proxy/</code><br />
-                  • Full URL: <code>https://my-polaris.example.com</code>
+                  Examples:
+                  <br />• K8s proxy:{' '}
+                  <code>/api/v1/namespaces/polaris/services/polaris-dashboard:80/proxy/</code>
+                  <br />• Full URL: <code>https://my-polaris.example.com</code>
                 </div>
               </div>
             ),

@@ -1,4 +1,9 @@
-import { NameValueTable, SectionBox, StatusLabel, SimpleTable } from '@kinvolk/headlamp-plugin/lib/CommonComponents';
+import {
+  NameValueTable,
+  SectionBox,
+  StatusLabel,
+  SimpleTable,
+} from '@kinvolk/headlamp-plugin/lib/CommonComponents';
 import { Link } from 'react-router-dom';
 import React from 'react';
 import { usePolarisDataContext } from '../api/PolarisDataContext';
@@ -140,9 +145,7 @@ export default function InlineAuditSection({ resource }: InlineAuditSectionProps
               {
                 label: 'Severity',
                 getter: (f: CheckFailure) => (
-                  <StatusLabel status={getSeverityStatus(f.severity)}>
-                    {f.severity}
-                  </StatusLabel>
+                  <StatusLabel status={getSeverityStatus(f.severity)}>{f.severity}</StatusLabel>
                 ),
               },
               { label: 'Message', getter: (f: CheckFailure) => f.message },
@@ -153,7 +156,10 @@ export default function InlineAuditSection({ resource }: InlineAuditSectionProps
       )}
 
       <div style={{ marginTop: '16px' }}>
-        <Link to={`/polaris/namespaces#${namespace}`} style={{ color: 'var(--link-color, #1976d2)' }}>
+        <Link
+          to={`/polaris/namespaces#${namespace}`}
+          style={{ color: 'var(--link-color, #1976d2)' }}
+        >
           View Full Report →
         </Link>
       </div>

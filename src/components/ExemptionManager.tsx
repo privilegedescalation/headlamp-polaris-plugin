@@ -21,7 +21,12 @@ interface CheckFailure {
  * Exemption management UI for adding/removing Polaris exemptions
  * Uses annotation patches on the workload resource
  */
-export default function ExemptionManager({ workloadResult, namespace, kind, name }: ExemptionManagerProps) {
+export default function ExemptionManager({
+  workloadResult,
+  namespace,
+  kind,
+  name,
+}: ExemptionManagerProps) {
   const [dialogOpen, setDialogOpen] = React.useState(false);
   const [selectedChecks, setSelectedChecks] = React.useState<Set<string>>(new Set());
   const [exemptAll, setExemptAll] = React.useState(false);
@@ -169,18 +174,11 @@ export default function ExemptionManager({ workloadResult, namespace, kind, name
         </Button>
       </SectionBox>
 
-      <Dialog
-        open={dialogOpen}
-        onClose={() => setDialogOpen(false)}
-        title="Add Exemptions"
-      >
+      <Dialog open={dialogOpen} onClose={() => setDialogOpen(false)} title="Add Exemptions">
         <div style={{ padding: '16px', minWidth: '400px' }}>
           <FormControlLabel
             control={
-              <Checkbox
-                checked={exemptAll}
-                onChange={(e) => setExemptAll(e.target.checked)}
-              />
+              <Checkbox checked={exemptAll} onChange={e => setExemptAll(e.target.checked)} />
             }
             label="Exempt from all checks"
           />
@@ -207,10 +205,10 @@ export default function ExemptionManager({ workloadResult, namespace, kind, name
             </>
           )}
 
-          <div style={{ marginTop: '16px', display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
-            <Button onClick={() => setDialogOpen(false)}>
-              Cancel
-            </Button>
+          <div
+            style={{ marginTop: '16px', display: 'flex', gap: '8px', justifyContent: 'flex-end' }}
+          >
+            <Button onClick={() => setDialogOpen(false)}>Cancel</Button>
             <Button
               variant="contained"
               onClick={applyExemptions}

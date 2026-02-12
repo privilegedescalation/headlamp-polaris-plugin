@@ -100,19 +100,21 @@ export default function DashboardView() {
 
   return (
     <>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+      <div
+        style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          marginBottom: '20px',
+        }}
+      >
         <SectionHeader title="Polaris — Overview" />
         {data && (
           <div style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
             <span style={{ fontSize: '14px', color: 'var(--mui-palette-text-secondary, #666)' }}>
               Last updated: {formatAuditTime(data.AuditTime)}
             </span>
-            <Button
-              variant="outlined"
-              startIcon={<RefreshIcon />}
-              onClick={refresh}
-              size="small"
-            >
+            <Button variant="outlined" startIcon={<RefreshIcon />} onClick={refresh} size="small">
               Refresh
             </Button>
           </div>
