@@ -103,7 +103,7 @@ function NamespaceDetailPanel({ namespace, onClose }: NamespaceDetailPanelProps)
         top: 0,
         bottom: 0,
         width: '1000px',
-        backgroundColor: 'var(--mui-palette-background-default)',
+        backgroundColor: 'var(--mui-palette-background-paper)',
         color: 'var(--mui-palette-text-primary)',
         boxShadow: '-2px 0 8px rgba(0,0,0,0.15)',
         overflowY: 'auto',
