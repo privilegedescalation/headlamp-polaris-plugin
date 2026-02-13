@@ -9,7 +9,7 @@ on:
 
 jobs:
   e2e:
-    runs-on: k3s-animaniacs
+    runs-on: local-ubuntu-latest
     timeout-minutes: 15
 
     steps:
