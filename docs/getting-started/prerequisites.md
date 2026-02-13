@@ -4,12 +4,12 @@ Before installing the Headlamp Polaris Plugin, ensure your environment meets the
 
 ## Required Components
 
-| Requirement                      | Minimum Version    | Recommended Version |
-| -------------------------------- | ------------------ | ------------------- |
-| **Kubernetes**                   | v1.24+             | v1.28+              |
-| **Headlamp**                     | v0.26+             | v0.39+              |
-| **Polaris** (dashboard enabled)  | Any recent release | Latest stable       |
-| **Browser**                      | Modern (ES2020+)   | Latest Chrome/Firefox/Safari/Edge |
+| Requirement                     | Minimum Version    | Recommended Version               |
+| ------------------------------- | ------------------ | --------------------------------- |
+| **Kubernetes**                  | v1.24+             | v1.28+                            |
+| **Headlamp**                    | v0.26+             | v0.39+                            |
+| **Polaris** (dashboard enabled) | Any recent release | Latest stable                     |
+| **Browser**                     | Modern (ES2020+)   | Latest Chrome/Firefox/Safari/Edge |
 
 ## Polaris Requirements
 
@@ -91,7 +91,6 @@ helm repo update
 helm install headlamp headlamp/headlamp \
   --namespace kube-system \
   --set config.pluginsDir="/headlamp/plugins" \
-  --set config.watchPlugins=false \
   --set pluginsManager.enabled=true
 
 # Wait for pod to be ready
@@ -133,6 +132,7 @@ Headlamp Pod → Kubernetes API Server → Polaris Dashboard Service
 ```
 
 **Required network paths:**
+
 - Headlamp pod → Kubernetes API server (443)
 - Kubernetes API server → Polaris dashboard service (80)
 
@@ -161,12 +161,12 @@ The plugin uses modern JavaScript features and requires:
 
 ### Tested Browsers
 
-| Browser          | Minimum Version |
-| ---------------- | --------------- |
-| Chrome/Chromium  | 80+             |
-| Firefox          | 75+             |
-| Safari           | 13.1+           |
-| Edge             | 80+             |
+| Browser         | Minimum Version |
+| --------------- | --------------- |
+| Chrome/Chromium | 80+             |
+| Firefox         | 75+             |
+| Safari          | 13.1+           |
+| Edge            | 80+             |
 
 ## Optional Components
 

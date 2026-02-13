@@ -29,10 +29,10 @@ metadata:
     app.kubernetes.io/name: headlamp-polaris-plugin
     app.kubernetes.io/component: rbac
 rules:
-  - apiGroups: [""]
-    resources: ["services/proxy"]
-    resourceNames: ["polaris-dashboard"]
-    verbs: ["get"]
+  - apiGroups: ['']
+    resources: ['services/proxy']
+    resourceNames: ['polaris-dashboard']
+    verbs: ['get']
 
 ---
 # RoleBinding: Grant Headlamp service account access
@@ -145,11 +145,11 @@ spec:
         - name: headlamp
           image: ghcr.io/headlamp-k8s/headlamp:v0.39.0
           args:
-            - "-in-cluster"
-            - "-plugins-dir=/headlamp/plugins"
+            - '-in-cluster'
+            - '-plugins-dir=/headlamp/plugins'
           env:
             - name: HEADLAMP_CONFIG_WATCH_PLUGINS
-              value: "false"  # CRITICAL: Must be false for plugin manager
+              value: 'false' # CRITICAL: Must be false for plugin manager
           ports:
             - name: http
               containerPort: 4466

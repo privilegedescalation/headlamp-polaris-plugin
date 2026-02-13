@@ -7,6 +7,7 @@
 ## Context
 
 The Headlamp Polaris Plugin needs to fetch Polaris audit data once and share it across multiple components:
+
 - Dashboard view (cluster overview)
 - Namespaces list view
 - Namespace detail view (drawer)
@@ -16,12 +17,14 @@ The Headlamp Polaris Plugin needs to fetch Polaris audit data once and share it 
 Multiple state management approaches are available: Redux, Zustand, Jotai, Recoil, React Context (built-in), or component props with prop drilling.
 
 **Constraints:**
+
 - Headlamp plugin environment does not allow adding external dependencies (peer dependencies only)
 - Redux, Zustand, Jotai, Recoil are not available in the plugin runtime
 - Plugin must work with Headlamp's existing React context (React 17+)
 - Bundle size should remain small (<50 KB)
 
 **Requirements:**
+
 - Share `AuditData` object across all views without duplicate API calls
 - Support auto-refresh on user-configurable interval (1-30 minutes)
 - Handle loading and error states consistently
@@ -32,6 +35,7 @@ Multiple state management approaches are available: Redux, Zustand, Jotai, Recoi
 Use **React Context API** (built-in, no dependencies) for shared state management.
 
 **Implementation:**
+
 - `PolarisDataProvider` wraps all plugin routes
 - `usePolarisDataContext()` hook provides `{ data, loading, error, refresh }` to consumers
 - Single fetch shared across all views
@@ -67,12 +71,14 @@ Use **React Context API** (built-in, no dependencies) for shared state managemen
 ### Option 1: Redux
 
 **Pros:**
+
 - Powerful state management with middleware
 - Excellent DevTools for debugging
 - Time-travel debugging
 - Well-established patterns
 
 **Cons:**
+
 - Redux is not available as a peer dependency in Headlamp plugins
 - Massive overkill for single AuditData object
 - Adds significant bundle size (~10-15 KB)
@@ -83,11 +89,13 @@ Use **React Context API** (built-in, no dependencies) for shared state managemen
 ### Option 2: Zustand
 
 **Pros:**
+
 - Lightweight (~1 KB)
 - Simple API similar to `useState`
 - No provider boilerplate
 
 **Cons:**
+
 - External peer dependency (not available in plugin runtime)
 - Still adds bundle size
 - Unnecessary for read-only state
@@ -97,11 +105,13 @@ Use **React Context API** (built-in, no dependencies) for shared state managemen
 ### Option 3: Component Props (Prop Drilling)
 
 **Pros:**
+
 - No dependencies
 - Explicit data flow
 - TypeScript tracks prop types
 
 **Cons:**
+
 - Prop drilling through 5+ component layers (index.tsx → route → view → subcomponent)
 - Duplicate fetches if not carefully managed
 - Refactoring nightmare if component tree changes
@@ -112,10 +122,12 @@ Use **React Context API** (built-in, no dependencies) for shared state managemen
 ### Option 4: Global Variable / Module State
 
 **Pros:**
+
 - Simple to implement
 - No React dependencies
 
 **Cons:**
+
 - No reactivity (components don't re-render on data change)
 - No built-in loading/error handling
 - Breaks React's declarative model
@@ -126,6 +138,7 @@ Use **React Context API** (built-in, no dependencies) for shared state managemen
 ## Implementation Details
 
 **Context Definition:**
+
 ```typescript
 interface PolarisDataContextValue {
   data: AuditData | null;
@@ -138,6 +151,7 @@ const PolarisDataContext = React.createContext<PolarisDataContextValue | undefin
 ```
 
 **Provider Implementation:**
+
 ```typescript
 export function PolarisDataProvider({ children }: { children: React.ReactNode }) {
   const [data, setData] = useState<AuditData | null>(null);
@@ -163,6 +177,7 @@ export function PolarisDataProvider({ children }: { children: React.ReactNode })
 ```
 
 **Consumer Hook:**
+
 ```typescript
 export function usePolarisDataContext() {
   const context = useContext(PolarisDataContext);
@@ -176,6 +191,7 @@ export function usePolarisDataContext() {
 ## Validation Criteria
 
 **Success Metrics:**
+
 - ✅ All views share single fetch (verified via network tab - one request per refresh)
 - ✅ No duplicate API calls (verified via Kubernetes audit logs)
 - ✅ Auto-refresh works correctly (5-30 minute intervals)
@@ -184,6 +200,7 @@ export function usePolarisDataContext() {
 - ✅ Bundle size remains <50 KB (currently ~27 KB)
 
 **Tested Scenarios:**
+
 - ✅ Initial load with loading spinner
 - ✅ Error handling (403, 404, network errors)
 - ✅ Manual refresh via button
@@ -200,6 +217,6 @@ export function usePolarisDataContext() {
 
 ## Revision History
 
-| Date | Author | Change |
-|------|--------|--------|
+| Date       | Author      | Change           |
+| ---------- | ----------- | ---------------- |
 | 2026-02-12 | Plugin Team | Initial decision |

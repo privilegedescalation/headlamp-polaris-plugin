@@ -18,6 +18,7 @@ This document describes the architecture, design decisions, and data flow of the
 The Headlamp Polaris Plugin is a **read-only dashboard** that surfaces Fairwinds Polaris audit results within the Headlamp UI. It fetches data from the Polaris dashboard API via the Kubernetes service proxy and presents it in a hierarchical navigation structure.
 
 **Key Characteristics:**
+
 - **Read-only:** No write operations to cluster or Polaris
 - **Service proxy based:** Uses K8s API server proxy to reach Polaris
 - **React Context for state:** Shared data fetch across components
@@ -170,6 +171,7 @@ Display namespace score + resource table
 ### Plugin Entry Point
 
 **`src/index.tsx`**
+
 - Registers sidebar entries (Polaris → Overview, Namespaces)
 - Registers routes (`/polaris`, `/polaris/namespaces`)
 - Registers app bar action (score badge)
@@ -179,22 +181,26 @@ Display namespace score + resource table
 ### Data Layer
 
 **`src/api/PolarisDataContext.tsx`**
+
 - React Context Provider for shared data
 - Fetches AuditData from Polaris dashboard
 - Handles auto-refresh based on user settings
 - Provides `{ data, loading, error, refresh }` to consumers
 
 **`src/api/polaris.ts`**
+
 - TypeScript types for AuditData schema
 - Utility functions: `countResults()`, `computeScore()`
 - Settings management: `getRefreshInterval()`, `setRefreshInterval()`
 - Constants: `DASHBOARD_URL_DEFAULT`, `INTERVAL_OPTIONS`
 
 **`src/api/checkMapping.ts`**
+
 - Maps Polaris check IDs to human-readable names
 - Used for display in UI (e.g., "hostIPCSet" → "Host IPC")
 
 **`src/api/topIssues.ts`**
+
 - Aggregates failing checks across cluster
 - Groups by check ID and severity
 - Used for top issues dashboard
@@ -202,6 +208,7 @@ Display namespace score + resource table
 ### View Components
 
 **`src/components/DashboardView.tsx`**
+
 - **Route:** `/polaris`
 - **Purpose:** Cluster-wide overview
 - **Features:**
@@ -212,6 +219,7 @@ Display namespace score + resource table
 - **Data:** Uses `usePolarisDataContext()`
 
 **`src/components/NamespacesListView.tsx`**
+
 - **Route:** `/polaris/namespaces`
 - **Purpose:** List all namespaces with scores
 - **Features:**
@@ -221,6 +229,7 @@ Display namespace score + resource table
 - **Data:** Uses `usePolarisDataContext()`, aggregates by namespace
 
 **`src/components/NamespaceDetailView.tsx`**
+
 - **Route:** Drawer on `/polaris/namespaces#<namespace>`
 - **Purpose:** Namespace-level drill-down
 - **Features:**
@@ -233,6 +242,7 @@ Display namespace score + resource table
 ### UI Components
 
 **`src/components/AppBarScoreBadge.tsx`**
+
 - **Location:** Headlamp app bar (top-right)
 - **Purpose:** Quick cluster score visibility
 - **Features:**
@@ -242,6 +252,7 @@ Display namespace score + resource table
 - **Data:** Uses `usePolarisDataContext()`
 
 **`src/components/PolarisSettings.tsx`**
+
 - **Location:** Settings → Plugins → Polaris
 - **Purpose:** Plugin configuration
 - **Features:**
@@ -251,6 +262,7 @@ Display namespace score + resource table
 - **Data:** localStorage for persistence
 
 **`src/components/InlineAuditSection.tsx`**
+
 - **Location:** Resource detail pages (Deployment, StatefulSet, etc.)
 - **Purpose:** Show Polaris audit inline
 - **Features:**
@@ -260,6 +272,7 @@ Display namespace score + resource table
 - **Data:** Uses `usePolarisDataContext()`, filters by resource
 
 **`src/components/ExemptionManager.tsx`**
+
 - **Location:** (Planned feature, UI exists but not fully integrated)
 - **Purpose:** Manage Polaris exemptions via annotations
 - **Features:**
@@ -274,6 +287,7 @@ Display namespace score + resource table
 **Decision:** Use React Context instead of Redux/Zustand
 
 **Rationale:**
+
 1. **Simple state:** Single AuditData object shared across views
 2. **Read-only:** No complex mutations or transactions
 3. **Headlamp constraints:** Plugin cannot add dependencies (Redux not bundled)
@@ -283,10 +297,10 @@ Display namespace score + resource table
 
 ```typescript
 interface PolarisDataContextValue {
-  data: AuditData | null;      // Audit results or null if loading/error
-  loading: boolean;             // True during initial fetch
-  error: string | null;         // Error message if fetch failed
-  refresh: () => void;          // Manual refresh function
+  data: AuditData | null; // Audit results or null if loading/error
+  loading: boolean; // True during initial fetch
+  error: string | null; // Error message if fetch failed
+  refresh: () => void; // Manual refresh function
 }
 ```
 
@@ -300,6 +314,7 @@ interface PolarisDataContextValue {
 ### localStorage Usage
 
 Settings persisted in localStorage:
+
 - **`polaris-plugin-refresh-interval`**: Number (seconds), default 300
 - **`polaris-plugin-dashboard-url`**: String, default service proxy path
 
@@ -312,12 +327,14 @@ No sensitive data stored in localStorage.
 **Decision:** Use Kubernetes service proxy, not direct ClusterIP access
 
 **Rationale:**
+
 - Headlamp already has K8s API credentials (service account or user token)
 - Service proxy leverages existing RBAC (no new credentials needed)
 - Works with Headlamp's token auth and OIDC
 - Simpler deployment (no additional network policies for plugin)
 
 **Trade-off:**
+
 - Requires `get` permission on `services/proxy` resource
 - Path is longer: `/api/v1/namespaces/polaris/services/polaris-dashboard:80/proxy/results.json`
 
@@ -326,14 +343,17 @@ No sensitive data stored in localStorage.
 **Decision:** Sidebar has "Polaris" → "Overview" and "Namespaces" (2 levels max)
 
 **Rationale:**
+
 - Headlamp sidebar supports 2-level nesting maximum
 - Deeper nesting (e.g., Polaris → Namespaces → <each namespace>) doesn't work
 - Sidebar Collapse component is route-based, not click-to-toggle
 
 **Alternative Considered:**
+
 - Dynamic sidebar with namespace entries → rejected (Headlamp limitation)
 
 **Current Solution:**
+
 - Use table in NamespacesListView with clickable namespace buttons
 - Namespace detail opens in drawer (not new route)
 
@@ -342,12 +362,14 @@ No sensitive data stored in localStorage.
 **Decision:** Namespace detail uses drawer, not dedicated route
 
 **Rationale:**
+
 - Better UX (drawer overlays table, no navigation loss)
 - URL hash preserves navigation state (`#namespace-name`)
 - Keyboard shortcuts (Escape to close)
 - Sidebar doesn't support 3-level nesting for per-namespace routes
 
 **Implementation:**
+
 - URL: `/polaris/namespaces#kube-system`
 - Drawer controlled by hash presence
 - `useEffect` watches hash changes
@@ -357,11 +379,13 @@ No sensitive data stored in localStorage.
 **Decision:** Never import from `@mui/material` or `@mui/icons-material`
 
 **Rationale:**
+
 - Headlamp plugin environment doesn't provide full MUI library
 - Importing MUI causes `createSvgIcon undefined` error
 - Plugins must use Headlamp CommonComponents only
 
 **Alternative:**
+
 - Use standard HTML elements with inline styles
 - Use theme-aware CSS variables (`--mui-palette-*`)
 
@@ -370,11 +394,13 @@ No sensitive data stored in localStorage.
 **Decision:** Enable all TypeScript strict checks
 
 **Rationale:**
+
 - Catch errors at compile time
 - Better IDE support and autocomplete
 - Enforces type safety (no `any`, no implicit unknowns)
 
 **Impact:**
+
 - More verbose code (explicit types required)
 - Better maintainability and refactorability
 
@@ -383,11 +409,13 @@ No sensitive data stored in localStorage.
 **Decision:** Default refresh interval is 5 minutes (configurable)
 
 **Rationale:**
+
 - Polaris audits typically run every 10-30 minutes
 - Balance between data freshness and API load
 - User can configure from 1 minute to 30 minutes
 
 **Considered:**
+
 - WebSocket/SSE for real-time updates → rejected (Polaris dashboard doesn't support)
 - Shorter default → rejected (unnecessary API calls)
 
@@ -401,28 +429,30 @@ No sensitive data stored in localStorage.
 
 ```typescript
 // Sidebar navigation
-registerSidebarEntry({ parent, name, label, url, icon })
+registerSidebarEntry({ parent, name, label, url, icon });
 
 // Routes
-registerRoute({ path, sidebar, name, exact, component })
+registerRoute({ path, sidebar, name, exact, component });
 
 // App bar actions
-registerAppBarAction(component)
+registerAppBarAction(component);
 
 // Plugin settings
-registerPluginSettings(name, component, displaySaveButton)
+registerPluginSettings(name, component, displaySaveButton);
 
 // Resource detail sections
-registerDetailsViewSection(component)
+registerDetailsViewSection(component);
 ```
 
 **Key Changes in v0.13.0:**
+
 - `registerDetailsViewSection` now takes 1 argument (component), not 2 (name, component)
 - `registerAppBarAction` now takes 1 argument (component), not 2 (name, component)
 
 ### Headlamp CommonComponents
 
 **Used Components:**
+
 - `SectionBox` - Card-like container with title
 - `SectionHeader` - Page header with title
 - `StatusLabel` - Color-coded status badges
@@ -432,16 +462,19 @@ registerDetailsViewSection(component)
 - `Loader` - Loading spinner
 
 **Router:**
+
 - `Router.createRouteURL()` - Generate plugin route URLs
 - React Router's `useHistory()`, `useParams()`, `useLocation()`
 
 ### Kubernetes API (via ApiProxy)
 
 **Used for:**
+
 - Fetching Polaris results: `ApiProxy.request(dashboardUrl + 'results.json')`
 - No direct K8s API calls (all data from Polaris dashboard)
 
 **RBAC Required:**
+
 - `get` on `services/proxy` for `polaris-dashboard` in `polaris` namespace
 
 ## Known Limitations
@@ -529,18 +562,22 @@ registerDetailsViewSection(component)
 ### Potential Improvements
 
 1. **WebWorker for data processing**
+
    - Offload `countResults()` aggregation for large clusters
    - Keep UI responsive during heavy computation
 
 2. **IndexedDB caching**
+
    - Cache audit data offline
    - Show stale data + "refresh available" indicator
 
 3. **GraphQL/REST API abstraction**
+
    - Decouple from Polaris dashboard JSON format
    - Support multiple backend sources
 
 4. **Plugin-to-plugin communication**
+
    - Integrate with other Headlamp plugins (e.g., policy enforcement)
    - Shared state between plugins
 

@@ -18,13 +18,13 @@ Comprehensive guide to testing the Headlamp Polaris Plugin, covering unit tests,
 
 The Headlamp Polaris Plugin uses a multi-layered testing approach:
 
-| Test Type | Framework | Purpose | Location |
-|-----------|-----------|---------|----------|
-| **Unit Tests** | Vitest | Test individual functions and components in isolation | `src/**/*.test.ts(x)` |
-| **E2E Tests** | Playwright | Test complete user flows against live Headlamp instance | `e2e/*.spec.ts` |
-| **Type Checking** | TypeScript | Ensure type safety across codebase | `tsc --noEmit` |
-| **Linting** | ESLint | Enforce code style and catch common errors | `eslint src/` |
-| **Formatting** | Prettier | Maintain consistent code formatting | `prettier --check src/` |
+| Test Type         | Framework  | Purpose                                                 | Location                |
+| ----------------- | ---------- | ------------------------------------------------------- | ----------------------- |
+| **Unit Tests**    | Vitest     | Test individual functions and components in isolation   | `src/**/*.test.ts(x)`   |
+| **E2E Tests**     | Playwright | Test complete user flows against live Headlamp instance | `e2e/*.spec.ts`         |
+| **Type Checking** | TypeScript | Ensure type safety across codebase                      | `tsc --noEmit`          |
+| **Linting**       | ESLint     | Enforce code style and catch common errors              | `eslint src/`           |
+| **Formatting**    | Prettier   | Maintain consistent code formatting                     | `prettier --check src/` |
 
 ### Test Philosophy
 
@@ -178,7 +178,9 @@ describe('DashboardView', () => {
     const mockData = {
       DisplayName: 'test-cluster',
       ClusterInfo: { Version: '1.27', Nodes: 3, Pods: 100, Namespaces: 10, Controllers: 50 },
-      Results: [/* ... */],
+      Results: [
+        /* ... */
+      ],
     };
 
     vi.spyOn(PolarisDataContext, 'usePolarisDataContext').mockReturnValue({
@@ -197,6 +199,7 @@ describe('DashboardView', () => {
 ### What to Unit Test
 
 ✅ **Do test:**
+
 - Pure functions (score calculation, filtering, data transformation)
 - Data parsing and validation
 - Utility functions
@@ -204,6 +207,7 @@ describe('DashboardView', () => {
 - Edge cases (empty arrays, null values, invalid input)
 
 ❌ **Don't test:**
+
 - Third-party libraries (Headlamp, React)
 - Simple prop passing
 - Trivial getters/setters
@@ -242,6 +246,7 @@ npx playwright show-trace test-results/<test-name>/trace.zip
 **1. Headlamp Instance**
 
 E2E tests require a running Headlamp instance with:
+
 - Polaris plugin installed (version being tested)
 - Polaris dashboard deployed and accessible
 - RBAC configured (service proxy permissions)
@@ -296,32 +301,32 @@ AUTHENTIK_PASSWORD=secret
 
 **File:** `e2e/polaris.spec.ts`
 
-| Test | Description | Validates |
-|------|-------------|-----------|
-| `sidebar contains Polaris entry` | Polaris appears in sidebar | Plugin registration |
-| `overview page renders cluster score` | Score displayed on overview | Data fetching, rendering |
-| `namespaces page renders table` | Namespace table loads | Data parsing, table rendering |
-| `namespace detail drawer opens` | Clicking namespace shows drawer | Navigation, drawer UI |
-| `namespace detail drawer closes with Escape` | Keyboard shortcut works | Keyboard navigation |
-| `namespace detail drawer opens from URL hash` | Direct URL navigation | URL routing, deep linking |
+| Test                                          | Description                     | Validates                     |
+| --------------------------------------------- | ------------------------------- | ----------------------------- |
+| `sidebar contains Polaris entry`              | Polaris appears in sidebar      | Plugin registration           |
+| `overview page renders cluster score`         | Score displayed on overview     | Data fetching, rendering      |
+| `namespaces page renders table`               | Namespace table loads           | Data parsing, table rendering |
+| `namespace detail drawer opens`               | Clicking namespace shows drawer | Navigation, drawer UI         |
+| `namespace detail drawer closes with Escape`  | Keyboard shortcut works         | Keyboard navigation           |
+| `namespace detail drawer opens from URL hash` | Direct URL navigation           | URL routing, deep linking     |
 
 **File:** `e2e/settings.spec.ts`
 
-| Test | Description | Validates |
-|------|-------------|-----------|
-| `plugin settings page is accessible` | Settings page loads | Settings registration |
-| `refresh interval can be changed` | Dropdown works | User preference persistence |
-| `dashboard URL can be customized` | Input field works | URL configuration |
-| `connection test button works` | Test functionality | API connectivity validation |
+| Test                                 | Description         | Validates                   |
+| ------------------------------------ | ------------------- | --------------------------- |
+| `plugin settings page is accessible` | Settings page loads | Settings registration       |
+| `refresh interval can be changed`    | Dropdown works      | User preference persistence |
+| `dashboard URL can be customized`    | Input field works   | URL configuration           |
+| `connection test button works`       | Test functionality  | API connectivity validation |
 
 **File:** `e2e/appbar.spec.ts`
 
-| Test | Description | Validates |
-|------|-------------|-----------|
-| `app bar displays Polaris badge` | Badge visible in header | App bar integration |
-| `badge shows cluster score` | Score matches dashboard | Data consistency |
-| `clicking badge navigates to overview` | Navigation works | App bar action |
-| `badge color reflects score` | Red/yellow/green based on score | Visual feedback |
+| Test                                   | Description                     | Validates           |
+| -------------------------------------- | ------------------------------- | ------------------- |
+| `app bar displays Polaris badge`       | Badge visible in header         | App bar integration |
+| `badge shows cluster score`            | Score matches dashboard         | Data consistency    |
+| `clicking badge navigates to overview` | Navigation works                | App bar action      |
+| `badge color reflects score`           | Red/yellow/green based on score | Visual feedback     |
 
 ### Writing E2E Tests
 
@@ -385,6 +390,7 @@ npx playwright test --debug
 ```
 
 This opens Playwright Inspector where you can:
+
 - Step through each test action
 - Inspect page state
 - Edit test selectors live
@@ -455,12 +461,12 @@ jobs:
 
 Configure in GitHub repository settings (Settings → Secrets and variables → Actions):
 
-| Secret | Required | Description |
-|--------|----------|-------------|
-| `HEADLAMP_URL` | Optional | Headlamp instance URL (defaults to configured instance) |
-| `AUTHENTIK_USERNAME` | OIDC | Authentik username/email for CI user |
-| `AUTHENTIK_PASSWORD` | OIDC | Authentik password |
-| `HEADLAMP_TOKEN` | Token | Kubernetes service account token (alternative to OIDC) |
+| Secret               | Required | Description                                             |
+| -------------------- | -------- | ------------------------------------------------------- |
+| `HEADLAMP_URL`       | Optional | Headlamp instance URL (defaults to configured instance) |
+| `AUTHENTIK_USERNAME` | OIDC     | Authentik username/email for CI user                    |
+| `AUTHENTIK_PASSWORD` | OIDC     | Authentik password                                      |
+| `HEADLAMP_TOKEN`     | Token    | Kubernetes service account token (alternative to OIDC)  |
 
 Set either `AUTHENTIK_USERNAME` + `AUTHENTIK_PASSWORD` **or** `HEADLAMP_TOKEN`. OIDC takes priority if both are set.
 
@@ -478,11 +484,11 @@ Trigger workflows manually from GitHub Actions UI:
 
 ### Current Coverage
 
-| Category | Coverage | Notes |
-|----------|----------|-------|
-| **API Functions** | 95% | Core utilities fully tested |
-| **React Components** | 60% | Focus on critical render paths |
-| **E2E User Flows** | 80% | Main features covered |
+| Category             | Coverage | Notes                          |
+| -------------------- | -------- | ------------------------------ |
+| **API Functions**    | 95%      | Core utilities fully tested    |
+| **React Components** | 60%      | Focus on critical render paths |
+| **E2E User Flows**   | 80%      | Main features covered          |
 
 ### Coverage Goals
 
@@ -507,18 +513,22 @@ open coverage/index.html
 ### Unit Testing
 
 1. **Test behavior, not implementation**
+
    - ✅ `expect(computeScore({ total: 100, pass: 75 })).toBe(75)`
    - ❌ `expect(mockInternalFunction).toHaveBeenCalled()`
 
 2. **Use descriptive test names**
+
    - ✅ `it('returns 0 when total checks is zero')`
    - ❌ `it('works')`
 
 3. **One assertion per test (when possible)**
+
    - Makes failures easier to debug
    - Exceptions: testing multiple properties of same object
 
 4. **Mock external dependencies**
+
    - Mock API calls, context providers, external libraries
    - Don't mock the code you're testing
 
@@ -529,27 +539,33 @@ open coverage/index.html
 ### E2E Testing
 
 1. **Use semantic selectors**
+
    - ✅ `page.getByRole('button', { name: 'Close' })`
    - ✅ `page.getByText('Polaris — Overview')`
    - ❌ `page.locator('.MuiButton-root')`
 
 2. **Wait for visibility, not arbitrary timeouts**
+
    - ✅ `await expect(element).toBeVisible()`
    - ❌ `await page.waitForTimeout(5000)`
 
 3. **Keep tests independent**
+
    - Each test should work in isolation
    - Don't rely on previous tests' state
 
 4. **Test complete user flows**
+
    - Navigate → Interact → Verify outcome
    - Don't just test page loads
 
 5. **Clean up after tests**
+
    - Close drawers/modals
    - Reset state if needed
 
 6. **Use storage state for auth**
+
    - Reuse authenticated session across tests
    - Faster than logging in for every test
 
@@ -560,15 +576,18 @@ open coverage/index.html
 ### General
 
 1. **Run tests before committing**
+
    ```bash
    npm run build && npm run lint && npm test
    ```
 
 2. **Fix failing tests immediately**
+
    - Don't commit failing tests
    - Don't skip tests to "fix later"
 
 3. **Update tests when changing code**
+
    - Tests are documentation
    - Keep them in sync with implementation
 
@@ -604,7 +623,7 @@ Check mocks are returning expected structure:
 
 ```typescript
 vi.spyOn(PolarisDataContext, 'usePolarisDataContext').mockReturnValue({
-  data: mockData,    // Ensure mockData has all required fields
+  data: mockData, // Ensure mockData has all required fields
   loading: false,
   error: null,
   refresh: vi.fn(),
@@ -624,6 +643,7 @@ npm run e2e:headed
 ```
 
 Common causes:
+
 - Element hasn't rendered yet (use `toBeVisible()` instead of `toBeDefined()`)
 - Wrong selector (use Playwright Inspector to verify)
 - Authentication failed (check token/credentials)

@@ -11,8 +11,10 @@ This plan standardizes documentation structure, formatting, and content across t
 ## Current State Analysis
 
 ### Polaris Plugin (v0.3.5)
+
 **Structure**: Topic-focused with monolithic files
 **Strengths**:
+
 - Comprehensive CONTRIBUTING.md with branching strategy and commit conventions
 - Complete CHANGELOG.md (35 versions documented)
 - Dedicated SECURITY.md with vulnerability reporting
@@ -21,6 +23,7 @@ This plan standardizes documentation structure, formatting, and content across t
 - Well-organized TROUBLESHOOTING.md with common issues
 
 **Gaps**:
+
 - No user journey-based organization
 - No Architecture Decision Records
 - Limited quick-start tutorials
@@ -28,8 +31,10 @@ This plan standardizes documentation structure, formatting, and content across t
 - Deployment guide is monolithic (needs breakdown)
 
 ### Sealed Secrets Plugin
+
 **Structure**: User journey-based with granular topic files
 **Strengths**:
+
 - Excellent user journey organization (Getting Started → User Guide → Tutorials)
 - Architecture Decision Records (5 ADRs)
 - Quick diagnosis flowchart in troubleshooting
@@ -38,6 +43,7 @@ This plan standardizes documentation structure, formatting, and content across t
 - Visual hierarchy with strategic emoji use
 
 **Gaps**:
+
 - No dedicated CONTRIBUTING.md (content in README)
 - No SECURITY.md for vulnerability reporting
 - Incomplete tutorial placeholders
@@ -49,6 +55,7 @@ This plan standardizes documentation structure, formatting, and content across t
 ### 1. File Structure Standard
 
 **Root-Level Files** (Common to Both):
+
 ```
 README.md              # Main entry point with badges, quick links
 CHANGELOG.md           # Keep a Changelog format, semantic versioning
@@ -59,6 +66,7 @@ package.json          # Plugin metadata
 ```
 
 **Documentation Directory** (Organized by User Journey):
+
 ```
 docs/
 ├── README.md         # Documentation hub with quick links
@@ -94,6 +102,7 @@ docs/
 ### 2. README.md Standard
 
 **Required Sections** (Order Matters):
+
 1. Title + Badges (ArtifactHub, CI, E2E, License)
 2. Quick navigation links (📚 Documentation | 🚀 Installation | 🔒 Security | 🛠️ Development)
 3. **What It Does** (features with visual hierarchy)
@@ -111,6 +120,7 @@ docs/
 15. Footer ("Made with ❤️ for the Kubernetes community")
 
 **Formatting Standards**:
+
 - Use emojis strategically for visual scanning (not excessive)
 - Quick navigation at top
 - Tables for structured data (prerequisites, troubleshooting quick ref)
@@ -122,6 +132,7 @@ docs/
 **Format**: Keep a Changelog (https://keepachangelog.com/)
 
 **Structure**:
+
 ```markdown
 # Changelog
 
@@ -135,21 +146,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [X.Y.Z] - YYYY-MM-DD
 
 ### Added
+
 - New features
 
 ### Changed
+
 - Changes to existing functionality
 
 ### Deprecated
+
 - Soon-to-be removed features
 
 ### Removed
+
 - Removed features
 
 ### Fixed
+
 - Bug fixes
 
 ### Security
+
 - Security fixes
 
 [Unreleased]: https://github.com/user/repo/compare/vX.Y.Z...HEAD
@@ -157,6 +174,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ```
 
 **Standards**:
+
 - One entry per version, newest first
 - Date in ISO 8601 format (YYYY-MM-DD)
 - Link to GitHub release
@@ -166,6 +184,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### 4. CONTRIBUTING.md Standard
 
 **Required Sections**:
+
 1. Code of Conduct (brief, respectful)
 2. Getting Started (prerequisites, setup)
 3. Development Workflow (feature development, testing)
@@ -178,6 +197,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 10. Release Process (version numbering, creating releases)
 
 **Formatting**:
+
 - Use tables for branch naming conventions
 - Code blocks for commit message examples
 - Checklists for PR requirements
@@ -186,6 +206,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### 5. SECURITY.md Standard
 
 **Required Sections**:
+
 1. Overview (security model, read-only vs. write operations)
 2. Data Flow Diagram (how data moves through system)
 3. RBAC Requirements (minimal permissions table)
@@ -198,6 +219,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 10. Compliance Considerations (audit trail, GDPR/privacy)
 
 **Formatting**:
+
 - Tables for permissions and supported versions
 - YAML examples for RBAC manifests
 - Bash commands for security verification
@@ -208,6 +230,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 **Purpose**: Central navigation for all documentation
 
 **Structure**:
+
 ```markdown
 # Documentation
 
@@ -222,31 +245,40 @@ Central hub for [Plugin Name] documentation.
 - 💻 [Development](development/workflow.md)
 
 ## Getting Started
+
 Description + links to installation, prerequisites, quick-start
 
 ## User Guide
+
 Description + links to features, configuration, RBAC
 
 ## Tutorials
+
 Description + links to plugin-specific tutorials
 
 ## Troubleshooting
+
 Description + link to quick diagnosis + common issues
 
 ## Architecture
+
 Description + links to overview, data flow, ADRs
 
 ## Development
+
 Description + links to workflow, testing, code style, release
 
 ## Deployment
+
 Description + links to Kubernetes, Helm, production
 
 ## API Reference
+
 Link to JSDoc or generated API docs
 ```
 
 **Formatting**:
+
 - Emojis for visual scanning
 - Brief descriptions (1-2 sentences) for each section
 - Organized by user journey (beginner → advanced)
@@ -254,12 +286,14 @@ Link to JSDoc or generated API docs
 ### 7. Architecture Decision Records (ADR) Standard
 
 **When to Create ADRs**:
+
 - Significant architectural choices
 - Technology selection (libraries, patterns)
 - Security or performance trade-offs
 - Design patterns that impact maintainability
 
 **Template** (Based on Michael Nygard's ADR):
+
 ```markdown
 # ADR-NNN: Title
 
@@ -280,17 +314,21 @@ What is the change that we're proposing and/or doing?
 What becomes easier or more difficult to do because of this change?
 
 ### Positive
+
 - ...
 
 ### Negative
+
 - ...
 
 ### Neutral
+
 - ...
 
 ## Alternatives Considered
 
 ### Option 1: Name
+
 **Pros**: ...
 **Cons**: ...
 **Decision**: Not chosen because...
@@ -303,11 +341,12 @@ What becomes easier or more difficult to do because of this change?
 **Numbering**: ADR-001, ADR-002, etc. (zero-padded 3 digits)
 
 **Index File** (architecture/adr/README.md):
+
 ```markdown
 # Architecture Decision Records
 
-| ADR | Title | Status | Date |
-|-----|-------|--------|------|
+| ADR                 | Title | Status   | Date       |
+| ------------------- | ----- | -------- | ---------- |
 | [001](001-title.md) | Title | Accepted | 2026-01-01 |
 ```
 
@@ -316,6 +355,7 @@ What becomes easier or more difficult to do because of this change?
 **Structure**:
 
 **troubleshooting/README.md** (Quick Diagnosis):
+
 ```markdown
 # Troubleshooting
 
@@ -324,8 +364,8 @@ Quick diagnosis guide for common issues.
 ## Quick Reference
 
 | Symptom | Likely Cause | Quick Fix |
-|---------|-------------|-----------|
-| ... | ... | ... |
+| ------- | ------------ | --------- |
+| ...     | ...          | ...       |
 
 ## Detailed Guides
 
@@ -335,6 +375,7 @@ Quick diagnosis guide for common issues.
 ```
 
 **Individual Issue Files**:
+
 - Symptom-based organization
 - Step-by-step resolution
 - Bash commands for verification
@@ -346,6 +387,7 @@ Quick diagnosis guide for common issues.
 **docs/development/testing.md**:
 
 **Required Sections**:
+
 1. Overview (testing philosophy, types of tests)
 2. Unit Testing (framework, running tests, writing tests, examples)
 3. E2E Testing (framework, prerequisites, running tests, examples)
@@ -355,6 +397,7 @@ Quick diagnosis guide for common issues.
 7. Debugging (common issues, useful commands)
 
 **Formatting**:
+
 - Tables for test types and coverage goals
 - Code blocks for examples
 - Bash commands for running tests
@@ -363,6 +406,7 @@ Quick diagnosis guide for common issues.
 ### 10. Visual Formatting Standards
 
 **Emoji Usage** (Strategic, Not Excessive):
+
 - 📚 Documentation
 - 🚀 Installation/Quick Start
 - 🔒 Security
@@ -375,6 +419,7 @@ Quick diagnosis guide for common issues.
 - 💻 Code/Technical
 
 **Code Block Languages**:
+
 - `bash` for shell commands
 - `yaml` for Kubernetes/Helm manifests
 - `typescript` for TypeScript code
@@ -382,11 +427,13 @@ Quick diagnosis guide for common issues.
 - `diff` for showing changes
 
 **Tables**:
+
 - Use for structured data (prerequisites, commands, permissions, troubleshooting)
 - Keep columns concise
 - Left-align text columns, center-align status columns
 
 **Links**:
+
 - Use descriptive text, not "click here"
 - Relative paths within repo (`docs/architecture/overview.md`)
 - Absolute URLs for external resources
@@ -397,6 +444,7 @@ Quick diagnosis guide for common issues.
 ### Phase 1: Polaris Plugin Enhancements
 
 **Priority 1: Granular Documentation Structure**
+
 - [ ] Create docs/README.md (documentation hub)
 - [ ] Break down DEPLOYMENT.md:
   - [ ] docs/getting-started/installation.md
@@ -414,6 +462,7 @@ Quick diagnosis guide for common issues.
 - [ ] Move TESTING.md → docs/development/testing.md
 
 **Priority 2: Add Missing Content**
+
 - [ ] Create docs/getting-started/quick-start.md (5-minute tutorial)
 - [ ] Create docs/user-guide/features.md
 - [ ] Create docs/user-guide/configuration.md
@@ -421,6 +470,7 @@ Quick diagnosis guide for common issues.
 - [ ] Create FAQ section in troubleshooting
 
 **Priority 3: Content Refinement**
+
 - [ ] Add multi-platform instructions to installation.md
 - [ ] Enhance README.md with better visual hierarchy
 - [ ] Add more code examples to user guide
@@ -429,18 +479,21 @@ Quick diagnosis guide for common issues.
 ### Phase 2: Sealed Secrets Plugin Enhancements
 
 **Priority 1: Root-Level Documentation**
+
 - [ ] Extract CONTRIBUTING.md from README
 - [ ] Create SECURITY.md with vulnerability reporting
 - [ ] Expand CHANGELOG.md to include all versions
 - [ ] Update README.md to match standardized format
 
 **Priority 2: Complete Incomplete Files**
+
 - [ ] Finish placeholder tutorial files
 - [ ] Add E2E testing guide to docs/development/testing.md
 - [ ] Expand API reference (ensure generated docs are readable)
 - [ ] Add FAQ section
 
 **Priority 3: Content Refinement**
+
 - [ ] Add CI/CD badges to README
 - [ ] Ensure consistent emoji usage
 - [ ] Standardize code block languages
@@ -449,12 +502,14 @@ Quick diagnosis guide for common issues.
 ### Phase 3: Cross-Repository Standards
 
 **Documentation Templates**
+
 - [ ] ADR template in both repos
 - [ ] Bug report template (GitHub issue template)
 - [ ] Feature request template
 - [ ] PR template
 
 **Shared Patterns**
+
 - [ ] Consistent branching strategy docs
 - [ ] Identical commit message conventions
 - [ ] Same release process documentation
@@ -463,21 +518,25 @@ Quick diagnosis guide for common issues.
 ## Success Metrics
 
 **Completeness**:
+
 - [ ] All standard files present in both repos
 - [ ] No broken links in documentation
 - [ ] All code examples tested and functional
 
 **Consistency**:
+
 - [ ] Same file structure in both repos
 - [ ] Same formatting standards applied
 - [ ] Same terminology used for common concepts
 
 **Usability**:
+
 - [ ] New users can get started in < 5 minutes
 - [ ] Contributors can find development workflow easily
 - [ ] Troubleshooting guides resolve 80%+ of common issues
 
 **Maintainability**:
+
 - [ ] Documentation updates documented in CHANGELOG
 - [ ] ADRs created for all major decisions
 - [ ] Test documentation kept in sync with code
@@ -485,6 +544,7 @@ Quick diagnosis guide for common issues.
 ## Maintenance Guidelines
 
 **When to Update Documentation**:
+
 1. **New Feature**: Add to CHANGELOG, update user guide, add tutorial if complex
 2. **Bug Fix**: Add to CHANGELOG, update troubleshooting if user-facing
 3. **Architecture Change**: Create ADR, update architecture docs
@@ -493,6 +553,7 @@ Quick diagnosis guide for common issues.
 6. **Configuration Change**: Update user guide, add migration notes if needed
 
 **Documentation Review Checklist**:
+
 - [ ] Spelling and grammar checked
 - [ ] Links tested (no 404s)
 - [ ] Code examples tested
@@ -502,6 +563,7 @@ Quick diagnosis guide for common issues.
 - [ ] Version numbers current
 
 **Annual Documentation Audit**:
+
 - Review all docs for accuracy (especially version numbers, screenshots)
 - Check for outdated information
 - Update ADR status if superseded
@@ -512,30 +574,30 @@ Quick diagnosis guide for common issues.
 
 ### Polaris Plugin Current → Standard
 
-| Current | Standard Location |
-|---------|-------------------|
-| README.md | README.md (enhanced) |
-| CHANGELOG.md | CHANGELOG.md (no change) |
-| CONTRIBUTING.md | CONTRIBUTING.md (no change) |
-| SECURITY.md | SECURITY.md (no change) |
-| docs/ARCHITECTURE.md | docs/architecture/overview.md + data-flow.md + design-decisions.md |
-| docs/DEPLOYMENT.md | docs/getting-started/installation.md + docs/deployment/kubernetes.md + helm.md + production.md |
-| docs/TROUBLESHOOTING.md | docs/troubleshooting/README.md + common-issues.md |
-| docs/TESTING.md | docs/development/testing.md |
-| — (new) | docs/README.md |
-| — (new) | docs/getting-started/quick-start.md |
-| — (new) | docs/user-guide/features.md |
-| — (new) | docs/architecture/adr/ |
+| Current                 | Standard Location                                                                              |
+| ----------------------- | ---------------------------------------------------------------------------------------------- |
+| README.md               | README.md (enhanced)                                                                           |
+| CHANGELOG.md            | CHANGELOG.md (no change)                                                                       |
+| CONTRIBUTING.md         | CONTRIBUTING.md (no change)                                                                    |
+| SECURITY.md             | SECURITY.md (no change)                                                                        |
+| docs/ARCHITECTURE.md    | docs/architecture/overview.md + data-flow.md + design-decisions.md                             |
+| docs/DEPLOYMENT.md      | docs/getting-started/installation.md + docs/deployment/kubernetes.md + helm.md + production.md |
+| docs/TROUBLESHOOTING.md | docs/troubleshooting/README.md + common-issues.md                                              |
+| docs/TESTING.md         | docs/development/testing.md                                                                    |
+| — (new)                 | docs/README.md                                                                                 |
+| — (new)                 | docs/getting-started/quick-start.md                                                            |
+| — (new)                 | docs/user-guide/features.md                                                                    |
+| — (new)                 | docs/architecture/adr/                                                                         |
 
 ### Sealed Secrets Plugin Current → Standard
 
-| Current | Standard Location |
-|---------|-------------------|
-| README.md | README.md (extract contributing section) |
-| CHANGELOG.md | CHANGELOG.md (expand) |
-| — (new) | CONTRIBUTING.md (extract from README) |
-| — (new) | SECURITY.md (new file) |
-| docs/* | docs/* (mostly keep, enhance incomplete files) |
+| Current      | Standard Location                               |
+| ------------ | ----------------------------------------------- |
+| README.md    | README.md (extract contributing section)        |
+| CHANGELOG.md | CHANGELOG.md (expand)                           |
+| — (new)      | CONTRIBUTING.md (extract from README)           |
+| — (new)      | SECURITY.md (new file)                          |
+| docs/\*      | docs/\* (mostly keep, enhance incomplete files) |
 
 ---
 

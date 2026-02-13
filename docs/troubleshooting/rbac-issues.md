@@ -70,7 +70,7 @@ metadata:
   namespace: polaris
 subjects:
   - kind: Group
-    name: system:authenticated  # All authenticated users
+    name: system:authenticated # All authenticated users
     apiGroup: rbac.authorization.k8s.io
 roleRef:
   kind: Role

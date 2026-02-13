@@ -4,17 +4,17 @@ Quick diagnosis guide and common issues for the Headlamp Polaris Plugin.
 
 ## Quick Diagnosis
 
-| Symptom | Likely Cause | Quick Fix | Details |
-|---------|-------------|-----------|---------|
-| **Plugin not in sidebar** | Headlamp v0.39.0+ plugin loading issue | Set `config.watchPlugins: false` and hard refresh (Cmd+Shift+R) | [Common Issues](common-issues.md#plugin-not-in-sidebar) |
-| **403 Access Denied** | Missing RBAC binding for `services/proxy` | Apply Role + RoleBinding from RBAC section | [RBAC Issues](rbac-issues.md) |
-| **404 or 503** | Polaris not installed, or dashboard disabled | Install Polaris with `dashboard.enabled: true` in `polaris` namespace | [Common Issues](common-issues.md#404-not-found) |
-| **Dark mode white backgrounds** | Old plugin version | Upgrade to v0.3.5+ and hard refresh browser | [Common Issues](common-issues.md#dark-mode-issues) |
-| **Settings page empty** | Old plugin version | Upgrade to v0.3.3+ | [Common Issues](common-issues.md#settings-page-empty) |
-| **No data / infinite spinner** | Network policy or Polaris pod down | Check network policies and `kubectl get pods -n polaris` | [Network Problems](network-problems.md) |
-| **Namespace drawer white** | CSS variable issue | Update to v0.3.5+ with `--mui-palette-background-paper` | [Common Issues](common-issues.md#dark-mode-issues) |
-| **Cluster score not updating** | Auto-refresh disabled or interval too long | Check Settings → Plugins → Polaris refresh interval | [Common Issues](common-issues.md#data-not-refreshing) |
-| **Custom URL not working** | CORS or incorrect URL format | Test with curl, check CORS headers | [Network Problems](network-problems.md#cors-issues) |
+| Symptom                         | Likely Cause                                 | Quick Fix                                                             | Details                                                 |
+| ------------------------------- | -------------------------------------------- | --------------------------------------------------------------------- | ------------------------------------------------------- |
+| **Plugin not in sidebar**       | Browser cache or plugin not installed        | Hard refresh browser (Cmd+Shift+R) and verify plugin files exist      | [Common Issues](common-issues.md#plugin-not-in-sidebar) |
+| **403 Access Denied**           | Missing RBAC binding for `services/proxy`    | Apply Role + RoleBinding from RBAC section                            | [RBAC Issues](rbac-issues.md)                           |
+| **404 or 503**                  | Polaris not installed, or dashboard disabled | Install Polaris with `dashboard.enabled: true` in `polaris` namespace | [Common Issues](common-issues.md#404-not-found)         |
+| **Dark mode white backgrounds** | Old plugin version                           | Upgrade to v0.3.5+ and hard refresh browser                           | [Common Issues](common-issues.md#dark-mode-issues)      |
+| **Settings page empty**         | Old plugin version                           | Upgrade to v0.3.3+                                                    | [Common Issues](common-issues.md#settings-page-empty)   |
+| **No data / infinite spinner**  | Network policy or Polaris pod down           | Check network policies and `kubectl get pods -n polaris`              | [Network Problems](network-problems.md)                 |
+| **Namespace drawer white**      | CSS variable issue                           | Update to v0.3.5+ with `--mui-palette-background-paper`               | [Common Issues](common-issues.md#dark-mode-issues)      |
+| **Cluster score not updating**  | Auto-refresh disabled or interval too long   | Check Settings → Plugins → Polaris refresh interval                   | [Common Issues](common-issues.md#data-not-refreshing)   |
+| **Custom URL not working**      | CORS or incorrect URL format                 | Test with curl, check CORS headers                                    | [Network Problems](network-problems.md#cors-issues)     |
 
 ## Detailed Guides
 
@@ -56,11 +56,6 @@ kubectl -n kube-system logs deployment/headlamp | grep -i polaris
 ### Plugin Loading Verification
 
 ```bash
-# Check Headlamp config
-kubectl -n kube-system get configmap headlamp -o yaml | grep watchPlugins
-
-# Expected: watchPlugins: "false"
-
 # Verify plugin files exist
 kubectl -n kube-system exec deployment/headlamp -c headlamp -- \
   ls -la /headlamp/plugins/headlamp-polaris-plugin/
@@ -115,6 +110,7 @@ kubectl run -it --rm debug --image=curlimages/curl --restart=Never -- \
 3. Look for errors containing "polaris" or "plugin"
 
 **Common errors:**
+
 - `createSvgIcon is not defined` → MUI import issue (plugin bug)
 - `403 Forbidden` → RBAC permission denied
 - `404 Not Found` → Polaris not installed or wrong URL
@@ -132,12 +128,12 @@ kubectl run -it --rm debug --image=curlimages/curl --restart=Never -- \
 
 ```javascript
 // Open browser console and run:
-localStorage.getItem('polaris-plugin-refresh-interval')
-localStorage.getItem('polaris-plugin-dashboard-url')
+localStorage.getItem('polaris-plugin-refresh-interval');
+localStorage.getItem('polaris-plugin-dashboard-url');
 
 // Reset to defaults:
-localStorage.removeItem('polaris-plugin-refresh-interval')
-localStorage.removeItem('polaris-plugin-dashboard-url')
+localStorage.removeItem('polaris-plugin-refresh-interval');
+localStorage.removeItem('polaris-plugin-dashboard-url');
 ```
 
 ## Still Having Issues?
@@ -145,11 +141,13 @@ localStorage.removeItem('polaris-plugin-dashboard-url')
 If the quick diagnosis doesn't resolve your issue:
 
 1. **Check detailed guides:**
+
    - [Common Issues](common-issues.md)
    - [RBAC Issues](rbac-issues.md)
    - [Network Problems](network-problems.md)
 
 2. **Review documentation:**
+
    - [Installation Guide](../getting-started/installation.md)
    - [RBAC Permissions](../user-guide/rbac-permissions.md)
    - [Deployment Guide](../deployment/kubernetes.md)

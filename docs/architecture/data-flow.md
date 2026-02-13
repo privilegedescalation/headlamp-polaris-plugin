@@ -212,46 +212,46 @@ If no match found:
 
 ```typescript
 interface AuditData {
-  PolarisOutputVersion: string;        // "1.0"
-  AuditTime: string;                   // ISO 8601 timestamp
-  SourceType: string;                  // "Cluster"
-  SourceName: string;                  // Cluster identifier
-  DisplayName: string;                 // Human-readable name
+  PolarisOutputVersion: string; // "1.0"
+  AuditTime: string; // ISO 8601 timestamp
+  SourceType: string; // "Cluster"
+  SourceName: string; // Cluster identifier
+  DisplayName: string; // Human-readable name
   ClusterInfo: {
-    Version: string;                   // K8s version
+    Version: string; // K8s version
     Nodes: number;
     Pods: number;
     Namespaces: number;
     Controllers: number;
   };
-  Results: Result[];                   // Array of resource audit results
+  Results: Result[]; // Array of resource audit results
 }
 
 interface Result {
-  Name: string;                        // Resource name
-  Namespace: string;                   // Kubernetes namespace
-  Kind: string;                        // "Deployment", "StatefulSet", etc.
-  Results: ResultSet;                  // Resource-level checks
+  Name: string; // Resource name
+  Namespace: string; // Kubernetes namespace
+  Kind: string; // "Deployment", "StatefulSet", etc.
+  Results: ResultSet; // Resource-level checks
   PodResult?: {
     Name: string;
-    Results: ResultSet;                // Pod-level checks
+    Results: ResultSet; // Pod-level checks
     ContainerResults: {
       Name: string;
-      Results: ResultSet;              // Container-level checks
+      Results: ResultSet; // Container-level checks
     }[];
   };
-  CreatedTime: string;                 // ISO 8601 timestamp
+  CreatedTime: string; // ISO 8601 timestamp
 }
 
 type ResultSet = Record<string, ResultMessage>;
 
 interface ResultMessage {
-  ID: string;                          // Check ID (e.g., "cpuLimitsMissing")
-  Message: string;                     // Human-readable message
-  Details: string[];                   // Additional context
-  Success: boolean;                    // true = passed, false = failed
-  Severity: "ignore" | "warning" | "danger";
-  Category: string;                    // "Security", "Efficiency", etc.
+  ID: string; // Check ID (e.g., "cpuLimitsMissing")
+  Message: string; // Human-readable message
+  Details: string[]; // Additional context
+  Success: boolean; // true = passed, false = failed
+  Severity: 'ignore' | 'warning' | 'danger';
+  Category: string; // "Security", "Efficiency", etc.
 }
 ```
 
@@ -259,11 +259,11 @@ interface ResultMessage {
 
 ```typescript
 interface ResultCounts {
-  total: number;       // Total checks performed
-  pass: number;        // Checks that passed (Success: true)
-  warning: number;     // Failed checks with Severity: "warning"
-  danger: number;      // Failed checks with Severity: "danger"
-  skipped: number;     // Failed checks with Severity: "ignore"
+  total: number; // Total checks performed
+  pass: number; // Checks that passed (Success: true)
+  warning: number; // Failed checks with Severity: "warning"
+  danger: number; // Failed checks with Severity: "danger"
+  skipped: number; // Failed checks with Severity: "ignore"
 }
 ```
 
@@ -361,21 +361,25 @@ function getNamespaces(data: AuditData): string[] {
 ## Caching Strategy
 
 **Current Implementation:**
+
 - Data fetched once and stored in React Context
 - Shared across all plugin views (no duplicate fetches)
 - Cached until manual refresh or auto-refresh interval
 
 **Cache Invalidation:**
+
 - Manual refresh button click
 - Auto-refresh interval elapses
 - Settings change (dashboard URL)
 
 **No Persistence:**
+
 - Data NOT persisted to localStorage
 - Each browser session fetches fresh data
 - No offline mode
 
 **Future Enhancement:**
+
 - IndexedDB caching for offline access
 - Incremental updates (fetch only changed namespaces)
 - Service Worker for background refresh

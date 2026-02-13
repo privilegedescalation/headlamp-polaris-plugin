@@ -20,34 +20,17 @@ This guide covers common issues encountered when using the Headlamp Polaris Plug
 ## Plugin Not Showing in Sidebar
 
 ### Symptoms
+
 - Plugin appears in Settings → Plugins but sidebar entry is missing
 - No "Polaris" section in navigation
 - Routes like `/polaris` return 404 or blank page
 
 ### Common Causes
 
-**1. Headlamp v0.39.0+ Plugin Loading Issue**
-
-**Root Cause**: Headlamp v0.39.0+ changed plugin loading behavior. With `config.watchPlugins: true` (default), catalog-managed plugins are treated as "development directory" plugins, causing the backend to serve metadata but frontend to never execute the JavaScript.
-
-**Solution**: Set `config.watchPlugins: false` in Headlamp configuration.
-
-```yaml
-# HelmRelease values
-config:
-  watchPlugins: false  # CRITICAL for plugin manager
-```
-
-After applying this change:
-1. Restart Headlamp pod
-2. Hard refresh browser (Cmd+Shift+R or Ctrl+Shift+R)
-3. Clear browser cache if needed
-
-**References**: See `deployment/PLUGIN_LOADING_FIX.md` for complete root cause analysis.
-
-**2. Plugin Not Installed**
+**1. Plugin Not Installed**
 
 **Check plugin installation**:
+
 ```bash
 # View Headlamp pod logs (plugin sidecar)
 kubectl logs -n kube-system deployment/headlamp -c headlamp-plugin
@@ -58,23 +41,26 @@ kubectl logs -n kube-system deployment/headlamp -c headlamp-plugin
 ```
 
 **Verify plugin files exist**:
+
 ```bash
 kubectl exec -n kube-system deployment/headlamp -c headlamp -- ls -la /headlamp/plugins/
 # Should show: headlamp-polaris-plugin/
 ```
 
-**3. JavaScript Cached by Browser**
+**2. JavaScript Cached by Browser**
 
 After upgrading the plugin, old JavaScript may be cached.
 
 **Solution**:
+
 - Hard refresh: Cmd+Shift+R (macOS) or Ctrl+Shift+R (Linux/Windows)
 - Clear browser cache for Headlamp domain
 - Open DevTools → Application → Clear Storage → Clear all
 
-**4. Plugin Disabled in Settings**
+**3. Plugin Disabled in Settings**
 
 **Check Settings → Plugins**:
+
 - Navigate to Headlamp Settings → Plugins
 - Ensure "Polaris" plugin is enabled (toggle should be ON)
 - If disabled, enable it and refresh the page
@@ -84,11 +70,13 @@ After upgrading the plugin, old JavaScript may be cached.
 ## 403 Forbidden Error
 
 ### Symptoms
+
 - Error message: "Error loading Polaris audit data: 403 Forbidden"
 - Browser console shows 403 response from API proxy
 - Plugin sidebar shows but data fails to load
 
 ### Root Cause
+
 User or service account lacks `services/proxy` permission on `polaris-dashboard` service in the `polaris` namespace.
 
 ### Solution
@@ -96,11 +84,13 @@ User or service account lacks `services/proxy` permission on `polaris-dashboard`
 **1. Verify RBAC Configuration**
 
 Check if Role exists:
+
 ```bash
 kubectl get role polaris-proxy-reader -n polaris -o yaml
 ```
 
 Expected output:
+
 ```yaml
 apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
@@ -108,20 +98,22 @@ metadata:
   name: polaris-proxy-reader
   namespace: polaris
 rules:
-  - apiGroups: [""]
-    resources: ["services/proxy"]
-    resourceNames: ["polaris-dashboard"]
-    verbs: ["get"]
+  - apiGroups: ['']
+    resources: ['services/proxy']
+    resourceNames: ['polaris-dashboard']
+    verbs: ['get']
 ```
 
 **2. Verify RoleBinding**
 
 For service account mode:
+
 ```bash
 kubectl get rolebinding headlamp-polaris-proxy -n polaris -o yaml
 ```
 
 Expected subjects:
+
 ```yaml
 subjects:
   - kind: ServiceAccount
@@ -130,6 +122,7 @@ subjects:
 ```
 
 For OIDC mode:
+
 ```bash
 kubectl get rolebinding -n polaris -o yaml | grep -A 5 polaris-proxy-reader
 ```
@@ -172,6 +165,7 @@ EOF
 **4. Test RBAC Permissions**
 
 Service account mode:
+
 ```bash
 # Impersonate Headlamp service account
 kubectl auth can-i get services/proxy \
@@ -182,6 +176,7 @@ kubectl auth can-i get services/proxy \
 ```
 
 OIDC mode (test as yourself):
+
 ```bash
 kubectl auth can-i get services/proxy \
   --resource-name=polaris-dashboard \
@@ -192,6 +187,7 @@ kubectl auth can-i get services/proxy \
 **5. Restart Headlamp**
 
 After applying RBAC changes:
+
 ```bash
 kubectl rollout restart deployment headlamp -n kube-system
 ```
@@ -201,11 +197,13 @@ kubectl rollout restart deployment headlamp -n kube-system
 ## 404 Not Found Error
 
 ### Symptoms
+
 - Error message: "Error loading Polaris audit data: 404 Not Found"
 - Service proxy request returns 404
 - Polaris dashboard not reachable
 
 ### Root Cause
+
 Polaris dashboard service doesn't exist or is in a different namespace.
 
 ### Solution
@@ -213,12 +211,14 @@ Polaris dashboard service doesn't exist or is in a different namespace.
 **1. Verify Polaris Installation**
 
 Check if Polaris is installed:
+
 ```bash
 kubectl get pods -n polaris
 # Expected: polaris-dashboard-* pod running
 ```
 
 Check if service exists:
+
 ```bash
 kubectl get service polaris-dashboard -n polaris
 # Expected: ClusterIP service on port 80
@@ -227,6 +227,7 @@ kubectl get service polaris-dashboard -n polaris
 **2. Verify Service Name and Port**
 
 The plugin expects:
+
 - **Namespace**: `polaris`
 - **Service Name**: `polaris-dashboard`
 - **Port**: `80` (or named port `dashboard`)
@@ -246,11 +247,13 @@ If this returns 404, Polaris service is not configured correctly.
 **4. Check Polaris Dashboard Configuration**
 
 Verify Polaris is running with dashboard enabled:
+
 ```bash
 kubectl get deployment polaris-dashboard -n polaris -o yaml | grep -A 5 dashboard
 ```
 
 If `dashboard.enabled: false` in Helm values, enable it:
+
 ```yaml
 # values.yaml
 dashboard:
@@ -260,6 +263,7 @@ dashboard:
 **5. Reinstall Polaris**
 
 If Polaris is missing or misconfigured:
+
 ```bash
 helm repo add fairwinds-stable https://charts.fairwinds.com/stable
 helm upgrade --install polaris fairwinds-stable/polaris \
@@ -273,21 +277,25 @@ helm upgrade --install polaris fairwinds-stable/polaris \
 ## Plugin Settings Page Empty
 
 ### Symptoms
+
 - Settings → Polaris shows title but no content
 - Refresh interval and dashboard URL fields not visible
 
 ### Root Cause (Fixed in v0.3.3)
+
 Plugin settings registration name didn't match `package.json` name.
 
 ### Solution
 
 Upgrade to v0.3.3 or later:
+
 ```bash
 # Via Headlamp UI: Settings → Plugins → Update
 # Or redeploy with latest version
 ```
 
 If manually installing, ensure plugin name matches `package.json`:
+
 ```typescript
 registerPluginSettings('headlamp-polaris-plugin', PolarisSettings, true);
 // NOT 'polaris' — must match package.json name
@@ -298,6 +306,7 @@ registerPluginSettings('headlamp-polaris-plugin', PolarisSettings, true);
 ## Dark Mode Issues
 
 ### Symptoms
+
 - Drawer background remains white in dark mode
 - Text is hard to read in dark mode
 - Theme colors don't match Headlamp UI
@@ -308,6 +317,7 @@ Upgrade to v0.3.5 or later for complete dark mode support.
 
 **Verify CSS Variables**:
 The plugin uses MUI CSS variables for theming:
+
 - `--mui-palette-background-default` (drawer background)
 - `--mui-palette-text-primary` (text color)
 - `--mui-palette-primary-main` (links, buttons)
@@ -317,6 +327,7 @@ These automatically adapt to Headlamp's theme (light/dark/system).
 
 **Hard Refresh Required**:
 After upgrading from v0.3.4 or earlier, hard refresh your browser:
+
 - macOS: Cmd+Shift+R
 - Linux/Windows: Ctrl+Shift+R
 
@@ -328,6 +339,7 @@ If hard refresh doesn't help, clear cache for Headlamp domain.
 ## Data Not Loading / Infinite Spinner
 
 ### Symptoms
+
 - Plugin shows "Loading Polaris audit data..." forever
 - No error message in UI
 - Data never appears
@@ -339,6 +351,7 @@ If hard refresh doesn't help, clear cache for Headlamp domain.
 Open DevTools (F12) → Console tab.
 
 Look for:
+
 - Network errors (CORS, timeouts, 5xx responses)
 - JavaScript errors
 - Failed API requests
@@ -348,6 +361,7 @@ Look for:
 Open DevTools → Network tab → Filter by "results.json"
 
 Expected request:
+
 ```
 GET /api/v1/namespaces/polaris/services/polaris-dashboard:80/proxy/results.json
 Status: 200
@@ -355,6 +369,7 @@ Response: JSON data
 ```
 
 Common issues:
+
 - **Status 0 / Failed**: Network policy blocking request
 - **Status 403**: RBAC issue (see [403 Forbidden Error](#403-forbidden-error))
 - **Status 404**: Service not found (see [404 Not Found Error](#404-not-found-error))
@@ -378,6 +393,7 @@ curl http://localhost:8080/results.json
 **4. Check Network Policies**
 
 If your cluster uses NetworkPolicies:
+
 ```bash
 kubectl get networkpolicy -n polaris
 ```
@@ -385,6 +401,7 @@ kubectl get networkpolicy -n polaris
 Ensure API server (or Headlamp pod) can reach Polaris dashboard.
 
 **Example fix**:
+
 ```yaml
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
@@ -399,7 +416,7 @@ spec:
     - Ingress
   ingress:
     - from:
-        - namespaceSelector: {}  # Allow from all namespaces (API server)
+        - namespaceSelector: {} # Allow from all namespaces (API server)
       ports:
         - protocol: TCP
           port: 8080
@@ -408,6 +425,7 @@ spec:
 **5. Increase Timeout / Disable Auto-Refresh**
 
 If Polaris responds slowly:
+
 - Open Settings → Polaris
 - Increase refresh interval to 10+ minutes
 - Or set to "Manual only" to disable auto-refresh
@@ -423,6 +441,7 @@ If Polaris responds slowly:
 **Cause**: Network request failed (CORS, network policy, timeout)
 
 **Solution**:
+
 1. Check Network tab for actual HTTP status
 2. Verify network policies allow API server → Polaris
 3. Check Polaris pod is running
@@ -434,6 +453,7 @@ If Polaris responds slowly:
 **Cause**: API returned HTML (error page) instead of JSON
 
 **Solution**:
+
 1. Check Network tab response body (likely 404 or 500 error page)
 2. Verify Polaris service exists and is healthy
 3. Check service proxy URL is correct
@@ -453,6 +473,7 @@ If Polaris responds slowly:
 **Cause**: Polaris returned empty or malformed response
 
 **Solution**:
+
 1. Check Polaris logs for errors
 2. Verify Polaris is scanning the cluster (check audit timestamp)
 3. Test `/results.json` endpoint directly
@@ -538,11 +559,13 @@ kubectl logs -n kube-system kube-apiserver-* | grep polaris-dashboard
 ### Sidecar Fails to Install Plugin
 
 **Symptoms**:
+
 - Plugin sidecar logs show download errors
 - Plugin directory is empty
 - Settings → Plugins shows nothing
 
 **Check sidecar logs**:
+
 ```bash
 kubectl logs -n kube-system deployment/headlamp -c headlamp-plugin
 ```
@@ -566,11 +589,13 @@ Error: 404 Not Found
 ```
 
 **Solution**: Verify `archive-url` in plugin config matches GitHub release:
+
 ```bash
 kubectl get configmap headlamp-plugin-config -n kube-system -o yaml
 ```
 
 Expected format:
+
 ```
 https://github.com/privilegedescalation/headlamp-polaris-plugin/releases/download/v0.3.10/polaris-0.3.10.tar.gz
 ```
@@ -580,6 +605,7 @@ https://github.com/privilegedescalation/headlamp-polaris-plugin/releases/downloa
 **3. Permission denied writing to /headlamp/plugins**
 
 **Solution**: Ensure volume mount is writable:
+
 ```yaml
 volumeMounts:
   - name: plugins
@@ -591,17 +617,18 @@ volumeMounts:
 ### Plugin Manager Not Working
 
 **Symptoms**:
+
 - Headlamp → Settings → Plugins shows "Catalog" tab but plugins don't install
 - "Install" button does nothing
 
 **Root Cause**: Plugin manager requires `config.pluginsDir` to be set.
 
 **Solution**: Configure Headlamp for plugin manager:
+
 ```yaml
 # HelmRelease values
 config:
   pluginsDir: /headlamp/plugins
-  watchPlugins: false  # CRITICAL for v0.39.0+
 ```
 
 ---
@@ -609,25 +636,30 @@ config:
 ## ArtifactHub Sync Delays
 
 ### Symptoms
+
 - New version released on GitHub but not showing in ArtifactHub
 - Headlamp plugin catalog shows old version
 
 ### Root Cause
+
 ArtifactHub pulls metadata every 30 minutes. There is no webhook or push mechanism.
 
 ### Solution
 
 **Wait 30 minutes** after pushing a GitHub release, then check:
+
 ```
 https://artifacthub.io/packages/headlamp/headlamp-polaris-plugin/headlamp-polaris-plugin
 ```
 
 **Verify metadata**:
+
 1. Check `artifacthub-pkg.yml` is in repository root
 2. Check `headlamp/plugin/archive-url` points to GitHub release
 3. Check `headlamp/plugin/archive-checksum` matches tarball SHA256
 
 **Force sync** (ArtifactHub UI):
+
 - Log in to ArtifactHub as package maintainer
 - Go to package settings
 - Click "Reindex now"
@@ -643,23 +675,28 @@ If none of these solutions work, gather debugging information and open an issue:
 ### Required Information
 
 1. **Version Information**:
+
    ```bash
    kubectl get pods -n kube-system -l app.kubernetes.io/name=headlamp -o yaml | grep image:
    ```
 
 2. **Plugin Version**:
+
    - Check Settings → Plugins in Headlamp UI
    - Or: `kubectl exec -n kube-system deployment/headlamp -c headlamp -- cat /headlamp/plugins/headlamp-polaris-plugin/package.json`
 
 3. **Browser Console Output**:
+
    - Open DevTools (F12) → Console
    - Screenshot or copy errors
 
 4. **Network Tab**:
+
    - Open DevTools → Network
    - Screenshot failed requests to `results.json`
 
 5. **Pod Logs**:
+
    ```bash
    kubectl logs -n kube-system deployment/headlamp -c headlamp --tail=100
    kubectl logs -n polaris deployment/polaris-dashboard --tail=100

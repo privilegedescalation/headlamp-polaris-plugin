@@ -87,7 +87,7 @@ dashboard:
   enabled: true
   env:
     - name: CORS_ALLOWED_ORIGINS
-      value: "https://headlamp.example.com"
+      value: 'https://headlamp.example.com'
 ```
 
 Test CORS headers:

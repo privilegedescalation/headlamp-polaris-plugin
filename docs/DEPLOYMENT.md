@@ -47,9 +47,9 @@ kubectl -n kube-system get pods -l app.kubernetes.io/name=headlamp
    ```yaml
    # headlamp-values.yaml
    config:
-     pluginsDir: "/headlamp/plugins"
+     pluginsDir: /headlamp/plugins
 
-pluginsManager:
+   pluginsManager:
      enabled: true
      repositories:
        - https://artifacthub.io/packages/search?kind=4
@@ -76,8 +76,7 @@ pluginsManager:
 ```yaml
 # headlamp-values.yaml
 config:
-  pluginsDir: "/headlamp/plugins"
-  watchPlugins: false  # CRITICAL: Must be false for plugin manager
+  pluginsDir: /headlamp/plugins
 
 replicaCount: 1
 
@@ -123,7 +122,7 @@ data:
 ```yaml
 # headlamp-values.yaml
 config:
-  pluginsDir: "/plugins"
+  pluginsDir: '/plugins'
 
 volumes:
   - name: plugins
@@ -152,9 +151,8 @@ image:
   tag: v0.39.0
 
 config:
-  baseURL: ""
-  pluginsDir: "/headlamp/plugins"
-  watchPlugins: false  # MUST be false for plugin manager
+  baseURL: ''
+  pluginsDir: /headlamp/plugins
 
 pluginsManager:
   enabled: true
@@ -195,16 +193,16 @@ resources:
 # OIDC Authentication (optional)
 env:
   - name: HEADLAMP_CONFIG_OIDC_CLIENT_ID
-    value: "headlamp"
+    value: 'headlamp'
   - name: HEADLAMP_CONFIG_OIDC_CLIENT_SECRET
     valueFrom:
       secretKeyRef:
         name: headlamp-oidc
         key: client-secret
   - name: HEADLAMP_CONFIG_OIDC_ISSUER_URL
-    value: "https://auth.example.com/realms/kubernetes"
+    value: 'https://auth.example.com/realms/kubernetes'
   - name: HEADLAMP_CONFIG_OIDC_SCOPES
-    value: "openid,profile,email,groups"
+    value: 'openid,profile,email,groups'
 ```
 
 ### FluxCD HelmRelease Example
@@ -230,8 +228,7 @@ spec:
 
   values:
     config:
-      pluginsDir: "/headlamp/plugins"
-      watchPlugins: false
+      pluginsDir: /headlamp/plugins
 
     pluginsManager:
       enabled: true
@@ -265,10 +262,10 @@ metadata:
   name: polaris-proxy-reader
   namespace: polaris
 rules:
-  - apiGroups: [""]
-    resources: ["services/proxy"]
-    resourceNames: ["polaris-dashboard"]
-    verbs: ["get"]
+  - apiGroups: ['']
+    resources: ['services/proxy']
+    resourceNames: ['polaris-dashboard']
+    verbs: ['get']
 ```
 
 ### RoleBinding Options
@@ -303,7 +300,7 @@ metadata:
   namespace: polaris
 subjects:
   - kind: Group
-    name: system:authenticated  # All authenticated users
+    name: system:authenticated # All authenticated users
     apiGroup: rbac.authorization.k8s.io
 roleRef:
   kind: Role
@@ -350,10 +347,10 @@ metadata:
     app.kubernetes.io/name: headlamp-polaris-plugin
     app.kubernetes.io/component: rbac
 rules:
-  - apiGroups: [""]
-    resources: ["services/proxy"]
-    resourceNames: ["polaris-dashboard"]
-    verbs: ["get"]
+  - apiGroups: ['']
+    resources: ['services/proxy']
+    resourceNames: ['polaris-dashboard']
+    verbs: ['get']
 
 ---
 # RoleBinding: Grant Headlamp service account access
@@ -376,6 +373,7 @@ roleRef:
 ```
 
 Apply with:
+
 ```bash
 kubectl apply -f polaris-plugin-rbac.yaml
 ```
@@ -385,6 +383,7 @@ kubectl apply -f polaris-plugin-rbac.yaml
 ### Required Network Access
 
 The plugin requires network connectivity:
+
 - **Headlamp pod** → **Kubernetes API server** (service proxy)
 - **Kubernetes API server** → **Polaris dashboard service** (port 80)
 
@@ -424,36 +423,9 @@ spec:
 
 ## Plugin Manager Setup
 
-### Critical Configuration
-
-**❌ WRONG (Will not load plugins):**
-```yaml
-config:
-  watchPlugins: true  # Default, treats catalog plugins as dev plugins
-```
-
-**✅ CORRECT:**
-```yaml
-config:
-  watchPlugins: false  # Required for plugin manager catalog plugins
-```
-
-### Why `watchPlugins: false` is Required
-
-- **With `watchPlugins: true`:** Headlamp backend serves plugin metadata, but frontend never executes the JavaScript (treated as development directory plugin)
-- **Result:** Plugins appear in Settings but no sidebar/routes/settings work
-- **Fix:** Set `watchPlugins: false` in Headlamp configuration
-- **Documentation:** See `deployment/PLUGIN_LOADING_FIX.md` for root cause analysis
-
 ### Plugin Manager Verification
 
 ```bash
-# Check Headlamp config
-kubectl -n kube-system get configmap headlamp -o yaml | grep watchPlugins
-
-# Expected output:
-# watchPlugins: "false"
-
 # Check plugin is installed
 kubectl -n kube-system exec -it deployment/headlamp -- ls -la /headlamp/plugins/
 
@@ -469,7 +441,6 @@ kubectl -n kube-system exec -it deployment/headlamp -- ls -la /headlamp/plugins/
 - [ ] Polaris dashboard service exists (`polaris-dashboard` in `polaris` namespace)
 - [ ] RBAC Role and RoleBinding created
 - [ ] Headlamp v0.26+ deployed
-- [ ] `watchPlugins: false` set in Headlamp config
 
 ### Deployment
 
@@ -518,14 +489,16 @@ kubectl -n kube-system exec -it deployment/headlamp -- ls -la /headlamp/plugins/
 **Symptom:** Plugin listed in Settings → Plugins but no sidebar entry
 
 **Causes:**
-1. `watchPlugins: true` (should be `false`)
-2. Browser cache not cleared
+
+1. Browser cache not cleared
+2. Plugin files not properly installed
 
 **Solution:**
+
 ```bash
-# Fix Headlamp config
-kubectl -n kube-system edit configmap headlamp
-# Set watchPlugins: false
+# Verify plugin files exist
+kubectl -n kube-system exec deployment/headlamp -c headlamp -- \
+  ls -la /headlamp/plugins/headlamp-polaris-plugin/
 
 # Restart Headlamp
 kubectl -n kube-system rollout restart deployment/headlamp
@@ -541,6 +514,7 @@ kubectl -n kube-system rollout restart deployment/headlamp
 **Cause:** RBAC missing or incorrect
 
 **Solution:**
+
 ```bash
 # Verify RBAC exists
 kubectl -n polaris get role polaris-proxy-reader
@@ -557,11 +531,13 @@ kubectl auth can-i get services/proxy --as=system:serviceaccount:kube-system:hea
 **Symptom:** Error loading Polaris data, 404 in console
 
 **Causes:**
+
 1. Polaris not deployed
 2. Polaris service name wrong
 3. Polaris namespace wrong
 
 **Solution:**
+
 ```bash
 # Check Polaris deployment
 kubectl -n polaris get pods
@@ -579,11 +555,13 @@ helm install polaris fairwinds-stable/polaris \
 **Symptom:** Error when using custom Polaris URL in settings
 
 **Causes:**
+
 1. URL format incorrect
 2. CORS not configured on external Polaris
 3. Network policy blocking external access
 
 **Solution:**
+
 ```bash
 # Test URL manually
 curl -v https://my-polaris.example.com/results.json
@@ -599,6 +577,7 @@ curl -v https://my-polaris.example.com/results.json
 **Cause:** Plugin manager hasn't synced from ArtifactHub
 
 **Solution:**
+
 ```bash
 # Wait 30 minutes (ArtifactHub sync interval)
 # Or manually refresh plugin list in Headlamp UI
@@ -614,6 +593,7 @@ kubectl -n kube-system rollout restart deployment/headlamp
 **Cause:** NetworkPolicy in `polaris` namespace blocking API server
 
 **Solution:**
+
 ```bash
 # Check NetworkPolicies
 kubectl -n polaris get networkpolicy
@@ -633,25 +613,28 @@ kubectl -n polaris get networkpolicy
 ### Audit Logging
 
 Kubernetes audit logs will record:
+
 - User/service account accessing service proxy
 - Timestamp and response code
 
 Configure audit policy if needed:
+
 ```yaml
 apiVersion: audit.k8s.io/v1
 kind: Policy
 rules:
   - level: Metadata
-    verbs: ["get"]
+    verbs: ['get']
     resources:
-      - group: ""
-        resources: ["services/proxy"]
-    namespaces: ["polaris"]
+      - group: ''
+        resources: ['services/proxy']
+    namespaces: ['polaris']
 ```
 
 ### Data Sensitivity
 
 Polaris audit data may contain:
+
 - Resource names and namespaces
 - Configuration details
 - Potential security vulnerabilities

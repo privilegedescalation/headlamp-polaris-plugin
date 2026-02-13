@@ -41,17 +41,21 @@ What is the change that we're proposing and/or doing?
 What becomes easier or more difficult to do because of this change?
 
 ### Positive
+
 - ...
 
 ### Negative
+
 - ...
 
 ### Neutral
+
 - ...
 
 ## Alternatives Considered
 
 ### Option 1: Name
+
 **Pros**: ...
 **Cons**: ...
 **Decision**: Not chosen because...
@@ -63,8 +67,8 @@ What becomes easier or more difficult to do because of this change?
 
 ## ADR Index
 
-| ADR | Title | Status | Date |
-|-----|-------|--------|------|
+| ADR                                   | Title                                  | Status   | Date       |
+| ------------------------------------- | -------------------------------------- | -------- | ---------- |
 | [001](001-react-context-for-state.md) | Use React Context for State Management | Accepted | 2026-02-12 |
 
 **Note:** Additional ADRs documenting other significant decisions (service proxy approach, drawer navigation, MUI import restrictions) can be created following the template above.

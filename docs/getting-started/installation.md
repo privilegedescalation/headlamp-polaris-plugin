@@ -33,16 +33,19 @@ The plugin is published on [Artifact Hub](https://artifacthub.io/packages/headla
 #### Via Headlamp UI
 
 1. **Navigate to Plugin Settings:**
+
    - Open Headlamp in your browser
    - Go to **Settings → Plugins**
    - Click the **Catalog** tab
 
 2. **Search and Install:**
+
    - Search for "Polaris"
    - Find "Headlamp Polaris Plugin"
    - Click **Install**
 
 3. **Hard Refresh Browser:**
+
    - **Mac:** Cmd+Shift+R
    - **Windows/Linux:** Ctrl+Shift+R
 
@@ -58,7 +61,6 @@ Add to your Headlamp Helm values:
 # headlamp-values.yaml
 config:
   pluginsDir: /headlamp/plugins
-  watchPlugins: false  # CRITICAL for v0.39.0+
 
 pluginsManager:
   enabled: true
@@ -76,23 +78,6 @@ helm upgrade --install headlamp headlamp/headlamp \
 
 Then install the plugin via Headlamp UI as described above.
 
-#### Critical Configuration for Headlamp v0.39.0+
-
-**⚠️ IMPORTANT:** You **must** set `config.watchPlugins: false` or the plugin will not load.
-
-**Why?**
-- With `watchPlugins: true` (default), catalog-managed plugins are treated as "development directory" plugins
-- This causes the backend to serve metadata but the frontend never executes the JavaScript
-- Result: Plugin appears in Settings but no sidebar/routes/settings work
-
-**Fix:**
-```yaml
-config:
-  watchPlugins: false  # Required for plugin manager
-```
-
-See [deployment/PLUGIN_LOADING_FIX.md](../deployment/production.md#plugin-loading-issue-headlamp-v0390) for full root cause analysis.
-
 ### Option 2: Sidecar Container
 
 **Best for:** Controlled plugin versions, air-gapped environments, specific version pinning
@@ -105,7 +90,6 @@ This method uses an init container to download and install the plugin from a tar
 # headlamp-values.yaml
 config:
   pluginsDir: /headlamp/plugins
-  watchPlugins: false
 
 initContainers:
   - name: install-polaris-plugin
@@ -204,7 +188,7 @@ config:
 volumes:
   - name: plugins
     hostPath:
-      path: /path/to/plugins  # Where you extracted the tarball
+      path: /path/to/plugins # Where you extracted the tarball
       type: Directory
 
 volumeMounts:
@@ -316,6 +300,7 @@ kubectl -n kube-system wait --for=condition=ready pod -l app.kubernetes.io/name=
 ### 4. Verify Installation
 
 **UI Verification:**
+
 1. Navigate to **Settings → Plugins**
 2. Verify "headlamp-polaris-plugin" is listed
 3. Check version matches installed version
@@ -351,22 +336,22 @@ kubectl get --raw /api/v1/namespaces/polaris/services/polaris-dashboard:80/proxy
 **Symptom:** Plugin listed in Settings → Plugins but no "Polaris" entry in sidebar
 
 **Causes:**
-1. `watchPlugins: true` (should be `false` for v0.39.0+)
-2. Browser cache not cleared
-3. Plugin JavaScript failed to load
+
+1. Browser cache not cleared
+2. Plugin JavaScript failed to load
+3. Plugin files not properly installed
 
 **Solution:**
 
 ```bash
-# 1. Check Headlamp config
-kubectl -n kube-system get configmap headlamp -o yaml | grep watchPlugins
+# 1. Verify plugin files exist
+kubectl -n kube-system exec deployment/headlamp -c headlamp -- \
+  ls -la /headlamp/plugins/headlamp-polaris-plugin/
 
-# If "true" or missing, fix it:
-kubectl -n kube-system edit configmap headlamp
-# Set: watchPlugins: "false"
+# Expected: dist/, package.json present
 
-# 2. Restart Headlamp
-kubectl -n kube-system rollout restart deployment/headlamp
+# 2. Check Headlamp logs for plugin errors
+kubectl -n kube-system logs deployment/headlamp | grep -i polaris
 
 # 3. Hard refresh browser (Cmd+Shift+R or Ctrl+Shift+R)
 
@@ -389,6 +374,7 @@ See [RBAC Issues](../troubleshooting/rbac-issues.md) for detailed debugging.
 **Symptom:** Error loading Polaris data, 404 in browser console
 
 **Causes:**
+
 1. Polaris not deployed
 2. Polaris service name incorrect
 3. Polaris namespace incorrect

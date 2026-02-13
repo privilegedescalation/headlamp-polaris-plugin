@@ -28,12 +28,14 @@ Access plugin settings via **Settings → Plugins → Polaris** in the Headlamp 
 ### Impact
 
 **Affects:**
+
 - Dashboard overview page
 - Namespace list and detail views
 - Inline audit sections on resource pages
 - App bar score badge
 
 **API Load:**
+
 - Each refresh triggers one HTTP GET to Polaris dashboard
 - Each request is logged in Kubernetes audit logs
 - Longer intervals reduce API server and audit log pressure
@@ -41,16 +43,19 @@ Access plugin settings via **Settings → Plugins → Polaris** in the Headlamp 
 ### Performance Considerations
 
 **For small clusters (<100 pods):**
+
 - Recommended: 5 minutes (default)
 - Acceptable: 1 minute (if real-time data is critical)
 
 **For large clusters (>1000 pods):**
+
 - Recommended: 10-30 minutes
 - Reason: Reduces audit log volume and API server load
 - Example: 10 users × 1-minute refresh = ~14,400 audit logs/day
 - Example: 10 users × 30-minute refresh = ~480 audit logs/day
 
 **For production environments:**
+
 - Start with 5 minutes
 - Monitor API server metrics and audit log volume
 - Increase interval if needed
@@ -62,6 +67,7 @@ Access plugin settings via **Settings → Plugins → Polaris** in the Headlamp 
 ### Default Configuration
 
 **Service proxy path (default):**
+
 ```
 /api/v1/namespaces/polaris/services/polaris-dashboard:80/proxy/
 ```
@@ -69,6 +75,7 @@ Access plugin settings via **Settings → Plugins → Polaris** in the Headlamp 
 This uses the Kubernetes API server to proxy requests to the Polaris dashboard service in the `polaris` namespace.
 
 **Advantages:**
+
 - Uses existing Headlamp authentication (service account or user token)
 - Works with Headlamp's OIDC and token-auth modes
 - No additional RBAC or network configuration needed
@@ -85,6 +92,7 @@ https://polaris.example.com/
 ```
 
 **Requirements:**
+
 - Polaris dashboard must be accessible from browser
 - CORS must be configured on Polaris to allow Headlamp origin
 - HTTPS recommended for production
@@ -98,6 +106,7 @@ If Polaris is deployed in a different namespace:
 ```
 
 **Requirements:**
+
 - Update RBAC Role namespace to match
 - Service name must still be `polaris-dashboard` (or adjust in URL)
 
@@ -131,39 +140,43 @@ http://localhost:8080/
 **What it does:** Verifies the plugin can reach the Polaris dashboard and fetch audit data.
 
 **To test:**
+
 1. Enter Dashboard URL in settings
 2. Click **Test Connection**
 3. Wait for response (2-5 seconds)
 
 **Success Response:**
+
 ```
 ✓ Connected to Polaris v4.2.0
 ```
 
 **Error Responses:**
 
-| Error | Meaning | Solution |
-|-------|---------|----------|
-| **403 Forbidden** | RBAC permission denied | Check RBAC bindings (see [RBAC Guide](rbac-permissions.md)) |
-| **404 Not Found** | Polaris service not found | Verify Polaris is running: `kubectl get svc -n polaris` |
-| **503 Service Unavailable** | Polaris pod not ready | Check pod status: `kubectl get pods -n polaris` |
-| **Network Error** | Cannot reach URL | Check URL format, CORS (for external), NetworkPolicies |
-| **CORS Error** | Cross-origin blocked | Configure Polaris dashboard CORS headers |
+| Error                       | Meaning                   | Solution                                                    |
+| --------------------------- | ------------------------- | ----------------------------------------------------------- |
+| **403 Forbidden**           | RBAC permission denied    | Check RBAC bindings (see [RBAC Guide](rbac-permissions.md)) |
+| **404 Not Found**           | Polaris service not found | Verify Polaris is running: `kubectl get svc -n polaris`     |
+| **503 Service Unavailable** | Polaris pod not ready     | Check pod status: `kubectl get pods -n polaris`             |
+| **Network Error**           | Cannot reach URL          | Check URL format, CORS (for external), NetworkPolicies      |
+| **CORS Error**              | Cross-origin blocked      | Configure Polaris dashboard CORS headers                    |
 
 ### CORS Configuration (External Polaris)
 
 If using an external Polaris URL, configure CORS to allow Headlamp origin.
 
 **Polaris Helm values:**
+
 ```yaml
 dashboard:
   enabled: true
   env:
     - name: CORS_ALLOWED_ORIGINS
-      value: "https://headlamp.example.com"
+      value: 'https://headlamp.example.com'
 ```
 
 **Test CORS:**
+
 ```bash
 curl -v -H "Origin: https://headlamp.example.com" \
   https://polaris.example.com/results.json \
@@ -180,25 +193,29 @@ curl -v -H "Origin: https://headlamp.example.com" \
 Plugin settings are stored in browser **localStorage**:
 
 **Keys:**
+
 - `polaris-plugin-refresh-interval` - Refresh interval in seconds (number)
 - `polaris-plugin-dashboard-url` - Dashboard URL (string)
 
 **View settings:**
+
 ```javascript
 // Open browser DevTools Console (F12)
-console.log('Refresh Interval:', localStorage.getItem('polaris-plugin-refresh-interval'))
-console.log('Dashboard URL:', localStorage.getItem('polaris-plugin-dashboard-url'))
+console.log('Refresh Interval:', localStorage.getItem('polaris-plugin-refresh-interval'));
+console.log('Dashboard URL:', localStorage.getItem('polaris-plugin-dashboard-url'));
 ```
 
 **Reset to defaults:**
+
 ```javascript
 // Open browser DevTools Console (F12)
-localStorage.removeItem('polaris-plugin-refresh-interval')
-localStorage.removeItem('polaris-plugin-dashboard-url')
+localStorage.removeItem('polaris-plugin-refresh-interval');
+localStorage.removeItem('polaris-plugin-dashboard-url');
 // Hard refresh browser: Cmd+Shift+R (Mac) or Ctrl+Shift+R (Windows/Linux)
 ```
 
 **Notes:**
+
 - Settings are per-browser, per-user
 - Private/incognito mode may clear settings on browser close
 - Settings are NOT synced across devices
@@ -208,6 +225,7 @@ localStorage.removeItem('polaris-plugin-dashboard-url')
 ### For Development Clusters
 
 **Recommended Settings:**
+
 - **Refresh Interval:** 1-5 minutes (faster feedback loop)
 - **Dashboard URL:** Service proxy (default)
 
@@ -216,6 +234,7 @@ localStorage.removeItem('polaris-plugin-dashboard-url')
 ### For Staging Clusters
 
 **Recommended Settings:**
+
 - **Refresh Interval:** 5-10 minutes (balanced)
 - **Dashboard URL:** Service proxy (default)
 
@@ -224,6 +243,7 @@ localStorage.removeItem('polaris-plugin-dashboard-url')
 ### For Production Clusters
 
 **Recommended Settings:**
+
 - **Refresh Interval:** 10-30 minutes (reduce load)
 - **Dashboard URL:** Service proxy (default)
 
@@ -232,6 +252,7 @@ localStorage.removeItem('polaris-plugin-dashboard-url')
 ### For Multi-Tenant Environments
 
 **Recommended Settings:**
+
 - **Refresh Interval:** 10-30 minutes (minimize per-user load)
 - **Dashboard URL:** Service proxy with per-namespace RBAC
 
@@ -240,6 +261,7 @@ localStorage.removeItem('polaris-plugin-dashboard-url')
 ### For External Polaris
 
 **Recommended Settings:**
+
 - **Refresh Interval:** 5-10 minutes (depends on network latency)
 - **Dashboard URL:** `https://polaris.example.com/`
 - **CORS:** Must be configured on Polaris side
@@ -253,17 +275,19 @@ localStorage.removeItem('polaris-plugin-dashboard-url')
 **Symptom:** Changes to settings revert after clicking Save
 
 **Possible Causes:**
+
 1. Browser blocks localStorage (privacy mode)
 2. Browser extension interfering
 3. JavaScript error in console
 
 **Solution:**
+
 1. Open browser DevTools Console (F12)
 2. Check for JavaScript errors
 3. Disable privacy mode or try different browser
 4. Check if localStorage is enabled:
    ```javascript
-   console.log('localStorage available:', typeof localStorage !== 'undefined')
+   console.log('localStorage available:', typeof localStorage !== 'undefined');
    ```
 
 ### Settings Lost After Browser Restart
@@ -273,6 +297,7 @@ localStorage.removeItem('polaris-plugin-dashboard-url')
 **Cause:** Browser privacy settings clear localStorage on exit
 
 **Solution:**
+
 - Use normal browsing mode (not private/incognito)
 - Check browser settings for "Clear data on exit"
 - Consider requesting ConfigMap-based settings (future feature)
@@ -284,6 +309,7 @@ localStorage.removeItem('polaris-plugin-dashboard-url')
 **Solutions by error type:**
 
 **403 Forbidden:**
+
 ```bash
 # Verify RBAC exists
 kubectl -n polaris get role polaris-proxy-reader
@@ -297,6 +323,7 @@ kubectl auth can-i get services/proxy \
 ```
 
 **404 Not Found:**
+
 ```bash
 # Verify Polaris is running
 kubectl -n polaris get pods
@@ -310,6 +337,7 @@ helm install polaris fairwinds-stable/polaris \
 ```
 
 **503 Service Unavailable:**
+
 ```bash
 # Check pod status
 kubectl -n polaris get pods
@@ -319,6 +347,7 @@ kubectl -n polaris logs deployment/polaris-dashboard
 ```
 
 **Network Error / CORS:**
+
 ```bash
 # For external Polaris, test CORS
 curl -v -H "Origin: https://headlamp.example.com" \
@@ -332,15 +361,17 @@ curl -v -H "Origin: https://headlamp.example.com" \
 **Symptom:** Data doesn't refresh automatically
 
 **Check:**
+
 1. Verify setting is saved (localStorage key exists)
 2. Check browser console for errors
 3. Verify Polaris is returning data (manual refresh works)
 4. Ensure you're on a Polaris plugin page (not other Headlamp pages)
 
 **Debug:**
+
 ```javascript
 // Check refresh interval
-console.log(localStorage.getItem('polaris-plugin-refresh-interval'))
+console.log(localStorage.getItem('polaris-plugin-refresh-interval'));
 
 // Should return: "300" (5 minutes), "600" (10 minutes), etc.
 ```
@@ -361,6 +392,7 @@ Before going to production, verify:
 ## Future Configuration Options
 
 **Planned features:**
+
 - ConfigMap-based settings (server-side, not localStorage)
 - Per-cluster settings (multi-cluster Headlamp support)
 - Webhook notifications for score changes

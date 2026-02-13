@@ -58,6 +58,7 @@ Click the refresh button to fetch the latest audit data immediately (bypasses au
 Navigate to **Polaris → Namespaces** to see all namespaces with audit results.
 
 **Table Columns:**
+
 - **Namespace** - Clickable namespace name (opens detail panel)
 - **Score** - Per-namespace score with color coding
 - **Pass** - Passing checks count
@@ -72,6 +73,7 @@ Navigate to **Polaris → Namespaces** to see all namespaces with audit results.
 Click any namespace to open a 1000px-wide side panel with detailed information.
 
 **Features:**
+
 - **Namespace Score** - Color-coded score gauge
 - **Check Counts** - Pass/Warning/Danger/Skipped breakdown
 - **Resource Table** - Per-resource audit results:
@@ -92,6 +94,7 @@ Polaris audit results automatically appear on resource detail pages.
 ### Supported Resources
 
 Inline audit sections appear on:
+
 - Deployments
 - StatefulSets
 - DaemonSets
@@ -101,6 +104,7 @@ Inline audit sections appear on:
 ### What's Shown
 
 **Compact Audit Section:**
+
 - **Score Badge** - Color-coded score
 - **Check Counts** - Pass/Warning/Danger summary
 - **Failing Checks Table** - Only failed checks listed:
@@ -116,6 +120,7 @@ Inline audit sections appear on:
 Top-right corner of Headlamp shows a persistent cluster score badge.
 
 **Features:**
+
 - **Color-Coded Chip** - Green/Yellow/Red based on score
 - **Shield Icon** - Visual indicator
 - **Score Percentage** - e.g., "85%"
@@ -134,12 +139,14 @@ Access plugin settings via **Settings → Plugins → Polaris**.
 Controls how often the plugin fetches new audit data.
 
 **Options:**
+
 - 1 minute - Most frequent (highest API load)
 - 5 minutes - **Default** (recommended)
 - 10 minutes - Moderate refresh rate
 - 30 minutes - Light load (large clusters)
 
 **Impact:**
+
 - Affects all views (dashboard, namespaces, inline audits, app bar badge)
 - Longer intervals reduce Kubernetes API audit logging
 - Changes take effect immediately (no restart required)
@@ -151,11 +158,13 @@ See [Configuration Guide](configuration.md) for details.
 Specifies which Polaris instance to connect to.
 
 **Default:** Kubernetes service proxy path
+
 ```
 /api/v1/namespaces/polaris/services/polaris-dashboard:80/proxy/
 ```
 
 **Custom Options:**
+
 - External Polaris: `https://polaris.example.com/`
 - Different namespace: `/api/v1/namespaces/custom-ns/services/polaris-dashboard:80/proxy/`
 
@@ -168,6 +177,7 @@ See [Configuration Guide](configuration.md) for advanced setup.
 Full theme adaptation for Headlamp's light and dark modes.
 
 **Features:**
+
 - **Auto Dark Mode** - Respects system preference when Headlamp uses it
 - **Theme Toggle** - Adapts when you change Headlamp theme
 - **All UI Elements** - Drawer backgrounds, tables, buttons, badges, score gauge
@@ -180,6 +190,7 @@ Full theme adaptation for Headlamp's light and dark modes.
 **Status:** Planned feature (UI components exist but not fully integrated)
 
 **Future Capability:**
+
 - View current exemptions on resources
 - Add exemptions for specific failing checks
 - Remove exemptions
@@ -190,21 +201,25 @@ This feature requires additional RBAC permissions (PATCH on workload resources) 
 ## Data Refresh Behavior
 
 **Initial Load:**
+
 - Data fetched when you first navigate to any Polaris view
 - Shared across all views via React Context (no duplicate fetches)
 - Loading spinner displayed during initial fetch
 
 **Auto-Refresh:**
+
 - Configured via Settings → Plugins → Polaris
 - Default: 5 minutes
 - Triggers background fetch without disrupting UI
 
 **Manual Refresh:**
+
 - Click refresh button on overview dashboard
 - Forces immediate data fetch
 - Updates all views simultaneously
 
 **Error Handling:**
+
 - 403 errors show RBAC permission guidance
 - 404/503 errors indicate Polaris not installed
 - Network errors show generic failure with retry suggestion
@@ -212,12 +227,14 @@ This feature requires additional RBAC permissions (PATCH on workload resources) 
 ## Browser Requirements
 
 **Supported Browsers:**
+
 - Chrome/Chromium 80+
 - Firefox 75+
 - Safari 13.1+
 - Edge 80+
 
 **Required:**
+
 - JavaScript enabled
 - localStorage enabled (for settings persistence)
 - Cookies enabled (for Headlamp session)
@@ -227,11 +244,13 @@ This feature requires additional RBAC permissions (PATCH on workload resources) 
 **Bundle Size:** ~27 KB minified (gzip: ~7.6 KB)
 
 **Data Volume:** Depends on cluster size. Example:
+
 - Small cluster (50 resources): ~100 KB JSON
 - Medium cluster (500 resources): ~1 MB JSON
 - Large cluster (5000 resources): ~10 MB JSON
 
 **Rendering Performance:**
+
 - Handles up to 100 namespaces without virtual scrolling
 - Namespace detail drawer renders instantly for up to 500 resources
 - React Context prevents unnecessary re-fetches

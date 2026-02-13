@@ -50,14 +50,11 @@ Polaris must be deployed in the `polaris` namespace with the dashboard component
 
 ### Option 1: Headlamp Plugin Manager (Recommended)
 
-**⚠️ CRITICAL for Headlamp v0.39.0+:** You **must** set `config.watchPlugins: false` or the plugin will not load. See [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md#critical-headlamp-v0390-configuration) for details.
-
 The plugin is published on [Artifact Hub](https://artifacthub.io/packages/headlamp/polaris/headlamp-polaris-plugin). Configure Headlamp via Helm:
 
 ```yaml
 config:
   pluginsDir: /headlamp/plugins
-  watchPlugins: false # CRITICAL for v0.39.0+
 
 pluginsManager:
   sources:
@@ -182,14 +179,14 @@ Every proxied request is recorded in Kubernetes API audit logs as a `get` on `se
 
 ### Comprehensive Guides
 
-| Guide | Description |
-|-------|-------------|
+| Guide                                             | Description                                                           |
+| ------------------------------------------------- | --------------------------------------------------------------------- |
 | **[Architecture](docs/architecture/overview.md)** | System architecture, data flow, component hierarchy, design decisions |
-| **[Deployment](docs/deployment/helm.md)** | Production deployment with Helm, Kubernetes, FluxCD |
-| **[Security](SECURITY.md)** | Security model, RBAC requirements, vulnerability reporting |
-| **[Testing](docs/development/testing.md)** | Unit tests, E2E tests, CI/CD, best practices |
-| **[Contributing](CONTRIBUTING.md)** | Development workflow, branching strategy, PR process |
-| **[Changelog](CHANGELOG.md)** | Complete release history (v0.0.1 to current) |
+| **[Deployment](docs/deployment/helm.md)**         | Production deployment with Helm, Kubernetes, FluxCD                   |
+| **[Security](SECURITY.md)**                       | Security model, RBAC requirements, vulnerability reporting            |
+| **[Testing](docs/development/testing.md)**        | Unit tests, E2E tests, CI/CD, best practices                          |
+| **[Contributing](CONTRIBUTING.md)**               | Development workflow, branching strategy, PR process                  |
+| **[Changelog](CHANGELOG.md)**                     | Complete release history (v0.0.1 to current)                          |
 
 ## Troubleshooting
 
@@ -197,14 +194,14 @@ Every proxied request is recorded in Kubernetes API audit logs as a `get` on `se
 
 Quick reference:
 
-| Symptom                         | Likely Cause                                 | Quick Fix                                                             |
-| ------------------------------- | -------------------------------------------- | --------------------------------------------------------------------- |
-| **Plugin not in sidebar**       | Headlamp v0.39.0+ plugin loading issue       | Set `config.watchPlugins: false` and hard refresh (Cmd+Shift+R)       |
-| **403 Access Denied**           | Missing RBAC binding for `services/proxy`    | Apply Role + RoleBinding from RBAC section                            |
-| **404 or 503**                  | Polaris not installed, or dashboard disabled | Install Polaris with `dashboard.enabled: true` in `polaris` namespace |
-| **Dark mode white backgrounds** | Old plugin version                           | Upgrade to v0.3.5+ and hard refresh browser                           |
-| **Settings page empty**         | Old plugin version                           | Upgrade to v0.3.3+                                                    |
-| **No data / infinite spinner**  | Network policy or Polaris pod down           | Check network policies and `kubectl get pods -n polaris`              |
+| Symptom                         | Likely Cause                                  | Quick Fix                                                             |
+| ------------------------------- | --------------------------------------------- | --------------------------------------------------------------------- |
+| **Plugin not in sidebar**       | Plugin not installed or needs browser refresh | Hard refresh browser (Cmd+Shift+R / Ctrl+Shift+F5)                    |
+| **403 Access Denied**           | Missing RBAC binding for `services/proxy`     | Apply Role + RoleBinding from RBAC section                            |
+| **404 or 503**                  | Polaris not installed, or dashboard disabled  | Install Polaris with `dashboard.enabled: true` in `polaris` namespace |
+| **Dark mode white backgrounds** | Old plugin version                            | Upgrade to v0.3.5+ and hard refresh browser                           |
+| **Settings page empty**         | Old plugin version                            | Upgrade to v0.3.3+                                                    |
+| **No data / infinite spinner**  | Network policy or Polaris pod down            | Check network policies and `kubectl get pods -n polaris`              |
 
 ## Development
 
@@ -373,4 +370,3 @@ Contributions are welcome! Please read [CONTRIBUTING.md](CONTRIBUTING.md) for:
 ## License
 
 [Apache-2.0 License](LICENSE) - see LICENSE file for details.
-

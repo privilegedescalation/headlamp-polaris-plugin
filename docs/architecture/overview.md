@@ -7,6 +7,7 @@ High-level architecture of the Headlamp Polaris Plugin.
 The Headlamp Polaris Plugin is a **read-only dashboard** that surfaces Fairwinds Polaris audit results within the Headlamp UI. It fetches data from the Polaris dashboard API via the Kubernetes service proxy and presents it in a hierarchical navigation structure.
 
 **Key Characteristics:**
+
 - **Read-only:** No write operations to cluster or Polaris
 - **Service proxy based:** Uses K8s API server proxy to reach Polaris
 - **React Context for state:** Shared data fetch across components
@@ -91,6 +92,7 @@ The Headlamp Polaris Plugin is a **read-only dashboard** that surfaces Fairwinds
 ### Plugin Entry Point
 
 **`src/index.tsx`**
+
 - Registers sidebar entries (Polaris → Overview, Namespaces)
 - Registers routes (`/polaris`, `/polaris/namespaces`)
 - Registers app bar action (score badge)
@@ -100,22 +102,26 @@ The Headlamp Polaris Plugin is a **read-only dashboard** that surfaces Fairwinds
 ### Data Layer
 
 **`src/api/PolarisDataContext.tsx`**
+
 - React Context Provider for shared data
 - Fetches AuditData from Polaris dashboard
 - Handles auto-refresh based on user settings
 - Provides `{ data, loading, error, refresh }` to consumers
 
 **`src/api/polaris.ts`**
+
 - TypeScript types for AuditData schema
 - Utility functions: `countResults()`, `computeScore()`
 - Settings management: `getRefreshInterval()`, `setRefreshInterval()`
 - Constants: `DASHBOARD_URL_DEFAULT`, `INTERVAL_OPTIONS`
 
 **`src/api/checkMapping.ts`**
+
 - Maps Polaris check IDs to human-readable names
 - Used for display in UI (e.g., "hostIPCSet" → "Host IPC")
 
 **`src/api/topIssues.ts`**
+
 - Aggregates failing checks across cluster
 - Groups by check ID and severity
 - Used for top issues dashboard
@@ -123,6 +129,7 @@ The Headlamp Polaris Plugin is a **read-only dashboard** that surfaces Fairwinds
 ### View Components
 
 **`src/components/DashboardView.tsx`**
+
 - **Route:** `/polaris`
 - **Purpose:** Cluster-wide overview
 - **Features:**
@@ -133,6 +140,7 @@ The Headlamp Polaris Plugin is a **read-only dashboard** that surfaces Fairwinds
 - **Data:** Uses `usePolarisDataContext()`
 
 **`src/components/NamespacesListView.tsx`**
+
 - **Route:** `/polaris/namespaces`
 - **Purpose:** List all namespaces with scores
 - **Features:**
@@ -142,6 +150,7 @@ The Headlamp Polaris Plugin is a **read-only dashboard** that surfaces Fairwinds
 - **Data:** Uses `usePolarisDataContext()`, aggregates by namespace
 
 **`src/components/NamespaceDetailView.tsx`**
+
 - **Route:** Drawer on `/polaris/namespaces#<namespace>`
 - **Purpose:** Namespace-level drill-down
 - **Features:**
@@ -154,6 +163,7 @@ The Headlamp Polaris Plugin is a **read-only dashboard** that surfaces Fairwinds
 ### UI Components
 
 **`src/components/AppBarScoreBadge.tsx`**
+
 - **Location:** Headlamp app bar (top-right)
 - **Purpose:** Quick cluster score visibility
 - **Features:**
@@ -163,6 +173,7 @@ The Headlamp Polaris Plugin is a **read-only dashboard** that surfaces Fairwinds
 - **Data:** Uses `usePolarisDataContext()`
 
 **`src/components/PolarisSettings.tsx`**
+
 - **Location:** Settings → Plugins → Polaris
 - **Purpose:** Plugin configuration
 - **Features:**
@@ -172,6 +183,7 @@ The Headlamp Polaris Plugin is a **read-only dashboard** that surfaces Fairwinds
 - **Data:** localStorage for persistence
 
 **`src/components/InlineAuditSection.tsx`**
+
 - **Location:** Resource detail pages (Deployment, StatefulSet, etc.)
 - **Purpose:** Show Polaris audit inline
 - **Features:**
@@ -181,6 +193,7 @@ The Headlamp Polaris Plugin is a **read-only dashboard** that surfaces Fairwinds
 - **Data:** Uses `usePolarisDataContext()`, filters by resource
 
 **`src/components/ExemptionManager.tsx`**
+
 - **Location:** (Planned feature, UI exists but not fully integrated)
 - **Purpose:** Manage Polaris exemptions via annotations
 - **Features:**
@@ -195,6 +208,7 @@ The Headlamp Polaris Plugin is a **read-only dashboard** that surfaces Fairwinds
 **Decision:** Use React Context instead of Redux/Zustand
 
 **Rationale:**
+
 1. **Simple state:** Single AuditData object shared across views
 2. **Read-only:** No complex mutations or transactions
 3. **Headlamp constraints:** Plugin cannot add dependencies (Redux not bundled)
@@ -204,10 +218,10 @@ The Headlamp Polaris Plugin is a **read-only dashboard** that surfaces Fairwinds
 
 ```typescript
 interface PolarisDataContextValue {
-  data: AuditData | null;      // Audit results or null if loading/error
-  loading: boolean;             // True during initial fetch
-  error: string | null;         // Error message if fetch failed
-  refresh: () => void;          // Manual refresh function
+  data: AuditData | null; // Audit results or null if loading/error
+  loading: boolean; // True during initial fetch
+  error: string | null; // Error message if fetch failed
+  refresh: () => void; // Manual refresh function
 }
 ```
 
@@ -221,6 +235,7 @@ interface PolarisDataContextValue {
 ### localStorage Usage
 
 Settings persisted in localStorage:
+
 - **`polaris-plugin-refresh-interval`**: Number (seconds), default 300
 - **`polaris-plugin-dashboard-url`**: String, default service proxy path
 
@@ -236,28 +251,30 @@ No sensitive data stored in localStorage.
 
 ```typescript
 // Sidebar navigation
-registerSidebarEntry({ parent, name, label, url, icon })
+registerSidebarEntry({ parent, name, label, url, icon });
 
 // Routes
-registerRoute({ path, sidebar, name, exact, component })
+registerRoute({ path, sidebar, name, exact, component });
 
 // App bar actions
-registerAppBarAction(component)
+registerAppBarAction(component);
 
 // Plugin settings
-registerPluginSettings(name, component, displaySaveButton)
+registerPluginSettings(name, component, displaySaveButton);
 
 // Resource detail sections
-registerDetailsViewSection(component)
+registerDetailsViewSection(component);
 ```
 
 **Key Changes in v0.13.0:**
+
 - `registerDetailsViewSection` now takes 1 argument (component), not 2 (name, component)
 - `registerAppBarAction` now takes 1 argument (component), not 2 (name, component)
 
 ### Headlamp CommonComponents
 
 **Used Components:**
+
 - `SectionBox` - Card-like container with title
 - `SectionHeader` - Page header with title
 - `StatusLabel` - Color-coded status badges
@@ -267,16 +284,19 @@ registerDetailsViewSection(component)
 - `Loader` - Loading spinner
 
 **Router:**
+
 - `Router.createRouteURL()` - Generate plugin route URLs
 - React Router's `useHistory()`, `useParams()`, `useLocation()`
 
 ### Kubernetes API (via ApiProxy)
 
 **Used for:**
+
 - Fetching Polaris results: `ApiProxy.request(dashboardUrl + 'results.json')`
 - No direct K8s API calls (all data from Polaris dashboard)
 
 **RBAC Required:**
+
 - `get` on `services/proxy` for `polaris-dashboard` in `polaris` namespace
 
 ## Performance Considerations

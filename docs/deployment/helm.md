@@ -31,7 +31,6 @@ helm repo update
 # headlamp-values.yaml
 config:
   pluginsDir: /headlamp/plugins
-  watchPlugins: false  # CRITICAL for v0.39.0+
 
 pluginsManager:
   enabled: true
@@ -63,9 +62,8 @@ image:
   pullPolicy: IfNotPresent
 
 config:
-  baseURL: ""
+  baseURL: ''
   pluginsDir: /headlamp/plugins
-  watchPlugins: false  # MUST be false for plugin manager
 
 pluginsManager:
   enabled: true
@@ -81,7 +79,7 @@ ingress:
   className: nginx
   annotations:
     cert-manager.io/cluster-issuer: letsencrypt-prod
-    nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/force-ssl-redirect: 'true'
   hosts:
     - host: headlamp.example.com
       paths:
@@ -117,16 +115,16 @@ affinity:
 # OIDC Authentication (optional)
 env:
   - name: HEADLAMP_CONFIG_OIDC_CLIENT_ID
-    value: "headlamp"
+    value: 'headlamp'
   - name: HEADLAMP_CONFIG_OIDC_CLIENT_SECRET
     valueFrom:
       secretKeyRef:
         name: headlamp-oidc
         key: client-secret
   - name: HEADLAMP_CONFIG_OIDC_ISSUER_URL
-    value: "https://auth.example.com/realms/kubernetes"
+    value: 'https://auth.example.com/realms/kubernetes'
   - name: HEADLAMP_CONFIG_OIDC_SCOPES
-    value: "openid,profile,email,groups"
+    value: 'openid,profile,email,groups'
 ```
 
 Deploy:
@@ -147,7 +145,6 @@ Alternative to Plugin Manager: use an init container to download the plugin.
 # headlamp-values.yaml
 config:
   pluginsDir: /headlamp/plugins
-  watchPlugins: false
 
 initContainers:
   - name: install-polaris-plugin
@@ -230,7 +227,7 @@ spec:
   chart:
     spec:
       chart: headlamp
-      version: 0.26.x  # Use semver range
+      version: 0.26.x # Use semver range
       sourceRef:
         kind: HelmRepository
         name: headlamp
@@ -252,7 +249,6 @@ spec:
 
     config:
       pluginsDir: /headlamp/plugins
-      watchPlugins: false
 
     pluginsManager:
       enabled: true
@@ -388,15 +384,12 @@ kubectl -n kube-system rollout status deployment/headlamp
 # Check Headlamp values
 helm get values headlamp -n kube-system
 
-# Verify watchPlugins is false:
-# config:
-#   watchPlugins: false
+# Verify plugin files exist
+kubectl -n kube-system exec deployment/headlamp -c headlamp -- \
+  ls -la /headlamp/plugins/headlamp-polaris-plugin/
 
-# If incorrect, update values and upgrade:
-helm upgrade headlamp headlamp/headlamp \
-  --namespace kube-system \
-  --values headlamp-values.yaml \
-  --set config.watchPlugins=false
+# If missing, reinstall plugin via UI or check init container logs
+kubectl -n kube-system logs deployment/headlamp -c install-polaris-plugin
 ```
 
 ### Helm Release Stuck

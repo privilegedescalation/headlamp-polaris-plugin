@@ -46,7 +46,6 @@ kubectl -n kube-system get svc headlamp
 ### Deployment
 
 - [ ] Plugin installed via Plugin Manager or sidecar init container
-- [ ] `config.watchPlugins: false` set in Headlamp configuration
 - [ ] RBAC Role and RoleBinding applied
 - [ ] NetworkPolicies configured (if using strict network policies)
 - [ ] Headlamp pods running with 2+ replicas (high availability)
@@ -121,7 +120,7 @@ metadata:
   namespace: polaris
 subjects:
   - kind: Group
-    name: system:authenticated  # All authenticated users
+    name: system:authenticated # All authenticated users
     apiGroup: rbac.authorization.k8s.io
 roleRef:
   kind: Role
@@ -134,7 +133,7 @@ For fine-grained control, bind specific users or groups:
 ```yaml
 subjects:
   - kind: Group
-    name: sre-team  # Only SRE team
+    name: sre-team # Only SRE team
     apiGroup: rbac.authorization.k8s.io
 ```
 
@@ -185,12 +184,12 @@ Kubernetes audit logs record every service proxy request:
 apiVersion: audit.k8s.io/v1
 kind: Policy
 rules:
-  - level: Metadata  # Log metadata only (not full request/response)
-    verbs: ["get"]
+  - level: Metadata # Log metadata only (not full request/response)
+    verbs: ['get']
     resources:
-      - group: ""
-        resources: ["services/proxy"]
-    namespaces: ["polaris"]
+      - group: ''
+        resources: ['services/proxy']
+    namespaces: ['polaris']
 ```
 
 ### Data Sensitivity
@@ -354,8 +353,8 @@ spec:
           labels:
             severity: warning
           annotations:
-            summary: "Headlamp pod not ready"
-            description: "Pod {{ $labels.pod }} in namespace {{ $labels.namespace }} has been not ready for 5 minutes."
+            summary: 'Headlamp pod not ready'
+            description: 'Pod {{ $labels.pod }} in namespace {{ $labels.namespace }} has been not ready for 5 minutes.'
 ```
 
 ## Performance Tuning
@@ -414,12 +413,14 @@ Adjust based on cluster size and user count.
 If Headlamp or plugin becomes unavailable:
 
 1. **Verify Polaris is running:**
+
    ```bash
    kubectl -n polaris get pods
    kubectl -n polaris get svc polaris-dashboard
    ```
 
 2. **Redeploy Headlamp:**
+
    ```bash
    helm upgrade --install headlamp headlamp/headlamp \
      --namespace kube-system \
@@ -427,11 +428,13 @@ If Headlamp or plugin becomes unavailable:
    ```
 
 3. **Reapply RBAC:**
+
    ```bash
    kubectl apply -f polaris-plugin-rbac.yaml
    ```
 
 4. **Verify plugin files:**
+
    ```bash
    kubectl -n kube-system exec deployment/headlamp -- \
      ls /headlamp/plugins/headlamp-polaris-plugin/
@@ -441,30 +444,6 @@ If Headlamp or plugin becomes unavailable:
    **Cmd+Shift+R** / **Ctrl+Shift+R**
 
 ## Known Issues
-
-### Plugin Loading Issue (Headlamp v0.39.0+)
-
-**Symptom:** Plugin appears in Settings but not in sidebar
-
-**Cause:** `config.watchPlugins: true` (default) treats catalog plugins as development plugins
-
-**Fix:**
-
-```yaml
-config:
-  watchPlugins: false  # Required for plugin manager
-```
-
-**Root Cause:**
-
-With `watchPlugins: true`, Headlamp backend serves plugin metadata but frontend never executes the JavaScript. This causes plugins to appear in Settings but no sidebar/routes/settings work.
-
-**Documentation:** See `deployment/PLUGIN_LOADING_FIX.md` in repository for full analysis.
-
-**After Fix:**
-
-- Restart Headlamp deployment
-- Hard refresh browser (**Cmd+Shift+R** / **Ctrl+Shift+R**)
 
 ### Skipped Count Limitation
 

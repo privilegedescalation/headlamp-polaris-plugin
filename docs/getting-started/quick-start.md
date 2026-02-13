@@ -29,7 +29,6 @@ Don't have these? See [Prerequisites](prerequisites.md) for installation instruc
 cat <<EOF > headlamp-values.yaml
 config:
   pluginsDir: /headlamp/plugins
-  watchPlugins: false  # CRITICAL for v0.39.0+
 
 pluginsManager:
   enabled: true
@@ -86,14 +85,17 @@ EOF
 ### UI Verification
 
 1. **Check Plugin is Loaded:**
+
    - Go to **Settings → Plugins**
    - Verify "headlamp-polaris-plugin" is listed
 
 2. **Check Sidebar:**
+
    - Look for **Polaris** entry in the left sidebar
    - If not visible, hard refresh: **Cmd+Shift+R** / **Ctrl+Shift+R**
 
 3. **View Overview Dashboard:**
+
    - Click **Polaris** in sidebar
    - Overview page loads with:
      - Cluster score gauge
@@ -137,6 +139,7 @@ kubectl get --raw /api/v1/namespaces/polaris/services/polaris-dashboard:80/proxy
 Navigate to **Polaris → Overview**:
 
 - **Cluster Score Gauge:** Overall cluster health (0-100%)
+
   - Green (≥80%): Excellent
   - Yellow (50-79%): Needs improvement
   - Red (<50%): Critical issues
@@ -181,15 +184,11 @@ Cluster score badge in top navigation:
 ### Plugin Not in Sidebar
 
 ```bash
-# Check Headlamp config
-kubectl -n kube-system get configmap headlamp -o yaml | grep watchPlugins
+# Verify plugin files exist
+kubectl -n kube-system exec -it deployment/headlamp -c headlamp -- \
+  ls /headlamp/plugins/headlamp-polaris-plugin/
 
-# If "true" or missing, set to false:
-kubectl -n kube-system edit configmap headlamp
-# Set: watchPlugins: "false"
-
-# Restart Headlamp
-kubectl -n kube-system rollout restart deployment/headlamp
+# If missing, reinstall via Headlamp UI or sidecar method
 
 # Hard refresh browser
 # Cmd+Shift+R (Mac) or Ctrl+Shift+R (Windows/Linux)

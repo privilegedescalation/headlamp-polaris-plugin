@@ -13,6 +13,7 @@ The plugin requires **one permission** to function:
 This allows the plugin to fetch audit results via the Kubernetes service proxy.
 
 **Why this permission?**
+
 - Plugin accesses Polaris through Kubernetes API server's service proxy
 - Service proxy requires `get` verb on `services/proxy` resource
 - Scoped to specific service (`polaris-dashboard`) for security
@@ -37,13 +38,14 @@ metadata:
     app.kubernetes.io/name: headlamp-polaris-plugin
     app.kubernetes.io/component: rbac
 rules:
-  - apiGroups: [""]
-    resources: ["services/proxy"]
-    resourceNames: ["polaris-dashboard"]
-    verbs: ["get"]
+  - apiGroups: ['']
+    resources: ['services/proxy']
+    resourceNames: ['polaris-dashboard']
+    verbs: ['get']
 ```
 
 **Key points:**
+
 - **Role** (not ClusterRole) - Scoped to `polaris` namespace only
 - **resourceNames** - Restricts access to `polaris-dashboard` service only
 - **verbs: ["get"]** - Read-only permission
@@ -62,8 +64,8 @@ metadata:
     app.kubernetes.io/component: rbac
 subjects:
   - kind: ServiceAccount
-    name: headlamp           # Adjust to your Headlamp SA name
-    namespace: kube-system   # Adjust to Headlamp's namespace
+    name: headlamp # Adjust to your Headlamp SA name
+    namespace: kube-system # Adjust to Headlamp's namespace
 roleRef:
   kind: Role
   name: polaris-proxy-reader
@@ -71,6 +73,7 @@ roleRef:
 ```
 
 **Adjust for your environment:**
+
 - `subjects[0].name` - Your Headlamp service account name (often `headlamp`)
 - `subjects[0].namespace` - Namespace where Headlamp runs (often `kube-system`)
 
@@ -104,10 +107,12 @@ In token-auth mode, **each user's own identity** is used for Kubernetes API requ
 ### Why Per-User RBAC?
 
 With service account mode:
+
 - Single RoleBinding grants access to all Headlamp users
 - Kubernetes sees all requests as `system:serviceaccount:kube-system:headlamp`
 
 With token-auth mode:
+
 - Each user's own token (OIDC, kubeconfig) is used
 - Kubernetes sees requests as `user@example.com` or `system:serviceaccount:team-ns:user-sa`
 - **Each user needs individual RBAC permissions**
@@ -125,7 +130,7 @@ metadata:
   namespace: polaris
 subjects:
   - kind: Group
-    name: system:authenticated  # All authenticated users
+    name: system:authenticated # All authenticated users
     apiGroup: rbac.authorization.k8s.io
 roleRef:
   kind: Role
@@ -174,7 +179,7 @@ metadata:
   namespace: polaris
 subjects:
   - kind: Group
-    name: sre-team          # OIDC group claim
+    name: sre-team # OIDC group claim
     apiGroup: rbac.authorization.k8s.io
   - kind: Group
     name: devops-team
@@ -186,11 +191,13 @@ roleRef:
 ```
 
 **Requirements:**
+
 - OIDC provider must include group claims in token
 - Headlamp must be configured to extract groups from OIDC token
 - Group names must match exactly (case-sensitive)
 
 **Example OIDC group claim:**
+
 ```json
 {
   "sub": "user@example.com",
@@ -229,23 +236,23 @@ apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
 metadata:
   name: polaris-proxy-reader
-  namespace: team-a-polaris  # First Polaris instance
+  namespace: team-a-polaris # First Polaris instance
 rules:
-  - apiGroups: [""]
-    resources: ["services/proxy"]
-    resourceNames: ["polaris-dashboard"]
-    verbs: ["get"]
+  - apiGroups: ['']
+    resources: ['services/proxy']
+    resourceNames: ['polaris-dashboard']
+    verbs: ['get']
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
 metadata:
   name: polaris-proxy-reader
-  namespace: team-b-polaris  # Second Polaris instance
+  namespace: team-b-polaris # Second Polaris instance
 rules:
-  - apiGroups: [""]
-    resources: ["services/proxy"]
-    resourceNames: ["polaris-dashboard"]
-    verbs: ["get"]
+  - apiGroups: ['']
+    resources: ['services/proxy']
+    resourceNames: ['polaris-dashboard']
+    verbs: ['get']
 ```
 
 ### Create RoleBindings per Namespace
@@ -343,22 +350,24 @@ When using OAuth2/OIDC authentication with Headlamp:
 ### Required Configuration
 
 **Headlamp Helm values:**
+
 ```yaml
 env:
   - name: HEADLAMP_CONFIG_OIDC_CLIENT_ID
-    value: "headlamp"
+    value: 'headlamp'
   - name: HEADLAMP_CONFIG_OIDC_CLIENT_SECRET
     valueFrom:
       secretKeyRef:
         name: headlamp-oidc
         key: client-secret
   - name: HEADLAMP_CONFIG_OIDC_ISSUER_URL
-    value: "https://auth.example.com/realms/kubernetes"
+    value: 'https://auth.example.com/realms/kubernetes'
   - name: HEADLAMP_CONFIG_OIDC_SCOPES
-    value: "openid,profile,email,groups"
+    value: 'openid,profile,email,groups'
 ```
 
 **RBAC for OIDC users:**
+
 ```yaml
 ---
 apiVersion: rbac.authorization.k8s.io/v1
@@ -368,7 +377,7 @@ metadata:
   namespace: polaris
 subjects:
   - kind: Group
-    name: kubernetes-admins  # OIDC group claim
+    name: kubernetes-admins # OIDC group claim
     apiGroup: rbac.authorization.k8s.io
 roleRef:
   kind: Role
@@ -421,32 +430,36 @@ Every plugin data fetch creates a Kubernetes API audit log entry.
 ### Volume Estimates
 
 **Per user:**
+
 - 1 refresh per 5 minutes = 288 requests/day
 - 1 refresh per 30 minutes = 48 requests/day
 
 **Cluster-wide:**
+
 - 10 concurrent users × 5-minute refresh = 2,880 audit logs/day
 - 100 concurrent users × 30-minute refresh = 4,800 audit logs/day
 
 ### Reducing Audit Volume
 
 **Option 1: Increase refresh interval**
+
 ```
 Settings → Plugins → Polaris → Refresh Interval → 30 minutes
 ```
 
 **Option 2: Adjust audit policy level**
+
 ```yaml
 # kube-apiserver audit policy
 apiVersion: audit.k8s.io/v1
 kind: Policy
 rules:
-  - level: Metadata  # Log metadata only, not full request/response
-    verbs: ["get"]
+  - level: Metadata # Log metadata only, not full request/response
+    verbs: ['get']
     resources:
-      - group: ""
-        resources: ["services/proxy"]
-    namespaces: ["polaris"]
+      - group: ''
+        resources: ['services/proxy']
+    namespaces: ['polaris']
 ```
 
 **Option 3: Filter audit logs**
@@ -461,18 +474,23 @@ If using a log aggregator (e.g., Elasticsearch), create filters to exclude or do
 **Diagnosis:**
 
 1. **Check Role exists:**
+
    ```bash
    kubectl -n polaris get role polaris-proxy-reader
    ```
+
    If missing: Apply Role manifest
 
 2. **Check RoleBinding exists:**
+
    ```bash
    kubectl -n polaris get rolebinding headlamp-polaris-proxy
    ```
+
    If missing: Apply RoleBinding manifest
 
 3. **Test permission:**
+
    ```bash
    # Service account mode
    kubectl auth can-i get services/proxy \
@@ -486,6 +504,7 @@ If using a log aggregator (e.g., Elasticsearch), create filters to exclude or do
      -n polaris \
      --resource-name=polaris-dashboard
    ```
+
    Expected: `yes`
 
 4. **Verify RoleBinding subjects match:**
@@ -499,6 +518,7 @@ If using a log aggregator (e.g., Elasticsearch), create filters to exclude or do
 **This is NOT an RBAC issue.** 404 means Polaris service doesn't exist.
 
 **Check:**
+
 ```bash
 kubectl -n polaris get svc polaris-dashboard
 ```
@@ -510,14 +530,17 @@ If missing, install Polaris with dashboard enabled.
 **Possible causes:**
 
 1. **Wrong namespace in RoleBinding:**
+
    - RoleBinding must be in `polaris` namespace (where the service is)
    - Common mistake: Creating RoleBinding in `kube-system`
 
 2. **Wrong resourceName:**
+
    - Must match service name exactly: `polaris-dashboard`
    - Check: `kubectl -n polaris get svc`
 
 3. **Browser caching old 403:**
+
    - Hard refresh browser: Cmd+Shift+R (Mac) or Ctrl+Shift+R (Windows/Linux)
 
 4. **Token expired (OIDC mode):**
@@ -529,6 +552,7 @@ If missing, install Polaris with dashboard enabled.
 ### 1. Use Namespaced Roles (Not ClusterRoles)
 
 ✅ **Good:**
+
 ```yaml
 kind: Role
 metadata:
@@ -536,6 +560,7 @@ metadata:
 ```
 
 ❌ **Bad:**
+
 ```yaml
 kind: ClusterRole
 # Grants access to all namespaces
@@ -546,13 +571,15 @@ kind: ClusterRole
 ### 2. Always Specify resourceNames
 
 ✅ **Good:**
+
 ```yaml
-resourceNames: ["polaris-dashboard"]
+resourceNames: ['polaris-dashboard']
 ```
 
 ❌ **Bad:**
+
 ```yaml
-resourceNames: []  # Allows access to ALL services
+resourceNames: [] # Allows access to ALL services
 ```
 
 **Why:** `resourceNames` restricts permission to a specific service. Without it, the binding grants access to proxy all services in the namespace.
@@ -560,13 +587,15 @@ resourceNames: []  # Allows access to ALL services
 ### 3. Use Read-Only Verb
 
 ✅ **Good:**
+
 ```yaml
-verbs: ["get"]
+verbs: ['get']
 ```
 
 ❌ **Bad:**
+
 ```yaml
-verbs: ["get", "create", "update", "delete"]
+verbs: ['get', 'create', 'update', 'delete']
 ```
 
 **Why:** Plugin only needs `get` to fetch audit results. Additional verbs violate principle of least privilege.
@@ -580,6 +609,7 @@ verbs: ["get", "create", "update", "delete"]
 ### 5. Monitor Audit Logs
 
 Set alerts for:
+
 - Unusual access patterns (e.g., 403 spikes = permission issues)
 - High request volume (e.g., misconfigured refresh interval)
 - Access from unexpected users (security monitoring)
@@ -587,11 +617,12 @@ Set alerts for:
 ### 6. Avoid Wildcard Permissions
 
 ❌ **Never do this:**
+
 ```yaml
 rules:
-  - apiGroups: ["*"]
-    resources: ["*"]
-    verbs: ["*"]
+  - apiGroups: ['*']
+    resources: ['*']
+    verbs: ['*']
 ```
 
 This grants cluster-admin equivalent permissions. Always use specific resources and verbs.
