@@ -1,0 +1,10 @@
+{
+  "mcpServers": {
+    "kubernetes (animaniacs)": {
+      "type": "http",
+      "url": "https://mcp.animaniacs.farh.net",
+      "headers": {
+        "Authorization: Basic ${BEARER_TOKEN}"
+      }
+    }
+}
