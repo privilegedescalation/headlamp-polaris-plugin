@@ -14,6 +14,48 @@ vi.mock('@kinvolk/headlamp-plugin/lib', () => ({
   },
 }));
 
+// Mock MUI components
+vi.mock('@mui/material/Drawer', () => ({
+  default: ({
+    open,
+    children,
+  }: {
+    open: boolean;
+    children: React.ReactNode;
+    onClose?: () => void;
+    anchor?: string;
+  }) => (open ? <div data-testid="mui-drawer">{children}</div> : null),
+}));
+
+vi.mock('@mui/material/IconButton', () => ({
+  default: ({
+    children,
+    onClick,
+    'aria-label': ariaLabel,
+  }: {
+    children: React.ReactNode;
+    onClick: () => void;
+    'aria-label': string;
+    title?: string;
+    size?: string;
+  }) => (
+    <button onClick={onClick} aria-label={ariaLabel}>
+      {children}
+    </button>
+  ),
+}));
+
+vi.mock('@mui/material/styles', () => ({
+  useTheme: () => ({
+    palette: {
+      primary: { main: '#1976d2' },
+      text: { primary: '#000', secondary: '#666' },
+      action: { hover: 'rgba(0,0,0,0.04)' },
+      background: { default: '#fafafa' },
+    },
+  }),
+}));
+
 // Mock Headlamp CommonComponents
 vi.mock('@kinvolk/headlamp-plugin/lib/CommonComponents', () => ({
   Loader: ({ title }: { title: string }) => <div data-testid="loader">{title}</div>,

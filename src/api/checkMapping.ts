@@ -208,22 +208,6 @@ export function getCheckCategory(checkId: string): 'Security' | 'Efficiency' | '
 }
 
 /**
- * Get color for severity
- */
-export function getSeverityColor(severity: string): string {
-  switch (severity) {
-    case 'danger':
-      return '#f44336';
-    case 'warning':
-      return '#ff9800';
-    case 'ignore':
-      return '#9e9e9e';
-    default:
-      return '#9e9e9e';
-  }
-}
-
-/**
  * Get status for StatusLabel component
  */
 export function getSeverityStatus(severity: string): 'error' | 'warning' | 'success' {

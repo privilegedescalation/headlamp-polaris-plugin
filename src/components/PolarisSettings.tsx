@@ -4,12 +4,15 @@ import {
   SectionBox,
   StatusLabel,
 } from '@kinvolk/headlamp-plugin/lib/CommonComponents';
+import { useTheme } from '@mui/material/styles';
 import React from 'react';
 import {
   AuditData,
   getDashboardUrl,
+  getPolarisApiPath,
   getRefreshInterval,
   INTERVAL_OPTIONS,
+  isFullUrl,
   setDashboardUrl,
   setRefreshInterval,
 } from '../api/polaris';
@@ -20,6 +23,7 @@ interface PluginSettingsProps {
 }
 
 export default function PolarisSettings(props: PluginSettingsProps) {
+  const theme = useTheme();
   const { data, onDataChange } = props;
   const currentInterval = (data?.refreshInterval as number) ?? getRefreshInterval();
   const currentUrl = (data?.dashboardUrl as string) ?? getDashboardUrl();
@@ -45,13 +49,11 @@ export default function PolarisSettings(props: PluginSettingsProps) {
     setTestResult(null);
 
     try {
-      const baseUrl = currentUrl;
-      const apiPath = baseUrl.endsWith('/') ? `${baseUrl}results.json` : `${baseUrl}/results.json`;
-      const isFullUrl = apiPath.startsWith('http://') || apiPath.startsWith('https://');
+      const apiPath = getPolarisApiPath();
 
       let result: AuditData;
 
-      if (isFullUrl) {
+      if (isFullUrl(apiPath)) {
         const response = await fetch(apiPath);
         if (!response.ok) {
           throw new Error(`HTTP ${response.status}: ${response.statusText}`);
@@ -107,17 +109,17 @@ export default function PolarisSettings(props: PluginSettingsProps) {
                   style={{
                     width: '100%',
                     padding: '4px 8px',
-                    border: '1px solid var(--mui-palette-divider, #e0e0e0)',
+                    border: `1px solid ${theme.palette.divider}`,
                     borderRadius: '4px',
                     fontSize: '14px',
-                    backgroundColor: 'var(--mui-palette-background-paper, #fff)',
-                    color: 'var(--mui-palette-text-primary, #000)',
+                    backgroundColor: theme.palette.background.paper,
+                    color: theme.palette.text.primary,
                   }}
                 />
                 <div
                   style={{
                     fontSize: '12px',
-                    color: 'var(--mui-palette-text-secondary, #666)',
+                    color: theme.palette.text.secondary,
                     marginTop: '4px',
                   }}
                 >
@@ -139,11 +141,11 @@ export default function PolarisSettings(props: PluginSettingsProps) {
                   style={{
                     padding: '6px 16px',
                     backgroundColor: testing
-                      ? 'var(--mui-palette-action-disabledBackground, #e0e0e0)'
-                      : 'var(--mui-palette-primary-main, #1976d2)',
+                      ? theme.palette.action.disabledBackground
+                      : theme.palette.primary.main,
                     color: testing
-                      ? 'var(--mui-palette-action-disabled, #9e9e9e)'
-                      : 'var(--mui-palette-primary-contrastText, #fff)',
+                      ? theme.palette.action.disabled
+                      : theme.palette.primary.contrastText,
                     border: 'none',
                     borderRadius: '4px',
                     cursor: testing ? 'not-allowed' : 'pointer',

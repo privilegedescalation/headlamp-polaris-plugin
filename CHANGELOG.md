@@ -7,6 +7,34 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.6.0] - 2026-03-04
+
+### Fixed
+- **ExemptionManager apiVersion bug**: `apps` and `batch` resources now correctly use `/apis/{group}/v1/` instead of the broken `/api/v1/` path
+- **Strict TypeScript**: Replaced `resource: any` in InlineAuditSection with proper `KubeResource` interface
+- **PolarisDataContext test mock**: Added missing `triggerRefresh` to mock, preventing silent `undefined` for `refresh` in context
+- **DashboardView test**: Fixed `SimpleTable` mock that used `Array<any>` and didn't exercise column getters
+
+### Changed
+- **Dark mode / theming**: Replaced all `var(--mui-palette-*)` CSS variables with `useTheme()` + `theme.palette.*` across all components (DashboardView, NamespacesListView, InlineAuditSection, ExemptionManager, PolarisSettings, AppBarScoreBadge)
+- **Namespace drawer**: Replaced custom `<style>` block + positioned `<div>` with MUI `Drawer` component for proper accessibility (`role="dialog"`, `aria-modal`, Escape key handling via MUI)
+- **AppBarScoreBadge**: Uses `theme.palette.success/warning/error` with proper `contrastText` instead of hardcoded hex colors
+- **ExemptionManager feedback**: Replaced `alert()` calls with `StatusLabel`-based inline feedback; removed dead `getExemptions()` stub and unreachable remove-exemption UI
+- **URL construction**: Exported `getPolarisApiPath` and `isFullUrl` from `polaris.ts`; PolarisSettings now reuses them instead of duplicating logic
+
+### Added
+- **Error boundaries**: All registered components (routes, detail sections, app bar action) wrapped in `PolarisErrorBoundary` for graceful error rendering
+- **Tests for InlineAuditSection** (7 tests): loading, unsupported kind, not found, score/summary, failing checks, link, exemption manager
+- **Tests for AppBarScoreBadge** (6 tests): loading, no data, score colors, navigation, aria-label
+- **Tests for topIssues.ts** (8 tests): empty, all pass, controller/pod/container results, counting, ignore filter, sorting, max 10
+- **Tests for checkMapping.ts** (11 tests): name/description/category/severity lookups, unknown checks, CHECK_MAPPING structure validation
+
+### Removed
+- **NamespaceDetailView.tsx**: Dead code with no registered route (replaced by drawer in NamespacesListView)
+- **NamespaceDetailView.test.tsx**: Tests for removed component
+- **MockPolarisProvider in test-utils.tsx**: Unused mock provider (tests use `vi.mock` instead)
+- **`getSeverityColor` export in checkMapping.ts**: Dead export not imported anywhere
+
 ## [0.3.5] - 2026-02-12
 
 ### Fixed
@@ -242,7 +270,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Automated release workflow
 - Basic CI/CD pipeline
 
-[Unreleased]: https://github.com/privilegedescalation/headlamp-polaris-plugin/compare/v0.3.5...HEAD
+[Unreleased]: https://github.com/privilegedescalation/headlamp-polaris-plugin/compare/v0.6.0...HEAD
+[0.6.0]: https://github.com/privilegedescalation/headlamp-polaris-plugin/releases/tag/v0.6.0
 [0.3.5]: https://github.com/privilegedescalation/headlamp-polaris-plugin/releases/tag/v0.3.5
 [0.3.4]: https://github.com/privilegedescalation/headlamp-polaris-plugin/releases/tag/v0.3.4
 [0.3.3]: https://github.com/privilegedescalation/headlamp-polaris-plugin/releases/tag/v0.3.3

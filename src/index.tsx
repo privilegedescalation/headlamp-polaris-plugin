@@ -5,6 +5,7 @@ import {
   registerRoute,
   registerSidebarEntry,
 } from '@kinvolk/headlamp-plugin/lib';
+import { SectionBox, StatusLabel } from '@kinvolk/headlamp-plugin/lib/CommonComponents';
 import React from 'react';
 import { PolarisDataProvider } from './api/PolarisDataContext';
 import AppBarScoreBadge from './components/AppBarScoreBadge';
@@ -12,6 +13,34 @@ import DashboardView from './components/DashboardView';
 import InlineAuditSection from './components/InlineAuditSection';
 import NamespacesListView from './components/NamespacesListView';
 import PolarisSettings from './components/PolarisSettings';
+
+// --- Error boundary for plugin components ---
+
+interface ErrorBoundaryState {
+  error: string | null;
+}
+
+class PolarisErrorBoundary extends React.Component<
+  { children: React.ReactNode },
+  ErrorBoundaryState
+> {
+  state: ErrorBoundaryState = { error: null };
+
+  static getDerivedStateFromError(error: Error): ErrorBoundaryState {
+    return { error: error.message };
+  }
+
+  render() {
+    if (this.state.error) {
+      return (
+        <SectionBox title="Polaris Plugin Error">
+          <StatusLabel status="error">{this.state.error}</StatusLabel>
+        </SectionBox>
+      );
+    }
+    return this.props.children;
+  }
+}
 
 // --- Sidebar entries ---
 
@@ -47,9 +76,11 @@ registerRoute({
   name: 'polaris',
   exact: true,
   component: () => (
-    <PolarisDataProvider>
-      <DashboardView />
-    </PolarisDataProvider>
+    <PolarisErrorBoundary>
+      <PolarisDataProvider>
+        <DashboardView />
+      </PolarisDataProvider>
+    </PolarisErrorBoundary>
   ),
 });
 
@@ -59,9 +90,11 @@ registerRoute({
   name: 'polaris-namespaces',
   exact: true,
   component: () => (
-    <PolarisDataProvider>
-      <NamespacesListView />
-    </PolarisDataProvider>
+    <PolarisErrorBoundary>
+      <PolarisDataProvider>
+        <NamespacesListView />
+      </PolarisDataProvider>
+    </PolarisErrorBoundary>
   ),
 });
 
@@ -77,15 +110,19 @@ registerDetailsViewSection(({ resource }) => {
   }
 
   return (
-    <PolarisDataProvider>
-      <InlineAuditSection resource={resource} />
-    </PolarisDataProvider>
+    <PolarisErrorBoundary>
+      <PolarisDataProvider>
+        <InlineAuditSection resource={resource} />
+      </PolarisDataProvider>
+    </PolarisErrorBoundary>
   );
 });
 
 // Register app bar score badge
 registerAppBarAction(() => (
-  <PolarisDataProvider>
-    <AppBarScoreBadge />
-  </PolarisDataProvider>
+  <PolarisErrorBoundary>
+    <PolarisDataProvider>
+      <AppBarScoreBadge />
+    </PolarisDataProvider>
+  </PolarisErrorBoundary>
 ));

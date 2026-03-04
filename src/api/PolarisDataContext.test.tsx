@@ -16,6 +16,7 @@ vi.mock('./polaris', async importOriginal => {
       data: makeAuditData([makeResult()]),
       loading: false,
       error: null,
+      triggerRefresh: vi.fn(),
     })),
   };
 });
@@ -44,5 +45,6 @@ describe('usePolarisDataContext', () => {
     expect(result.current.data).not.toBeNull();
     expect(result.current.loading).toBe(false);
     expect(result.current.error).toBeNull();
+    expect(result.current.refresh).toBeDefined();
   });
 });

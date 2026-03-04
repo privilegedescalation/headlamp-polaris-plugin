@@ -35,17 +35,16 @@ All tests and `tsc` must pass before committing.
 
 ```
 src/
-├── index.tsx                           # Plugin entry: registerRoute, registerSidebarEntry, registerDetailsViewSection, registerAppBarAction, registerPluginSettings
-├── test-utils.tsx                      # Shared test utilities
+├── index.tsx                           # Plugin entry: registerRoute, registerSidebarEntry, registerDetailsViewSection, registerAppBarAction, registerPluginSettings; PolarisErrorBoundary
+├── test-utils.tsx                      # Shared test fixtures (makeResult, makeAuditData)
 ├── api/
-│   ├── polaris.ts                      # Types (AuditData schema), countResults utilities, refresh settings
+│   ├── polaris.ts                      # Types (AuditData schema), countResults utilities, refresh settings, getPolarisApiPath, isFullUrl
 │   ├── checkMapping.ts                 # Polaris check ID → human-readable name mapping
 │   ├── topIssues.ts                    # Top failing checks aggregation logic
 │   └── PolarisDataContext.tsx           # Shared React context provider (ApiProxy.request + configurable refresh)
 └── components/
     ├── DashboardView.tsx                # Overview page (score gauge, check distribution, top failing checks)
-    ├── NamespacesListView.tsx           # Namespace list with per-namespace scores
-    ├── NamespaceDetailView.tsx          # Per-namespace drill-down with resource table
+    ├── NamespacesListView.tsx           # Namespace list with per-namespace scores + MUI Drawer detail panel
     ├── InlineAuditSection.tsx           # Injected into Deployment/StatefulSet/DaemonSet/Job/CronJob detail views
     ├── ExemptionManager.tsx             # Polaris exemption annotation management
     ├── AppBarScoreBadge.tsx             # App bar cluster score chip
@@ -60,12 +59,15 @@ Data is fetched via `ApiProxy.request` to the Polaris dashboard service proxy an
 
 ## Code conventions
 
-- Functional React components only — no class components
+- Functional React components only — class components only for error boundaries (PolarisErrorBoundary in index.tsx)
 - All imports from `@kinvolk/headlamp-plugin/lib` and `@kinvolk/headlamp-plugin/lib/CommonComponents`
-- No additional UI libraries (no MUI direct imports, no Ant Design, etc.)
+- `@mui/material` is available as a shared external via Headlamp — use `useTheme` from `@mui/material/styles` for theming, MUI `Drawer`/`IconButton` etc. as needed. Do NOT add `@mui/material` to package.json dependencies.
+- Use `useTheme()` + `theme.palette.*` for all theme-aware colors — never use `var(--mui-palette-*)` CSS variables
+- No other UI libraries (no Ant Design, etc.)
 - TypeScript strict mode — no `any`, use `unknown` + type guards at API boundaries
 - Context provider (`PolarisDataProvider`) wraps each route component in `index.tsx`
-- Tests: vitest + @testing-library/react, mock with `vi.mock('@kinvolk/headlamp-plugin/lib', ...)`
+- All registered components wrapped in `PolarisErrorBoundary` for graceful error handling
+- Tests: vitest + @testing-library/react, mock with `vi.mock('@kinvolk/headlamp-plugin/lib', ...)` and `vi.mock('@mui/material/styles', ...)`
 - `vitest.setup.ts` provides a spec-compliant `localStorage` shim for Node 22+ compatibility
 
 ## Testing

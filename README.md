@@ -26,7 +26,7 @@ Adds a **Polaris** top-level sidebar section to Headlamp with comprehensive secu
 - **Exemption Management** -- add or remove Polaris exemptions via annotation patches directly from the UI; supports per-check exemptions or exempt-all
 - **Configurable Dashboard URL** -- supports both Kubernetes service proxy URLs and full HTTP/HTTPS URLs for external Polaris deployments
 - **Connection Testing** -- test button in settings to verify Polaris dashboard connectivity and show version info
-- **Dark Mode Support** -- full theme adaptation using MUI CSS variables; drawer, settings, and all UI elements respect system/Headlamp theme
+- **Dark Mode Support** -- full theme adaptation using MUI `useTheme()` API; drawer, settings, and all UI elements respect system/Headlamp theme
 
 ### Data & Refresh
 
@@ -199,7 +199,7 @@ Quick reference:
 | **Plugin not in sidebar**       | Plugin not installed or needs browser refresh | Hard refresh browser (Cmd+Shift+R / Ctrl+Shift+F5)                    |
 | **403 Access Denied**           | Missing RBAC binding for `services/proxy`     | Apply Role + RoleBinding from RBAC section                            |
 | **404 or 503**                  | Polaris not installed, or dashboard disabled  | Install Polaris with `dashboard.enabled: true` in `polaris` namespace |
-| **Dark mode white backgrounds** | Old plugin version                            | Upgrade to v0.3.5+ and hard refresh browser                           |
+| **Dark mode white backgrounds** | Old plugin version                            | Upgrade to v0.6.0+ and hard refresh browser                           |
 | **Settings page empty**         | Old plugin version                            | Upgrade to v0.3.3+                                                    |
 | **No data / infinite spinner**  | Network policy or Polaris pod down            | Check network policies and `kubectl get pods -n polaris`              |
 
@@ -253,17 +253,21 @@ For complete testing guide including CI/CD integration, see **[docs/TESTING.md](
 
 ```
 src/
-  index.tsx                           -- Entry point. Registers sidebar entries and routes.
+  index.tsx                           -- Entry point. Registers sidebar entries, routes, and error boundaries.
+  test-utils.tsx                      -- Shared test fixtures (makeResult, makeAuditData).
   api/
     polaris.ts                        -- TypeScript types (AuditData schema), usePolarisData hook,
                                          countResults utilities, refresh interval settings.
-    polaris.test.ts                   -- Unit tests for utility functions (vitest).
+    checkMapping.ts                   -- Polaris check ID → human-readable name mapping.
+    topIssues.ts                      -- Top failing checks aggregation logic.
     PolarisDataContext.tsx             -- React context provider; shared data fetch across views.
   components/
     DashboardView.tsx                 -- Overview page (score, check summary with skipped, cluster info).
-    NamespacesListView.tsx            -- Namespace list with scores and links to detail views.
-    NamespaceDetailView.tsx           -- Per-namespace drill-down with resource table.
-    PolarisSettings.tsx               -- Plugin settings page (refresh interval selector).
+    NamespacesListView.tsx            -- Namespace list with scores; MUI Drawer detail panel.
+    InlineAuditSection.tsx            -- Inline audit for Deployment/StatefulSet/DaemonSet/Job/CronJob detail views.
+    ExemptionManager.tsx              -- Polaris exemption annotation management.
+    AppBarScoreBadge.tsx              -- App bar cluster score chip.
+    PolarisSettings.tsx               -- Plugin settings page (refresh interval, dashboard URL).
 vitest.config.mts                     -- Vitest configuration (jsdom environment).
 ```
 

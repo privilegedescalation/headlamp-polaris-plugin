@@ -300,7 +300,7 @@ export function computeScore(counts: ResultCounts): number {
  *
  * @returns Full path to results.json endpoint
  */
-function getPolarisApiPath(): string {
+export function getPolarisApiPath(): string {
   const baseUrl = getDashboardUrl();
   return baseUrl.endsWith('/') ? `${baseUrl}results.json` : `${baseUrl}/results.json`;
 }
@@ -311,7 +311,7 @@ function getPolarisApiPath(): string {
  * @param url - URL to check
  * @returns true if full URL, false if relative path
  */
-function isFullUrl(url: string): boolean {
+export function isFullUrl(url: string): boolean {
   return url.startsWith('http://') || url.startsWith('https://');
 }
 

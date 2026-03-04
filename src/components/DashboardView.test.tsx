@@ -8,6 +8,15 @@ vi.mock('@kinvolk/headlamp-plugin/lib', () => ({
   ApiProxy: { request: vi.fn() },
 }));
 
+vi.mock('@mui/material/styles', () => ({
+  useTheme: () => ({
+    palette: {
+      primary: { main: '#1976d2' },
+      text: { primary: '#000', secondary: '#666' },
+    },
+  }),
+}));
+
 // Mock Headlamp CommonComponents as thin pass-throughs
 vi.mock('@kinvolk/headlamp-plugin/lib/CommonComponents', () => ({
   Loader: ({ title }: { title: string }) => <div data-testid="loader">{title}</div>,
@@ -34,12 +43,27 @@ vi.mock('@kinvolk/headlamp-plugin/lib/CommonComponents', () => ({
       </tbody>
     </table>
   ),
-  SimpleTable: ({ data }: { data: Array<any> }) => (
+  SimpleTable: ({
+    columns,
+    data,
+  }: {
+    columns: Array<{ label: string; getter: (row: unknown) => React.ReactNode }>;
+    data: unknown[];
+  }) => (
     <table data-testid="simple-table">
+      <thead>
+        <tr>
+          {columns.map(col => (
+            <th key={col.label}>{col.label}</th>
+          ))}
+        </tr>
+      </thead>
       <tbody>
-        {data.map((item, idx) => (
-          <tr key={idx}>
-            <td>{JSON.stringify(item)}</td>
+        {data.map((row, i) => (
+          <tr key={i}>
+            {columns.map(col => (
+              <td key={col.label}>{col.getter(row)}</td>
+            ))}
           </tr>
         ))}
       </tbody>

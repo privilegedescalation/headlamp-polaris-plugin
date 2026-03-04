@@ -8,6 +8,7 @@ import {
   SimpleTable,
   StatusLabel,
 } from '@kinvolk/headlamp-plugin/lib/CommonComponents';
+import { useTheme } from '@mui/material/styles';
 import React from 'react';
 import { getSeverityStatus } from '../api/checkMapping';
 import { AuditData, computeScore, countResults, ResultCounts } from '../api/polaris';
@@ -87,6 +88,7 @@ function formatAuditTime(auditTime: string): string {
 }
 
 export default function DashboardView() {
+  const theme = useTheme();
   const { data, loading, error, refresh } = usePolarisDataContext();
 
   if (loading) {
@@ -109,7 +111,7 @@ export default function DashboardView() {
         <SectionHeader title="Polaris — Overview" />
         {data && (
           <div style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
-            <span style={{ fontSize: '14px', color: 'var(--mui-palette-text-secondary, #666)' }}>
+            <span style={{ fontSize: '14px', color: theme.palette.text.secondary }}>
               Last updated: {formatAuditTime(data.AuditTime)}
             </span>
             <button
@@ -117,8 +119,8 @@ export default function DashboardView() {
               style={{
                 padding: '6px 16px',
                 backgroundColor: 'transparent',
-                color: 'var(--mui-palette-primary-main, #1976d2)',
-                border: '1px solid var(--mui-palette-primary-main, #1976d2)',
+                color: theme.palette.primary.main,
+                border: `1px solid ${theme.palette.primary.main}`,
                 borderRadius: '4px',
                 cursor: 'pointer',
                 fontSize: '13px',

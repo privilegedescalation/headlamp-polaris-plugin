@@ -1,5 +1,6 @@
 import { ApiProxy } from '@kinvolk/headlamp-plugin/lib';
-import { Dialog, NameValueTable, SectionBox } from '@kinvolk/headlamp-plugin/lib/CommonComponents';
+import { Dialog, SectionBox, StatusLabel } from '@kinvolk/headlamp-plugin/lib/CommonComponents';
+import { useTheme } from '@mui/material/styles';
 import React from 'react';
 import { getCheckName } from '../api/checkMapping';
 import { Result } from '../api/polaris';
@@ -26,17 +27,14 @@ export default function ExemptionManager({
   kind,
   name,
 }: ExemptionManagerProps) {
+  const theme = useTheme();
   const [dialogOpen, setDialogOpen] = React.useState(false);
   const [selectedChecks, setSelectedChecks] = React.useState<Set<string>>(new Set());
   const [exemptAll, setExemptAll] = React.useState(false);
   const [applying, setApplying] = React.useState(false);
-
-  // Extract current exemptions from workload metadata
-  const getExemptions = (): string[] => {
-    // This would need to fetch the actual workload from K8s API
-    // For now, return empty array as placeholder
-    return [];
-  };
+  const [feedback, setFeedback] = React.useState<{ success: boolean; message: string } | null>(
+    null
+  );
 
   // Extract failing checks for this workload
   const getFailingChecks = (): CheckFailure[] => {
@@ -75,7 +73,6 @@ export default function ExemptionManager({
   };
 
   const failingChecks = getFailingChecks();
-  const currentExemptions = getExemptions();
 
   const handleCheckToggle = (checkId: string) => {
     const newSelected = new Set(selectedChecks);
@@ -89,15 +86,15 @@ export default function ExemptionManager({
 
   const applyExemptions = async () => {
     setApplying(true);
+    setFeedback(null);
 
     try {
       // Construct the API path based on kind
       const apiGroup = getApiGroup(kind);
-      const apiVersion = 'v1'; // This would need to be dynamic based on kind
       const plural = getPlural(kind);
 
       const patchPath = apiGroup
-        ? `/apis/${apiGroup}/${apiVersion}/namespaces/${namespace}/${plural}/${name}`
+        ? `/apis/${apiGroup}/v1/namespaces/${namespace}/${plural}/${name}`
         : `/api/v1/namespaces/${namespace}/${plural}/${name}`;
 
       // Build annotations patch
@@ -128,46 +125,27 @@ export default function ExemptionManager({
       setDialogOpen(false);
       setSelectedChecks(new Set());
       setExemptAll(false);
-
-      // Show success message (would need notistack integration)
-      alert('Exemptions applied successfully');
+      setFeedback({ success: true, message: 'Exemptions applied successfully' });
     } catch (err) {
-      alert(`Failed to apply exemptions: ${String(err)}`);
+      setFeedback({ success: false, message: `Failed to apply exemptions: ${String(err)}` });
     } finally {
       setApplying(false);
     }
   };
 
+  const isDisabled = applying || (!exemptAll && selectedChecks.size === 0);
+
   return (
     <>
       <SectionBox title="Exemptions">
-        {currentExemptions.length > 0 ? (
-          <NameValueTable
-            rows={currentExemptions.map(exemption => ({
-              name: exemption,
-              value: (
-                <button
-                  style={{
-                    padding: '4px 12px',
-                    backgroundColor: 'var(--mui-palette-error-main, #f44336)',
-                    color: 'var(--mui-palette-error-contrastText, #fff)',
-                    border: 'none',
-                    borderRadius: '4px',
-                    cursor: 'pointer',
-                    fontSize: '12px',
-                  }}
-                  onClick={() => {
-                    // Remove exemption logic
-                    alert('Remove exemption: ' + exemption);
-                  }}
-                >
-                  Remove
-                </button>
-              ),
-            }))}
-          />
-        ) : (
-          <p>No exemptions configured</p>
+        <p>No exemptions configured</p>
+
+        {feedback && (
+          <div style={{ marginBottom: '8px' }}>
+            <StatusLabel status={feedback.success ? 'success' : 'error'}>
+              {feedback.message}
+            </StatusLabel>
+          </div>
         )}
 
         <button
@@ -177,18 +155,14 @@ export default function ExemptionManager({
             marginTop: '8px',
             padding: '6px 16px',
             backgroundColor:
-              failingChecks.length === 0
-                ? 'var(--mui-palette-action-disabledBackground, #e0e0e0)'
-                : 'transparent',
+              failingChecks.length === 0 ? theme.palette.action.disabledBackground : 'transparent',
             color:
               failingChecks.length === 0
-                ? 'var(--mui-palette-action-disabled, #9e9e9e)'
-                : 'var(--mui-palette-primary-main, #1976d2)',
+                ? theme.palette.action.disabled
+                : theme.palette.primary.main,
             border: '1px solid',
             borderColor:
-              failingChecks.length === 0
-                ? 'var(--mui-palette-divider, #e0e0e0)'
-                : 'var(--mui-palette-primary-main, #1976d2)',
+              failingChecks.length === 0 ? theme.palette.divider : theme.palette.primary.main,
             borderRadius: '4px',
             cursor: failingChecks.length === 0 ? 'not-allowed' : 'pointer',
             fontSize: '13px',
@@ -246,7 +220,7 @@ export default function ExemptionManager({
               style={{
                 padding: '6px 16px',
                 backgroundColor: 'transparent',
-                color: 'var(--mui-palette-primary-main, #1976d2)',
+                color: theme.palette.primary.main,
                 border: 'none',
                 borderRadius: '4px',
                 cursor: 'pointer',
@@ -257,21 +231,18 @@ export default function ExemptionManager({
             </button>
             <button
               onClick={applyExemptions}
-              disabled={applying || (!exemptAll && selectedChecks.size === 0)}
+              disabled={isDisabled}
               style={{
                 padding: '6px 16px',
-                backgroundColor:
-                  applying || (!exemptAll && selectedChecks.size === 0)
-                    ? 'var(--mui-palette-action-disabledBackground, #e0e0e0)'
-                    : 'var(--mui-palette-primary-main, #1976d2)',
-                color:
-                  applying || (!exemptAll && selectedChecks.size === 0)
-                    ? 'var(--mui-palette-action-disabled, #9e9e9e)'
-                    : 'var(--mui-palette-primary-contrastText, #fff)',
+                backgroundColor: isDisabled
+                  ? theme.palette.action.disabledBackground
+                  : theme.palette.primary.main,
+                color: isDisabled
+                  ? theme.palette.action.disabled
+                  : theme.palette.primary.contrastText,
                 border: 'none',
                 borderRadius: '4px',
-                cursor:
-                  applying || (!exemptAll && selectedChecks.size === 0) ? 'not-allowed' : 'pointer',
+                cursor: isDisabled ? 'not-allowed' : 'pointer',
                 fontSize: '13px',
                 fontWeight: 500,
               }}

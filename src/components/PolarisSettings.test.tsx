@@ -8,6 +8,18 @@ vi.mock('@kinvolk/headlamp-plugin/lib', () => ({
   ApiProxy: { request: vi.fn() },
 }));
 
+vi.mock('@mui/material/styles', () => ({
+  useTheme: () => ({
+    palette: {
+      primary: { main: '#1976d2', contrastText: '#fff' },
+      text: { primary: '#000', secondary: '#666' },
+      action: { disabledBackground: '#e0e0e0', disabled: '#9e9e9e' },
+      divider: '#e0e0e0',
+      background: { paper: '#fff' },
+    },
+  }),
+}));
+
 // Mock Headlamp CommonComponents
 vi.mock('@kinvolk/headlamp-plugin/lib/CommonComponents', () => ({
   SectionBox: ({ title, children }: { title?: string; children?: React.ReactNode }) => (

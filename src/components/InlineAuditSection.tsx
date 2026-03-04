@@ -4,6 +4,7 @@ import {
   SimpleTable,
   StatusLabel,
 } from '@kinvolk/headlamp-plugin/lib/CommonComponents';
+import { useTheme } from '@mui/material/styles';
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { getCheckName, getSeverityStatus } from '../api/checkMapping';
@@ -18,8 +19,17 @@ interface CheckFailure {
   message: string;
 }
 
+interface KubeResource {
+  kind: string;
+  metadata?: {
+    name?: string;
+    namespace?: string;
+    annotations?: Record<string, string>;
+  };
+}
+
 interface InlineAuditSectionProps {
-  resource: any; // KubeObject from Headlamp
+  resource: KubeResource;
 }
 
 /**
@@ -27,6 +37,7 @@ interface InlineAuditSectionProps {
  * Shows a compact summary of Polaris findings for Deployments, StatefulSets, etc.
  */
 export default function InlineAuditSection({ resource }: InlineAuditSectionProps) {
+  const theme = useTheme();
   const { data, loading } = usePolarisDataContext();
 
   if (loading || !data) {
@@ -156,10 +167,7 @@ export default function InlineAuditSection({ resource }: InlineAuditSectionProps
       )}
 
       <div style={{ marginTop: '16px' }}>
-        <Link
-          to={`/polaris/namespaces#${namespace}`}
-          style={{ color: 'var(--link-color, #1976d2)' }}
-        >
+        <Link to={`/polaris/namespaces#${namespace}`} style={{ color: theme.palette.primary.main }}>
           View Full Report →
         </Link>
       </div>

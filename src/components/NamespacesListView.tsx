@@ -6,6 +6,9 @@ import {
   SimpleTable,
   StatusLabel,
 } from '@kinvolk/headlamp-plugin/lib/CommonComponents';
+import Drawer from '@mui/material/Drawer';
+import IconButton from '@mui/material/IconButton';
+import { useTheme } from '@mui/material/styles';
 import React, { useEffect, useState } from 'react';
 import { useHistory, useLocation } from 'react-router-dom';
 import {
@@ -44,6 +47,7 @@ interface NamespaceDetailPanelProps {
 }
 
 function NamespaceDetailPanel({ namespace, onClose }: NamespaceDetailPanelProps) {
+  const theme = useTheme();
   const [isMaximized, setIsMaximized] = React.useState(false);
   const { data, loading, error } = usePolarisDataContext();
 
@@ -96,172 +100,119 @@ function NamespaceDetailPanel({ namespace, onClose }: NamespaceDetailPanelProps)
     return countsPerResource.get(`${row.Namespace}/${row.Kind}/${row.Name}`) ?? resourceCounts(row);
   }
 
-  // Generate a unique class name for this drawer to avoid conflicts
-  const drawerClass = `polaris-namespace-drawer-${namespace}`;
-
   return (
-    <>
-      <style>
-        {`
-          .${drawerClass} {
-            position: fixed;
-            right: 0;
-            top: 0;
-            bottom: 0;
-            width: ${isMaximized ? 'calc(100vw - 240px)' : '1000px'};
-            background-color: var(--mui-palette-background-default, #fafafa);
-            color: var(--mui-palette-text-primary);
-            box-shadow: -2px 0 8px rgba(0,0,0,0.15);
-            overflow-y: auto;
-            z-index: 1200;
-            padding: 20px;
-            transition: width 0.3s ease;
-          }
-        `}
-      </style>
-      <div className={drawerClass}>
-        <div
-          style={{
-            marginBottom: '20px',
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-          }}
-        >
-          <h2 style={{ margin: 0, color: 'var(--mui-palette-text-primary)' }}>
-            Polaris — {namespace}
-          </h2>
-          <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-            <button
-              onClick={() => setIsMaximized(!isMaximized)}
-              style={{
-                border: 'none',
-                background: 'transparent',
-                fontSize: '20px',
-                cursor: 'pointer',
-                padding: '4px 8px',
-                color: 'var(--mui-palette-text-secondary, #666)',
-                borderRadius: '4px',
-              }}
-              onMouseEnter={e => {
-                e.currentTarget.style.backgroundColor =
-                  'var(--mui-palette-action-hover, rgba(0, 0, 0, 0.04))';
-              }}
-              onMouseLeave={e => {
-                e.currentTarget.style.backgroundColor = 'transparent';
-              }}
-              aria-label={isMaximized ? 'Minimize panel' : 'Maximize panel'}
-              title={isMaximized ? 'Minimize' : 'Maximize'}
-            >
-              {isMaximized ? '⊟' : '⊡'}
-            </button>
-            <button
-              onClick={onClose}
-              style={{
-                border: 'none',
-                background: 'transparent',
-                fontSize: '24px',
-                cursor: 'pointer',
-                padding: '4px 8px',
-                color: 'var(--mui-palette-text-secondary, #666)',
-                borderRadius: '4px',
-              }}
-              onMouseEnter={e => {
-                e.currentTarget.style.backgroundColor =
-                  'var(--mui-palette-action-hover, rgba(0, 0, 0, 0.04))';
-              }}
-              onMouseLeave={e => {
-                e.currentTarget.style.backgroundColor = 'transparent';
-              }}
-              aria-label="Close panel"
-              title="Close"
-            >
-              ×
-            </button>
-          </div>
+    <div
+      style={{
+        width: isMaximized ? 'calc(100vw - 240px)' : '1000px',
+        padding: '20px',
+        transition: 'width 0.3s ease',
+      }}
+    >
+      <div
+        style={{
+          marginBottom: '20px',
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+        }}
+      >
+        <h2 style={{ margin: 0, color: theme.palette.text.primary }}>Polaris — {namespace}</h2>
+        <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+          <IconButton
+            onClick={() => setIsMaximized(!isMaximized)}
+            aria-label={isMaximized ? 'Minimize panel' : 'Maximize panel'}
+            title={isMaximized ? 'Minimize' : 'Maximize'}
+            size="small"
+          >
+            {isMaximized ? '\u229F' : '\u22A1'}
+          </IconButton>
+          <IconButton onClick={onClose} aria-label="Close panel" title="Close" size="small">
+            \u00D7
+          </IconButton>
         </div>
-
-        <SectionBox title="External">
-          <NameValueTable
-            rows={[
-              {
-                name: 'Polaris Dashboard',
-                value: (
-                  <a href={getPolarisProxyUrl()} target="_blank" rel="noopener noreferrer">
-                    View in Polaris Dashboard
-                  </a>
-                ),
-              },
-            ]}
-          />
-        </SectionBox>
-
-        <SectionBox title="Namespace Score">
-          <NameValueTable
-            rows={[
-              {
-                name: 'Score',
-                value: <StatusLabel status={status}>{score}%</StatusLabel>,
-              },
-              { name: 'Total Checks', value: String(counts.total) },
-              {
-                name: 'Pass',
-                value: <StatusLabel status="success">{counts.pass}</StatusLabel>,
-              },
-              {
-                name: 'Warning',
-                value: <StatusLabel status="warning">{counts.warning}</StatusLabel>,
-              },
-              {
-                name: 'Danger',
-                value: <StatusLabel status="error">{counts.danger}</StatusLabel>,
-              },
-              {
-                name: 'Skipped',
-                value: (
-                  <span title="Only counts checks with Severity=ignore. Annotation-based exemptions are not included.">
-                    {counts.skipped}
-                  </span>
-                ),
-              },
-            ]}
-          />
-        </SectionBox>
-
-        <SectionBox title="Resources">
-          <SimpleTable
-            columns={[
-              { label: 'Name', getter: (row: Result) => row.Name },
-              { label: 'Kind', getter: (row: Result) => row.Kind },
-              {
-                label: 'Pass',
-                getter: (row: Result) => (
-                  <StatusLabel status="success">{getResourceCounts(row).pass}</StatusLabel>
-                ),
-              },
-              {
-                label: 'Warning',
-                getter: (row: Result) => (
-                  <StatusLabel status="warning">{getResourceCounts(row).warning}</StatusLabel>
-                ),
-              },
-              {
-                label: 'Danger',
-                getter: (row: Result) => (
-                  <StatusLabel status="error">{getResourceCounts(row).danger}</StatusLabel>
-                ),
-              },
-            ]}
-            data={results}
-            emptyMessage={`No resources found in namespace "${namespace}".`}
-          />
-        </SectionBox>
       </div>
-    </>
+
+      <SectionBox title="External">
+        <NameValueTable
+          rows={[
+            {
+              name: 'Polaris Dashboard',
+              value: (
+                <a href={getPolarisProxyUrl()} target="_blank" rel="noopener noreferrer">
+                  View in Polaris Dashboard
+                </a>
+              ),
+            },
+          ]}
+        />
+      </SectionBox>
+
+      <SectionBox title="Namespace Score">
+        <NameValueTable
+          rows={[
+            {
+              name: 'Score',
+              value: <StatusLabel status={status}>{score}%</StatusLabel>,
+            },
+            { name: 'Total Checks', value: String(counts.total) },
+            {
+              name: 'Pass',
+              value: <StatusLabel status="success">{counts.pass}</StatusLabel>,
+            },
+            {
+              name: 'Warning',
+              value: <StatusLabel status="warning">{counts.warning}</StatusLabel>,
+            },
+            {
+              name: 'Danger',
+              value: <StatusLabel status="error">{counts.danger}</StatusLabel>,
+            },
+            {
+              name: 'Skipped',
+              value: (
+                <span title="Only counts checks with Severity=ignore. Annotation-based exemptions are not included.">
+                  {counts.skipped}
+                </span>
+              ),
+            },
+          ]}
+        />
+      </SectionBox>
+
+      <SectionBox title="Resources">
+        <SimpleTable
+          columns={[
+            { label: 'Name', getter: (row: Result) => row.Name },
+            { label: 'Kind', getter: (row: Result) => row.Kind },
+            {
+              label: 'Pass',
+              getter: (row: Result) => (
+                <StatusLabel status="success">{getResourceCounts(row).pass}</StatusLabel>
+              ),
+            },
+            {
+              label: 'Warning',
+              getter: (row: Result) => (
+                <StatusLabel status="warning">{getResourceCounts(row).warning}</StatusLabel>
+              ),
+            },
+            {
+              label: 'Danger',
+              getter: (row: Result) => (
+                <StatusLabel status="error">{getResourceCounts(row).danger}</StatusLabel>
+              ),
+            },
+          ]}
+          data={results}
+          emptyMessage={`No resources found in namespace "${namespace}".`}
+        />
+      </SectionBox>
+    </div>
   );
 }
 
 export default function NamespacesListView() {
+  const theme = useTheme();
   const location = useLocation();
   const history = useHistory();
   const { data, loading, error } = usePolarisDataContext();
@@ -286,21 +237,6 @@ export default function NamespacesListView() {
     setSelectedNamespace(null);
     history.push(location.pathname);
   };
-
-  // Handle keyboard navigation (Escape key closes drawer)
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape' && selectedNamespace) {
-        closeNamespace();
-      }
-    };
-
-    if (selectedNamespace) {
-      window.addEventListener('keydown', handleKeyDown);
-      return () => window.removeEventListener('keydown', handleKeyDown);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedNamespace]);
 
   if (loading) {
     return <Loader title="Loading Polaris audit data..." />;
@@ -364,7 +300,7 @@ export default function NamespacesListView() {
                   style={{
                     border: 'none',
                     background: 'transparent',
-                    color: 'var(--link-color, #1976d2)',
+                    color: theme.palette.primary.main,
                     cursor: 'pointer',
                     textDecoration: 'underline',
                     padding: 0,
@@ -405,24 +341,11 @@ export default function NamespacesListView() {
         />
       </SectionBox>
 
-      {selectedNamespace && (
-        <>
-          <div
-            onClick={closeNamespace}
-            style={{
-              position: 'fixed',
-              top: 0,
-              left: 0,
-              right: 0,
-              bottom: 0,
-              backgroundColor: 'rgba(0, 0, 0, 0.5)',
-              zIndex: 1100,
-            }}
-            aria-label="Close panel backdrop"
-          />
+      <Drawer anchor="right" open={Boolean(selectedNamespace)} onClose={closeNamespace}>
+        {selectedNamespace && (
           <NamespaceDetailPanel namespace={selectedNamespace} onClose={closeNamespace} />
-        </>
-      )}
+        )}
+      </Drawer>
     </>
   );
 }
