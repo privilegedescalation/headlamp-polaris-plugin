@@ -1,6 +1,6 @@
 {
   "name": "polaris",
-  "version": "0.5.1",
+  "version": "0.5.2",
   "description": "Headlamp plugin for Fairwinds Polaris audit results",
   "repository": {
     "type": "git",
