@@ -5,9 +5,10 @@ on:
     branches: [main]
   pull_request:
     branches: [main]
+  workflow_call:
 
 jobs:
-  lint-and-test:
+  ci:
     runs-on: local-ubuntu-latest
     timeout-minutes: 10
 
@@ -18,7 +19,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '22'
           cache: 'npm'
 
       - name: Install dependencies
@@ -28,13 +29,13 @@ jobs:
         run: npx @kinvolk/headlamp-plugin build
 
       - name: Lint
-        run: npx eslint --ext .ts,.tsx src/
+        run: npm run lint
 
       - name: Type-check
-        run: npx tsc --noEmit
+        run: npm run tsc
 
       - name: Format check
-        run: npx prettier --check src/
+        run: npm run format:check
 
-      - name: Run unit tests
+      - name: Run tests
         run: npm test
