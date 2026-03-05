@@ -70,8 +70,10 @@ What becomes easier or more difficult to do because of this change?
 | ADR                                   | Title                                  | Status   | Date       |
 | ------------------------------------- | -------------------------------------- | -------- | ---------- |
 | [001](001-react-context-for-state.md) | Use React Context for State Management | Accepted | 2026-02-12 |
-
-**Note:** Additional ADRs documenting other significant decisions (service proxy approach, drawer navigation, MUI import restrictions) can be created following the template above.
+| [002](002-service-proxy-data-source.md) | Service Proxy as Single Data Source | Accepted | 2026-03-05 |
+| [003](003-error-boundary-class-component.md) | Error Boundary as Class Component Exception | Accepted | 2026-03-05 |
+| [004](004-localstorage-settings.md) | Browser localStorage for User Settings | Accepted | 2026-03-05 |
+| [005](005-annotation-exemption-management.md) | Annotation-Based Exemption Management | Accepted | 2026-03-05 |
 
 ## Creating a New ADR
 
