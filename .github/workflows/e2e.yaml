@@ -25,6 +25,14 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Configure RBAC for Polaris dashboard proxy access
+        run: kubectl apply -f deployment/polaris-rbac.yaml
+
+      - name: Verify Polaris dashboard is reachable
+        run: |
+          kubectl wait --for=condition=ready pod -l app.kubernetes.io/name=polaris -n polaris --timeout=120s
+          kubectl get svc polaris-dashboard -n polaris
+
       - name: Install Playwright browsers
         run: npx playwright install --with-deps chromium
 
