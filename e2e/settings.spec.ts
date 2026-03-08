@@ -5,7 +5,7 @@ test.describe('Polaris plugin settings', () => {
     await page.goto('/c/main/settings/plugins');
 
     // Find Polaris plugin in the list
-    const pluginCard = page.locator('text=headlamp-polaris-plugin').first();
+    const pluginCard = page.locator('text=polaris').first();
     await expect(pluginCard).toBeVisible();
 
     // Click to view settings (if settings are displayed inline, they should already be visible)
