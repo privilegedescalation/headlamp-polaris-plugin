@@ -218,7 +218,7 @@ const REFRESH_STORAGE_KEY = 'polaris-plugin-refresh-interval';
 const DEFAULT_INTERVAL_SECONDS = 300; // 5 minutes
 
 const URL_STORAGE_KEY = 'polaris-plugin-dashboard-url';
-const DEFAULT_DASHBOARD_URL = '/api/v1/namespaces/polaris/services/polaris-dashboard:80/proxy/';
+const DEFAULT_DASHBOARD_URL = '/api/v1/namespaces/polaris/services/http:polaris-dashboard:80/proxy/';
 
 /**
  * Retrieves the configured refresh interval from localStorage.

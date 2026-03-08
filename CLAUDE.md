@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project
 
-Headlamp plugin surfacing Fairwinds Polaris audit results. Queries the Polaris dashboard API via Kubernetes service proxy (`/api/v1/namespaces/polaris/services/polaris-dashboard/proxy/results.json`). Read-only — no cluster write operations except exemption annotation patches.
+Headlamp plugin surfacing Fairwinds Polaris audit results. Queries the Polaris dashboard API via Kubernetes service proxy (`/api/v1/namespaces/polaris/services/http:polaris-dashboard:80/proxy/results.json`). Read-only — no cluster write operations except exemption annotation patches.
 
 - **Plugin name**: `polaris`
 - **Target**: Headlamp >= v0.26

@@ -131,6 +131,6 @@ describe('AppBarScoreBadge', () => {
     mockUsePolarisDataContext.mockReturnValue({ data, loading: false });
 
     render(<AppBarScoreBadge />);
-    expect(screen.getByLabelText('Polaris cluster score: 100%')).toBeInTheDocument();
+    expect(screen.getByLabelText('Polaris: 100%')).toBeInTheDocument();
   });
 });

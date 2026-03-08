@@ -54,8 +54,9 @@ export default function AppBarScoreBadge() {
         alignItems: 'center',
         gap: '4px',
       }}
-      aria-label={`Polaris cluster score: ${score}%`}
+      aria-label={`Polaris: ${score}%`}
     >
+      <span>{'\u{1F6E1}\uFE0F'}</span>
       <span>Polaris: {score}%</span>
     </button>
   );

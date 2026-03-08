@@ -105,7 +105,7 @@ export default function PolarisSettings(props: PluginSettingsProps) {
                   type="text"
                   value={currentUrl}
                   onChange={handleUrlChange}
-                  placeholder="/api/v1/namespaces/polaris/services/polaris-dashboard:80/proxy/"
+                  placeholder="/api/v1/namespaces/polaris/services/http:polaris-dashboard:80/proxy/"
                   style={{
                     width: '100%',
                     padding: '4px 8px',
@@ -125,7 +125,7 @@ export default function PolarisSettings(props: PluginSettingsProps) {
                 >
                   Examples:
                   <br />• K8s proxy:{' '}
-                  <code>/api/v1/namespaces/polaris/services/polaris-dashboard:80/proxy/</code>
+                  <code>/api/v1/namespaces/polaris/services/http:polaris-dashboard:80/proxy/</code>
                   <br />• Full URL: <code>https://my-polaris.example.com</code>
                 </div>
               </div>
