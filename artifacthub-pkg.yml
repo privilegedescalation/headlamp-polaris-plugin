@@ -1,4 +1,4 @@
-version: "0.6.0"
+version: "0.7.0"
 name: headlamp-polaris
 displayName: Polaris
 createdAt: "2026-02-05T19:00:00Z"
@@ -28,7 +28,7 @@ maintainers:
   - name: privilegedescalation
     email: "chris@farhood.org"
 annotations:
-  headlamp/plugin/archive-url: "https://github.com/privilegedescalation/headlamp-polaris-plugin/releases/download/v0.6.0/polaris-0.6.0.tar.gz"
+  headlamp/plugin/archive-url: "https://github.com/privilegedescalation/headlamp-polaris-plugin/releases/download/v0.7.0/headlamp-polaris-0.7.0.tar.gz"
   headlamp/plugin/version-compat: ">=0.26"
   headlamp/plugin/archive-checksum: sha256:c271590b71424b7f3e70e51309074f64531bb55063fcd9b8c18663579916cb97
   headlamp/plugin/distro-compat: in-cluster
