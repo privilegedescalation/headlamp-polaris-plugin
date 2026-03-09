@@ -25,36 +25,6 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Preflight — verify Headlamp connectivity
-        env:
-          HEADLAMP_URL: ${{ secrets.HEADLAMP_URL || 'http://headlamp.kube-system.svc.cluster.local' }}
-        run: |
-          echo "::group::Expected plugin version"
-          EXPECTED=$(node -p "require('./package.json').version")
-          echo "Plugin version in repo: $EXPECTED"
-          echo "::endgroup::"
-
-          echo "::group::Headlamp connectivity"
-          HTTP_CODE=$(curl -s -o /dev/null -w '%{http_code}' --connect-timeout 10 "$HEADLAMP_URL" || true)
-          if [ "$HTTP_CODE" = "000" ]; then
-            echo "::error::Cannot reach Headlamp at $HEADLAMP_URL — E2E tests will fail"
-            exit 1
-          fi
-          echo "Headlamp responded with HTTP $HTTP_CODE at $HEADLAMP_URL"
-          echo "::endgroup::"
-
-          echo "::group::Installed plugins"
-          # Headlamp serves plugin metadata at /plugins — no auth required
-          curl -sf --connect-timeout 10 "$HEADLAMP_URL/plugins" 2>/dev/null \
-            | node -e "
-              const d = require('fs').readFileSync(0,'utf8');
-              try {
-                const plugins = JSON.parse(d);
-                for (const p of plugins) console.log('  ' + p.name + '@' + (p.version||'unknown'));
-              } catch { console.log('  (could not parse plugin list)'); }
-            " || echo "  (plugin list endpoint not available — tests will validate at runtime)"
-          echo "::endgroup::"
-
       - name: Install Playwright browsers
         run: npx playwright install --with-deps chromium
 
