@@ -11,9 +11,10 @@ export default defineConfig({
   use: {
     baseURL: process.env.HEADLAMP_URL || 'https://headlamp.animaniacs.farh.net',
     trace: 'on-first-retry',
+    screenshot: 'only-on-failure',
   },
   projects: [
-    { name: 'setup', testMatch: /auth\.setup\.ts/ },
+    { name: 'setup', testMatch: /auth\.setup\.ts/, timeout: 60_000 },
     {
       name: 'chromium',
       use: {

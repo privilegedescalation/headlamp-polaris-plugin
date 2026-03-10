@@ -12,12 +12,21 @@ async function authenticateWithOIDC(page: Page, username: string, password: stri
   await page.getByRole('button', { name: /sign in/i }).click();
   const popup = await popupPromise;
 
-  // Authentik step 1: fill username
-  await popup.getByRole('textbox', { name: /email or username/i }).fill(username);
+  // Wait for the Authentik popup to fully load before interacting
+  await popup.waitForLoadState('domcontentloaded');
+  await popup.waitForLoadState('networkidle');
+
+  // Authentik step 1: fill username — wait for the form to render
+  const usernameField = popup.getByRole('textbox', { name: /email or username/i });
+  await usernameField.waitFor({ state: 'visible', timeout: 15_000 });
+  await usernameField.fill(username);
   await popup.getByRole('button', { name: /log in/i }).click();
 
-  // Authentik step 2: fill password
-  await popup.getByRole('textbox', { name: /password/i }).fill(password);
+  // Authentik step 2: fill password — wait for the next step to load
+  await popup.waitForLoadState('networkidle');
+  const passwordField = popup.getByRole('textbox', { name: /password/i });
+  await passwordField.waitFor({ state: 'visible', timeout: 15_000 });
+  await passwordField.fill(password);
   await popup.getByRole('button', { name: /continue|log in/i }).click();
 
   // Wait for the popup to close (Authentik redirects back, Headlamp processes callback)
