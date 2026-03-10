@@ -65,6 +65,24 @@ jobs:
             echo "::warning::Version mismatch — repo has $EXPECTED but Headlamp runs $DEPLOYED_VERSION. Tests may fail due to stale plugin."
           fi
 
+      - name: Deploy Polaris to CI cluster
+        run: |
+          helm repo add fairwinds-stable https://charts.fairwinds.com/stable
+          helm repo update
+          helm upgrade --install polaris fairwinds-stable/polaris \
+            --namespace polaris --create-namespace \
+            --set dashboard.enabled=true \
+            --set webhook.enabled=false \
+            --wait --timeout 5m
+
+      - name: Apply RBAC
+        run: kubectl apply -f deployment/polaris-rbac.yaml
+
+      - name: Wait for Polaris dashboard readiness
+        run: |
+          kubectl rollout status deployment/polaris-dashboard -n polaris --timeout=120s
+          kubectl wait --for=condition=ready pod -l app.kubernetes.io/name=polaris,app.kubernetes.io/component=dashboard -n polaris --timeout=120s
+
       - name: Install Playwright browsers
         run: npx playwright install --with-deps chromium
 
