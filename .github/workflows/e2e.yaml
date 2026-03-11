@@ -65,6 +65,12 @@ jobs:
             echo "::warning::Version mismatch — repo has $EXPECTED but Headlamp runs $DEPLOYED_VERSION. Tests may fail due to stale plugin."
           fi
 
+      - name: Setup Helm
+        uses: azure/setup-helm@v4
+
+      - name: Setup kubectl
+        uses: azure/setup-kubectl@v4
+
       - name: Deploy Polaris to CI cluster
         run: |
           helm repo add fairwinds-stable https://charts.fairwinds.com/stable
