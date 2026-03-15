@@ -127,7 +127,7 @@ data:
   plugin.yml: |
     - name: headlamp-polaris
       version: 0.3.5
-      url: https://github.com/privilegedescalation/headlamp-polaris/releases/download/v0.3.10/polaris-0.3.10.tar.gz
+      url: https://github.com/privilegedescalation/headlamp-polaris-plugin/releases/download/v0.3.10/polaris-0.3.10.tar.gz
 ```
 
 #### Apply Configuration
@@ -163,7 +163,7 @@ Download the plugin tarball and extract it into Headlamp's plugin directory.
 ```bash
 # Download latest release
 VERSION=0.3.5
-wget https://github.com/privilegedescalation/headlamp-polaris/releases/download/v${VERSION}/headlamp-polaris-${VERSION}.tar.gz
+wget https://github.com/privilegedescalation/headlamp-polaris-plugin/releases/download/v${VERSION}/headlamp-polaris-${VERSION}.tar.gz
 
 # Extract to plugin directory
 tar xzf headlamp-polaris-${VERSION}.tar.gz -C /headlamp/plugins/
@@ -209,7 +209,7 @@ Clone the repository and build the plugin from source.
 
 ```bash
 # Clone repository
-git clone https://github.com/privilegedescalation/headlamp-polaris.git
+git clone https://github.com/privilegedescalation/headlamp-polaris-plugin.git
 cd headlamp-polaris
 
 # Install dependencies
