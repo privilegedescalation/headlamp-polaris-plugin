@@ -7,8 +7,12 @@ import { makeAuditData, makeResult } from '../test-utils';
 // Mock Headlamp lib
 vi.mock('@kinvolk/headlamp-plugin/lib', () => ({
   ApiProxy: { request: vi.fn() },
+  K8s: {
+    useCluster: () => 'test-cluster',
+  },
   Router: {
-    createRouteURL: (name: string) => `/c/test-cluster/${name}`,
+    createRouteURL: (name: string, params?: { cluster?: string }) =>
+      `/c/${params?.cluster ?? 'default'}/${name}`,
   },
 }));
 

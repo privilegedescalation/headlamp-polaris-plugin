@@ -1,4 +1,4 @@
-import { Router } from '@kinvolk/headlamp-plugin/lib';
+import { K8s, Router } from '@kinvolk/headlamp-plugin/lib';
 import { useTheme } from '@mui/material/styles';
 import React from 'react';
 import { useHistory } from 'react-router-dom';
@@ -13,6 +13,7 @@ export default function AppBarScoreBadge() {
   const theme = useTheme();
   const { data, loading } = usePolarisDataContext();
   const history = useHistory();
+  const cluster = K8s.useCluster();
 
   if (loading || !data) {
     return null; // Graceful degradation when Polaris unavailable
@@ -35,7 +36,7 @@ export default function AppBarScoreBadge() {
   };
 
   const handleClick = () => {
-    history.push(Router.createRouteURL('polaris'));
+    history.push(Router.createRouteURL('polaris', { cluster: cluster ?? '' }));
   };
 
   return (
