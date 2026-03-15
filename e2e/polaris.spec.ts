@@ -17,7 +17,7 @@ test.describe('Polaris plugin smoke tests', () => {
 
     // "Cluster Score" section exists with a percentage
     await expect(page.getByText('Cluster Score')).toBeVisible();
-    await expect(page.getByText(/%/)).toBeVisible();
+    await expect(page.locator('main').getByText(/%/).first()).toBeVisible();
   });
 
   test('namespaces page renders table with namespace buttons', async ({ page }) => {
@@ -55,7 +55,7 @@ test.describe('Polaris plugin smoke tests', () => {
     await expect(page.getByText('Namespace Score')).toBeVisible();
 
     // Resources table should exist in drawer
-    await expect(page.getByText('Resources')).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Resources' })).toBeVisible();
 
     // URL hash should be updated with namespace name
     await expect(page).toHaveURL(/\/polaris\/namespaces#/);
