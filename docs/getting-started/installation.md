@@ -28,7 +28,7 @@ Before installation, ensure all [prerequisites](prerequisites.md) are met:
 
 **Best for:** Production deployments, managed updates, ease of use
 
-The plugin is published on [Artifact Hub](https://artifacthub.io/packages/headlamp/polaris/headlamp-polaris-plugin) and can be installed via the Headlamp Plugin Manager.
+The plugin is published on [Artifact Hub](https://artifacthub.io/packages/headlamp/polaris/headlamp-polaris) and can be installed via the Headlamp Plugin Manager.
 
 #### Via Headlamp UI
 
@@ -125,9 +125,9 @@ metadata:
   namespace: kube-system
 data:
   plugin.yml: |
-    - name: headlamp-polaris-plugin
+    - name: headlamp-polaris
       version: 0.3.5
-      url: https://github.com/privilegedescalation/headlamp-polaris-plugin/releases/download/v0.3.10/polaris-0.3.10.tar.gz
+      url: https://github.com/privilegedescalation/headlamp-polaris/releases/download/v0.3.10/polaris-0.3.10.tar.gz
 ```
 
 #### Apply Configuration
@@ -145,7 +145,7 @@ helm upgrade --install headlamp headlamp/headlamp \
 kubectl -n kube-system wait --for=condition=ready pod -l app.kubernetes.io/name=headlamp --timeout=300s
 
 # Verify plugin files
-kubectl -n kube-system exec -it deployment/headlamp -c headlamp -- ls -la /headlamp/plugins/headlamp-polaris-plugin/
+kubectl -n kube-system exec -it deployment/headlamp -c headlamp -- ls -la /headlamp/plugins/headlamp-polaris/
 
 # Expected output:
 # drwxr-xr-x  dist/
@@ -163,13 +163,13 @@ Download the plugin tarball and extract it into Headlamp's plugin directory.
 ```bash
 # Download latest release
 VERSION=0.3.5
-wget https://github.com/privilegedescalation/headlamp-polaris-plugin/releases/download/v${VERSION}/headlamp-polaris-plugin-${VERSION}.tar.gz
+wget https://github.com/privilegedescalation/headlamp-polaris/releases/download/v${VERSION}/headlamp-polaris-${VERSION}.tar.gz
 
 # Extract to plugin directory
-tar xzf headlamp-polaris-plugin-${VERSION}.tar.gz -C /headlamp/plugins/
+tar xzf headlamp-polaris-${VERSION}.tar.gz -C /headlamp/plugins/
 
 # Verify extraction
-ls -la /headlamp/plugins/headlamp-polaris-plugin/
+ls -la /headlamp/plugins/headlamp-polaris/
 
 # Expected output:
 # drwxr-xr-x  dist/
@@ -209,8 +209,8 @@ Clone the repository and build the plugin from source.
 
 ```bash
 # Clone repository
-git clone https://github.com/privilegedescalation/headlamp-polaris-plugin.git
-cd headlamp-polaris-plugin
+git clone https://github.com/privilegedescalation/headlamp-polaris.git
+cd headlamp-polaris
 
 # Install dependencies
 npm install
@@ -302,7 +302,7 @@ kubectl -n kube-system wait --for=condition=ready pod -l app.kubernetes.io/name=
 **UI Verification:**
 
 1. Navigate to **Settings → Plugins**
-2. Verify "headlamp-polaris-plugin" is listed
+2. Verify "headlamp-polaris" is listed
 3. Check version matches installed version
 4. Verify **Polaris** appears in sidebar
 5. Click **Polaris** → Overview page loads
@@ -312,7 +312,7 @@ kubectl -n kube-system wait --for=condition=ready pod -l app.kubernetes.io/name=
 
 ```bash
 # Verify plugin files exist
-kubectl -n kube-system exec -it deployment/headlamp -c headlamp -- ls -la /headlamp/plugins/headlamp-polaris-plugin/
+kubectl -n kube-system exec -it deployment/headlamp -c headlamp -- ls -la /headlamp/plugins/headlamp-polaris/
 
 # Expected output:
 # drwxr-xr-x  dist/
@@ -346,7 +346,7 @@ kubectl get --raw /api/v1/namespaces/polaris/services/polaris-dashboard:80/proxy
 ```bash
 # 1. Verify plugin files exist
 kubectl -n kube-system exec deployment/headlamp -c headlamp -- \
-  ls -la /headlamp/plugins/headlamp-polaris-plugin/
+  ls -la /headlamp/plugins/headlamp-polaris/
 
 # Expected: dist/, package.json present
 
@@ -419,4 +419,4 @@ kubectl -n kube-system rollout restart deployment/headlamp
 - [Headlamp Plugin Documentation](https://headlamp.dev/docs/latest/development/plugins/)
 - [Headlamp Helm Chart](https://github.com/headlamp-k8s/headlamp/tree/main/charts/headlamp)
 - [Polaris Installation](https://polaris.docs.fairwinds.com/infrastructure-as-code/)
-- [Artifact Hub Package](https://artifacthub.io/packages/headlamp/polaris/headlamp-polaris-plugin)
+- [Artifact Hub Package](https://artifacthub.io/packages/headlamp/polaris/headlamp-polaris)

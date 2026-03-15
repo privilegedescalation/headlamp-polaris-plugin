@@ -180,9 +180,9 @@ metadata:
   namespace: kube-system
 data:
   plugin.yml: |
-    - name: headlamp-polaris-plugin
+    - name: headlamp-polaris
       version: 0.3.5
-      url: https://github.com/privilegedescalation/headlamp-polaris-plugin/releases/download/v0.3.10/polaris-0.3.10.tar.gz
+      url: https://github.com/privilegedescalation/headlamp-polaris/releases/download/v0.3.10/polaris-0.3.10.tar.gz
 ```
 
 Apply ConfigMap then deploy Headlamp:
@@ -357,7 +357,7 @@ helm upgrade headlamp headlamp/headlamp \
 ### Upgrade Plugin (Plugin Manager Method)
 
 1. Navigate to **Settings → Plugins** in Headlamp UI
-2. Find "headlamp-polaris-plugin"
+2. Find "headlamp-polaris"
 3. Click **Update** if new version available
 4. Hard refresh browser (**Cmd+Shift+R** / **Ctrl+Shift+R**)
 
@@ -386,7 +386,7 @@ helm get values headlamp -n kube-system
 
 # Verify plugin files exist
 kubectl -n kube-system exec deployment/headlamp -c headlamp -- \
-  ls -la /headlamp/plugins/headlamp-polaris-plugin/
+  ls -la /headlamp/plugins/headlamp-polaris/
 
 # If missing, reinstall plugin via UI or check init container logs
 kubectl -n kube-system logs deployment/headlamp -c install-polaris-plugin

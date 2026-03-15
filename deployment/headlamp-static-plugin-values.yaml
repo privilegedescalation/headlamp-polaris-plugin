@@ -28,10 +28,10 @@ initContainers:
         # Install polaris plugin
         echo "Installing polaris plugin..."
         cd /headlamp/static-plugins
-        npm pack headlamp-polaris-plugin@0.3.0
-        tar -xzf headlamp-polaris-plugin-0.3.0.tgz
+        npm pack headlamp-polaris-plugin@0.7.2
+        tar -xzf headlamp-polaris-plugin-0.7.2.tgz
         mv package headlamp-polaris-plugin
-        rm headlamp-polaris-plugin-0.3.0.tgz
+        rm headlamp-polaris-plugin-0.7.2.tgz
 
         # Install other plugins
         npx --yes @headlamp-k8s/plugin@latest install \

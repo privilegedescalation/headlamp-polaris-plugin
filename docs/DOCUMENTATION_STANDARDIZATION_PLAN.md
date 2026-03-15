@@ -1,7 +1,7 @@
 # Documentation Standardization Plan
 
 **Date**: 2026-02-12
-**Repositories**: headlamp-polaris-plugin, headlamp-sealed-secrets-plugin
+**Repositories**: headlamp-polaris, headlamp-sealed-secrets-plugin
 **Goal**: Establish consistent documentation standards across Headlamp plugin projects
 
 ## Executive Summary

@@ -35,7 +35,7 @@ metadata:
   name: polaris-proxy-reader
   namespace: polaris
   labels:
-    app.kubernetes.io/name: headlamp-polaris-plugin
+    app.kubernetes.io/name: headlamp-polaris
     app.kubernetes.io/component: rbac
 rules:
   - apiGroups: ['']
@@ -60,7 +60,7 @@ metadata:
   name: headlamp-polaris-proxy
   namespace: polaris
   labels:
-    app.kubernetes.io/name: headlamp-polaris-plugin
+    app.kubernetes.io/name: headlamp-polaris
     app.kubernetes.io/component: rbac
 subjects:
   - kind: ServiceAccount

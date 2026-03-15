@@ -70,14 +70,14 @@ kubectl -n kube-system logs deployment/headlamp | grep -i polaris
 # Expected: No errors related to plugin loading
 
 # 4. Verify plugin files exist
-kubectl -n kube-system exec deployment/headlamp -c headlamp -- ls -la /headlamp/plugins/headlamp-polaris-plugin/
+kubectl -n kube-system exec deployment/headlamp -c headlamp -- ls -la /headlamp/plugins/headlamp-polaris/
 # Expected: dist/, package.json present
 ```
 
 ### UI Verification
 
 - [ ] Navigate to **Settings → Plugins**
-- [ ] Verify "headlamp-polaris-plugin" is listed with correct version
+- [ ] Verify "headlamp-polaris" is listed with correct version
 - [ ] Sidebar shows "Polaris" entry
 - [ ] Click **Polaris → Overview** - page loads successfully
 - [ ] Cluster score gauge displays
@@ -437,7 +437,7 @@ If Headlamp or plugin becomes unavailable:
 
    ```bash
    kubectl -n kube-system exec deployment/headlamp -- \
-     ls /headlamp/plugins/headlamp-polaris-plugin/
+     ls /headlamp/plugins/headlamp-polaris/
    ```
 
 5. **Hard refresh browser:**

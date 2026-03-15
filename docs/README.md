@@ -68,4 +68,4 @@ Production deployment guides:
 
 ---
 
-**Need help?** Open an issue on [GitHub](https://github.com/privilegedescalation/headlamp-polaris-plugin/issues) or check [CONTRIBUTING.md](../CONTRIBUTING.md) for development guidelines.
+**Need help?** Open an issue on [GitHub](https://github.com/privilegedescalation/headlamp-polaris/issues) or check [CONTRIBUTING.md](../CONTRIBUTING.md) for development guidelines.

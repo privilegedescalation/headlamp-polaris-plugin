@@ -87,7 +87,7 @@ EOF
 1. **Check Plugin is Loaded:**
 
    - Go to **Settings → Plugins**
-   - Verify "headlamp-polaris-plugin" is listed
+   - Verify "headlamp-polaris" is listed
 
 2. **Check Sidebar:**
 
@@ -112,7 +112,7 @@ EOF
 ```bash
 # Verify plugin files exist
 kubectl -n kube-system exec -it deployment/headlamp -c headlamp -- \
-  ls /headlamp/plugins/headlamp-polaris-plugin/dist/
+  ls /headlamp/plugins/headlamp-polaris/dist/
 
 # Expected output:
 # main.js
@@ -186,7 +186,7 @@ Cluster score badge in top navigation:
 ```bash
 # Verify plugin files exist
 kubectl -n kube-system exec -it deployment/headlamp -c headlamp -- \
-  ls /headlamp/plugins/headlamp-polaris-plugin/
+  ls /headlamp/plugins/headlamp-polaris/
 
 # If missing, reinstall via Headlamp UI or sidecar method
 

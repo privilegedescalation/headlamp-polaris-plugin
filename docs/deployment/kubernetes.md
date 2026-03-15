@@ -26,7 +26,7 @@ metadata:
   name: polaris-proxy-reader
   namespace: polaris
   labels:
-    app.kubernetes.io/name: headlamp-polaris-plugin
+    app.kubernetes.io/name: headlamp-polaris
     app.kubernetes.io/component: rbac
 rules:
   - apiGroups: ['']
@@ -42,7 +42,7 @@ metadata:
   name: headlamp-polaris-proxy
   namespace: polaris
   labels:
-    app.kubernetes.io/name: headlamp-polaris-plugin
+    app.kubernetes.io/name: headlamp-polaris
     app.kubernetes.io/component: rbac
 subjects:
   - kind: ServiceAccount
@@ -96,9 +96,9 @@ metadata:
     app.kubernetes.io/component: plugin-config
 data:
   plugin.yml: |
-    - name: headlamp-polaris-plugin
+    - name: headlamp-polaris
       version: 0.3.5
-      url: https://github.com/privilegedescalation/headlamp-polaris-plugin/releases/download/v0.3.10/polaris-0.3.10.tar.gz
+      url: https://github.com/privilegedescalation/headlamp-polaris/releases/download/v0.3.10/polaris-0.3.10.tar.gz
 ```
 
 ### Headlamp Deployment with Plugin Init Container
@@ -256,7 +256,7 @@ kubectl -n kube-system logs deployment/headlamp -c install-plugins
 
 # Verify plugin files exist
 kubectl -n kube-system exec deployment/headlamp -c headlamp -- \
-  ls -la /headlamp/plugins/headlamp-polaris-plugin/
+  ls -la /headlamp/plugins/headlamp-polaris/
 
 # Expected output:
 # drwxr-xr-x  dist/
@@ -388,7 +388,7 @@ For GitOps with FluxCD:
 apiVersion: kustomize.toolkit.fluxcd.io/v1
 kind: Kustomization
 metadata:
-  name: headlamp-polaris-plugin
+  name: headlamp-polaris
   namespace: flux-system
 spec:
   interval: 10m

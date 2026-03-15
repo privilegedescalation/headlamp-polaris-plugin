@@ -110,9 +110,9 @@ metadata:
   namespace: kube-system
 data:
   plugin.yml: |
-    - name: headlamp-polaris-plugin
+    - name: headlamp-polaris
       version: 0.3.4
-      url: https://github.com/privilegedescalation/headlamp-polaris-plugin/releases/download/v0.3.10/polaris-0.3.10.tar.gz
+      url: https://github.com/privilegedescalation/headlamp-polaris/releases/download/v0.3.10/polaris-0.3.10.tar.gz
 ```
 
 ### Method 3: Volume Mount (Development)
@@ -136,7 +136,7 @@ volumeMounts:
     readOnly: true
 ```
 
-Then manually place `headlamp-polaris-plugin/` in the host path.
+Then manually place `headlamp-polaris/` in the host path.
 
 ## Helm Integration
 
@@ -344,7 +344,7 @@ metadata:
   name: polaris-proxy-reader
   namespace: polaris
   labels:
-    app.kubernetes.io/name: headlamp-polaris-plugin
+    app.kubernetes.io/name: headlamp-polaris
     app.kubernetes.io/component: rbac
 rules:
   - apiGroups: ['']
@@ -360,7 +360,7 @@ metadata:
   name: headlamp-polaris-proxy
   namespace: polaris
   labels:
-    app.kubernetes.io/name: headlamp-polaris-plugin
+    app.kubernetes.io/name: headlamp-polaris
     app.kubernetes.io/component: rbac
 subjects:
   - kind: ServiceAccount
@@ -430,7 +430,7 @@ spec:
 kubectl -n kube-system exec -it deployment/headlamp -- ls -la /headlamp/plugins/
 
 # Expected output:
-# drwxr-xr-x headlamp-polaris-plugin/
+# drwxr-xr-x headlamp-polaris/
 ```
 
 ## Production Checklist
@@ -467,7 +467,7 @@ kubectl -n kube-system logs deployment/headlamp | grep -i polaris
 # Expected: No errors related to plugin loading
 
 # 4. Verify plugin files exist
-kubectl -n kube-system exec -it deployment/headlamp -- ls -la /headlamp/plugins/headlamp-polaris-plugin/
+kubectl -n kube-system exec -it deployment/headlamp -- ls -la /headlamp/plugins/headlamp-polaris/
 
 # Expected: dist/, package.json present
 ```
@@ -475,7 +475,7 @@ kubectl -n kube-system exec -it deployment/headlamp -- ls -la /headlamp/plugins/
 ### UI Verification
 
 - [ ] Navigate to Headlamp → Settings → Plugins
-- [ ] Plugin "headlamp-polaris-plugin" listed
+- [ ] Plugin "headlamp-polaris" listed
 - [ ] Sidebar shows "Polaris" entry
 - [ ] Click "Polaris" → Overview page loads
 - [ ] Cluster score displays correctly
@@ -498,7 +498,7 @@ kubectl -n kube-system exec -it deployment/headlamp -- ls -la /headlamp/plugins/
 ```bash
 # Verify plugin files exist
 kubectl -n kube-system exec deployment/headlamp -c headlamp -- \
-  ls -la /headlamp/plugins/headlamp-polaris-plugin/
+  ls -la /headlamp/plugins/headlamp-polaris/
 
 # Restart Headlamp
 kubectl -n kube-system rollout restart deployment/headlamp
@@ -646,7 +646,7 @@ Polaris audit data may contain:
 ### Plugin Upgrade via Plugin Manager
 
 1. Navigate to Settings → Plugins
-2. Find "headlamp-polaris-plugin"
+2. Find "headlamp-polaris"
 3. Click "Update" if new version available
 4. Refresh browser (Cmd+Shift+R / Ctrl+Shift+R)
 

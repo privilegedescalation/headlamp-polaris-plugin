@@ -58,7 +58,7 @@ kubectl -n kube-system logs deployment/headlamp | grep -i polaris
 ```bash
 # Verify plugin files exist
 kubectl -n kube-system exec deployment/headlamp -c headlamp -- \
-  ls -la /headlamp/plugins/headlamp-polaris-plugin/
+  ls -la /headlamp/plugins/headlamp-polaris/
 
 # Expected output:
 # drwxr-xr-x  dist/
@@ -153,7 +153,7 @@ If the quick diagnosis doesn't resolve your issue:
    - [Deployment Guide](../deployment/kubernetes.md)
 
 3. **Open a GitHub issue:**
-   - [GitHub Issues](https://github.com/privilegedescalation/headlamp-polaris-plugin/issues)
+   - [GitHub Issues](https://github.com/privilegedescalation/headlamp-polaris/issues)
    - Include: Headlamp version, plugin version, error messages, logs
 
 ## References
