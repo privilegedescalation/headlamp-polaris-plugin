@@ -201,7 +201,7 @@ test('plugin settings page shows Polaris configuration', async ({ page }) => {
   await page.goto('/c/main/settings/plugins');
 
   // Find and click Polaris plugin
-  await page.getByText('headlamp-polaris-plugin').click();
+  await page.getByText('headlamp-polaris').click();
 
   // Check settings are visible
   await expect(page.getByText('Polaris Settings')).toBeVisible();

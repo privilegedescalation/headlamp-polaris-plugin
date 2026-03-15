@@ -36,7 +36,7 @@ This guide covers common issues encountered when using the Headlamp Polaris Plug
 kubectl logs -n kube-system deployment/headlamp -c headlamp-plugin
 
 # Expected output:
-# Installing plugin from https://github.com/.../headlamp-polaris-plugin-X.Y.Z.tar.gz
+# Installing plugin from https://github.com/.../headlamp-polaris-X.Y.Z.tar.gz
 # Plugin installed successfully
 ```
 
@@ -44,7 +44,7 @@ kubectl logs -n kube-system deployment/headlamp -c headlamp-plugin
 
 ```bash
 kubectl exec -n kube-system deployment/headlamp -c headlamp -- ls -la /headlamp/plugins/
-# Should show: headlamp-polaris-plugin/
+# Should show: headlamp-polaris/
 ```
 
 **2. JavaScript Cached by Browser**
@@ -297,7 +297,7 @@ Upgrade to v0.3.3 or later:
 If manually installing, ensure plugin name matches `package.json`:
 
 ```typescript
-registerPluginSettings('headlamp-polaris-plugin', PolarisSettings, true);
+registerPluginSettings('headlamp-polaris', PolarisSettings, true);
 // NOT 'polaris' — must match package.json name
 ```
 
@@ -597,7 +597,7 @@ kubectl get configmap headlamp-plugin-config -n kube-system -o yaml
 Expected format:
 
 ```
-https://github.com/privilegedescalation/headlamp-polaris-plugin/releases/download/v0.3.10/polaris-0.3.10.tar.gz
+https://github.com/privilegedescalation/headlamp-polaris/releases/download/v0.3.10/polaris-0.3.10.tar.gz
 ```
 
 ---
@@ -649,7 +649,7 @@ ArtifactHub pulls metadata every 30 minutes. There is no webhook or push mechani
 **Wait 30 minutes** after pushing a GitHub release, then check:
 
 ```
-https://artifacthub.io/packages/headlamp/headlamp-polaris-plugin/headlamp-polaris-plugin
+https://artifacthub.io/packages/headlamp/headlamp-polaris/headlamp-polaris
 ```
 
 **Verify metadata**:
@@ -683,7 +683,7 @@ If none of these solutions work, gather debugging information and open an issue:
 2. **Plugin Version**:
 
    - Check Settings → Plugins in Headlamp UI
-   - Or: `kubectl exec -n kube-system deployment/headlamp -c headlamp -- cat /headlamp/plugins/headlamp-polaris-plugin/package.json`
+   - Or: `kubectl exec -n kube-system deployment/headlamp -c headlamp -- cat /headlamp/plugins/headlamp-polaris/package.json`
 
 3. **Browser Console Output**:
 
@@ -709,7 +709,7 @@ If none of these solutions work, gather debugging information and open an issue:
 
 ### Where to Get Help
 
-- **GitHub Issues**: [https://github.com/privilegedescalation/headlamp-polaris-plugin/issues](https://github.com/privilegedescalation/headlamp-polaris-plugin/issues)
-- **GitHub Discussions**: [https://github.com/privilegedescalation/headlamp-polaris-plugin/discussions](https://github.com/privilegedescalation/headlamp-polaris-plugin/discussions)
+- **GitHub Issues**: [https://github.com/privilegedescalation/headlamp-polaris/issues](https://github.com/privilegedescalation/headlamp-polaris/issues)
+- **GitHub Discussions**: [https://github.com/privilegedescalation/headlamp-polaris/discussions](https://github.com/privilegedescalation/headlamp-polaris/discussions)
 
 Include the debugging information above when opening an issue.
