@@ -7,6 +7,9 @@ import { makeAuditData, makeResult } from '../test-utils';
 // Mock Headlamp lib
 vi.mock('@kinvolk/headlamp-plugin/lib', () => ({
   ApiProxy: { request: vi.fn() },
+  Router: {
+    createRouteURL: (name: string) => `/c/test-cluster/${name}`,
+  },
 }));
 
 vi.mock('@mui/material/styles', () => ({
@@ -110,7 +113,7 @@ describe('AppBarScoreBadge', () => {
 
     render(<AppBarScoreBadge />);
     await user.click(screen.getByRole('button'));
-    expect(mockPush).toHaveBeenCalledWith('/polaris');
+    expect(mockPush).toHaveBeenCalledWith('/c/test-cluster/polaris');
   });
 
   it('has correct aria-label', () => {

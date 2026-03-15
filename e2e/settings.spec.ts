@@ -1,23 +1,28 @@
-import { test, expect } from '@playwright/test';
+import { test, expect, Page } from '@playwright/test';
+
+/** Navigate to the Polaris plugin settings page and wait for settings to render. */
+async function goToPolarisSettings(page: Page) {
+  await page.goto('/c/main/settings/plugins');
+
+  // Find and click the Polaris plugin entry to open its settings
+  const pluginEntry = page.locator('text=polaris').first();
+  await expect(pluginEntry).toBeVisible({ timeout: 15_000 });
+  await pluginEntry.click();
+
+  // Wait for the PolarisSettings component to render
+  await expect(page.getByText('Polaris Settings')).toBeVisible({ timeout: 15_000 });
+}
 
 test.describe('Polaris plugin settings', () => {
   test('settings page shows configuration options', async ({ page }) => {
-    await page.goto('/c/main/settings/plugins');
+    await goToPolarisSettings(page);
 
-    // Find Polaris plugin in the list
-    const pluginCard = page.locator('text=polaris').first();
-    await expect(pluginCard).toBeVisible();
-
-    // Click to view settings (if settings are displayed inline, they should already be visible)
-    // Note: Headlamp v0.39.0+ shows settings inline on the plugins page
-    await expect(page.getByText('Polaris Settings')).toBeVisible({ timeout: 15_000 });
+    // SectionBox title should be visible
+    await expect(page.getByText('Polaris Settings')).toBeVisible();
   });
 
   test('refresh interval setting is configurable', async ({ page }) => {
-    await page.goto('/c/main/settings/plugins');
-
-    // Navigate to Polaris settings
-    await expect(page.getByText('Polaris Settings')).toBeVisible({ timeout: 15_000 });
+    await goToPolarisSettings(page);
 
     // Find the refresh interval dropdown
     const intervalSelect = page.locator('select').filter({ hasText: /minute|second/ });
@@ -35,10 +40,7 @@ test.describe('Polaris plugin settings', () => {
   });
 
   test('dashboard URL setting is configurable', async ({ page }) => {
-    await page.goto('/c/main/settings/plugins');
-
-    // Navigate to Polaris settings
-    await expect(page.getByText('Polaris Settings')).toBeVisible({ timeout: 15_000 });
+    await goToPolarisSettings(page);
 
     // Find the dashboard URL input
     const urlInput = page.getByPlaceholder(/polaris-dashboard/);
@@ -54,10 +56,7 @@ test.describe('Polaris plugin settings', () => {
   });
 
   test('connection test button is available', async ({ page }) => {
-    await page.goto('/c/main/settings/plugins');
-
-    // Navigate to Polaris settings
-    await expect(page.getByText('Polaris Settings')).toBeVisible({ timeout: 15_000 });
+    await goToPolarisSettings(page);
 
     // Find and verify test connection button
     const testButton = page.getByRole('button', { name: /test connection/i });
@@ -66,10 +65,7 @@ test.describe('Polaris plugin settings', () => {
   });
 
   test('connection test works with valid URL', async ({ page }) => {
-    await page.goto('/c/main/settings/plugins');
-
-    // Navigate to Polaris settings
-    await expect(page.getByText('Polaris Settings')).toBeVisible({ timeout: 15_000 });
+    await goToPolarisSettings(page);
 
     // Click test connection
     const testButton = page.getByRole('button', { name: /test connection/i });

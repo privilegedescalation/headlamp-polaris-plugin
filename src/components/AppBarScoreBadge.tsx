@@ -1,3 +1,4 @@
+import { Router } from '@kinvolk/headlamp-plugin/lib';
 import { useTheme } from '@mui/material/styles';
 import React from 'react';
 import { useHistory } from 'react-router-dom';
@@ -34,7 +35,7 @@ export default function AppBarScoreBadge() {
   };
 
   const handleClick = () => {
-    history.push('/polaris');
+    history.push(Router.createRouteURL('polaris'));
   };
 
   return (
