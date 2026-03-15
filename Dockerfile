@@ -6,5 +6,5 @@ COPY src/ src/
 RUN npx @kinvolk/headlamp-plugin build
 
 FROM alpine:3.20
-COPY --from=build /app/dist/ /plugins/headlamp-polaris-plugin/
-COPY --from=build /app/package.json /plugins/headlamp-polaris-plugin/
+COPY --from=build /app/dist/ /plugins/polaris/
+COPY --from=build /app/package.json /plugins/polaris/
