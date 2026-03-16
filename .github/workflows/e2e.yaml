@@ -68,6 +68,29 @@ jobs:
       - name: Build plugin
         run: npm run build
 
+      - name: Setup kubectl
+        uses: azure/setup-kubectl@v4
+
+      - name: Configure kubeconfig
+        env:
+          KUBECONFIG_DATA: ${{ secrets.KUBECONFIG }}
+        run: |
+          if [ -n "$KUBECONFIG_DATA" ]; then
+            mkdir -p ~/.kube
+            echo "$KUBECONFIG_DATA" | base64 -d > ~/.kube/config
+            chmod 600 ~/.kube/config
+          elif [ -f /var/run/secrets/kubernetes.io/serviceaccount/token ]; then
+            SA_TOKEN=$(cat /var/run/secrets/kubernetes.io/serviceaccount/token)
+            CA_CERT=/var/run/secrets/kubernetes.io/serviceaccount/ca.crt
+            NAMESPACE=$(cat /var/run/secrets/kubernetes.io/serviceaccount/namespace)
+            kubectl config set-cluster in-cluster --server=https://kubernetes.default.svc --certificate-authority="$CA_CERT"
+            kubectl config set-credentials sa-user --token="$SA_TOKEN"
+            kubectl config set-context in-cluster --cluster=in-cluster --user=sa-user --namespace="$NAMESPACE"
+            kubectl config use-context in-cluster
+          fi
+          kubectl version --client
+          kubectl cluster-info || echo "::warning::Cannot reach cluster API — deploy step may fail"
+
       - name: Deploy plugin to Headlamp
         env:
           HEADLAMP_URL: ${{ secrets.HEADLAMP_URL || 'http://headlamp.kube-system.svc.cluster.local' }}
