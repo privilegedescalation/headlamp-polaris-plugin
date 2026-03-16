@@ -1,0 +1,22 @@
+---
+# Headlamp Helm values for E2E testing with shared volume plugin deployment.
+#
+# The CI runner and Headlamp pod share a PVC so that the runner can copy
+# built plugin artifacts directly into Headlamp's plugins directory.
+# This is a CI-only mechanism — production plugin distribution uses ArtifactHub.
+
+# Point Headlamp at the shared plugins mount
+config:
+  pluginsDir: /headlamp/plugins
+
+# PVC-backed volume shared with the CI runner
+volumes:
+  - name: plugins
+    persistentVolumeClaim:
+      claimName: headlamp-plugins
+
+# Mount into the Headlamp container
+volumeMounts:
+  - name: plugins
+    mountPath: /headlamp/plugins
+    readOnly: true
