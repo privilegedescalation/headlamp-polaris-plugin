@@ -1,0 +1,35 @@
+# RBAC for GitHub Actions E2E runner to deploy plugins to Headlamp.
+#
+# The self-hosted runner SA needs to:
+#   - list/get pods in kube-system (to find the Headlamp pod)
+#   - exec into the Headlamp pod (to copy plugin files and restart)
+#
+# Apply with: kubectl apply -f deployment/e2e-runner-rbac.yaml
+#
+# Adjust the ServiceAccount name/namespace if your runner setup differs.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: e2e-runner-headlamp-deploy
+  namespace: kube-system
+rules:
+  - apiGroups: [""]
+    resources: ["pods"]
+    verbs: ["list", "get"]
+  - apiGroups: [""]
+    resources: ["pods/exec"]
+    verbs: ["create"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: e2e-runner-headlamp-deploy
+  namespace: kube-system
+subjects:
+  - kind: ServiceAccount
+    name: local-ubuntu-latest-gha-rs-no-permission
+    namespace: arc-runners
+roleRef:
+  kind: Role
+  name: e2e-runner-headlamp-deploy
+  apiGroup: rbac.authorization.k8s.io
