@@ -1,0 +1,53 @@
+---
+# RBAC for the self-hosted GitHub Actions runner ServiceAccount to deploy
+# plugins to Headlamp via ConfigMap + deployment patch.
+#
+# This grants ONLY the permissions needed by scripts/deploy-plugin-to-headlamp.sh:
+#   - configmaps: create/get/update (store the plugin tarball)
+#   - deployments: get/patch (add the init container that extracts the plugin)
+#   - replicasets: get/list (for kubectl rollout status)
+#
+# No pod exec or pod cp access is required.
+#
+# Apply with:
+#   kubectl apply -f deployment/e2e-runner-rbac.yaml
+#
+# The runner SA name comes from the ARC (Actions Runner Controller) deployment.
+# Adjust the serviceaccount name/namespace if your runner uses a different identity.
+
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: e2e-plugin-deployer
+  namespace: kube-system
+rules:
+  # Store plugin tarball in a ConfigMap
+  - apiGroups: [""]
+    resources: ["configmaps"]
+    verbs: ["create", "get", "update", "patch"]
+  # Patch the Headlamp deployment to add the init container
+  - apiGroups: ["apps"]
+    resources: ["deployments"]
+    verbs: ["get", "patch"]
+  # Required for kubectl rollout status
+  - apiGroups: ["apps"]
+    resources: ["replicasets"]
+    verbs: ["get", "list"]
+  # Required for rollout status pod readiness check
+  - apiGroups: [""]
+    resources: ["pods"]
+    verbs: ["get", "list"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: e2e-plugin-deployer
+  namespace: kube-system
+subjects:
+  - kind: ServiceAccount
+    name: local-ubuntu-latest-gha-rs-no-permission
+    namespace: arc-runners
+roleRef:
+  kind: Role
+  name: e2e-plugin-deployer
+  apiGroup: rbac.authorization.k8s.io
