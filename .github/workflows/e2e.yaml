@@ -7,6 +7,11 @@ on:
     branches: [main]
   workflow_dispatch:
 
+env:
+  SHARED_VOLUME_PATH: /shared/headlamp-plugins
+  HEADLAMP_NAMESPACE: kube-system
+  HEADLAMP_RELEASE: headlamp
+
 jobs:
   e2e:
     runs-on: local-ubuntu-latest
@@ -25,45 +30,76 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Preflight — verify Headlamp and plugin version
+      - name: Build plugin
+        run: npm run build
+
+      - name: Deploy plugin via shared volume
         env:
           HEADLAMP_URL: ${{ secrets.HEADLAMP_URL || 'http://headlamp.kube-system.svc.cluster.local' }}
         run: |
-          EXPECTED=$(node -p "require('./package.json').version")
-          PLUGIN_NAME=$(node -p "require('./package.json').artifacthub?.name || require('./package.json').name")
-          echo "Expected: $PLUGIN_NAME@$EXPECTED"
+          PLUGIN_NAME=$(node -p "require('./package.json').name")
+          PLUGIN_DIR="$SHARED_VOLUME_PATH/$PLUGIN_NAME"
 
-          # Check Headlamp connectivity
-          HTTP_CODE=$(curl -s -o /dev/null -w '%{http_code}' --connect-timeout 10 "$HEADLAMP_URL" || true)
+          echo "Deploying $PLUGIN_NAME to shared volume at $SHARED_VOLUME_PATH"
+
+          # Ensure shared volume directory exists
+          mkdir -p "$SHARED_VOLUME_PATH"
+
+          # Remove stale plugin if present, then copy fresh build
+          rm -rf "$PLUGIN_DIR"
+          cp -r dist "$PLUGIN_DIR"
+
+          # Copy package.json for version identification
+          cp package.json "$PLUGIN_DIR/package.json"
+
+          echo "Plugin deployed to $PLUGIN_DIR"
+          ls -la "$PLUGIN_DIR"
+
+          # If Gandalf's deploy script exists, use it for Headlamp rollout
+          if [ -x scripts/deploy-plugin-via-volume.sh ]; then
+            echo "Running deploy script..."
+            scripts/deploy-plugin-via-volume.sh
+          else
+            echo "::warning::deploy-plugin-via-volume.sh not found — relying on pre-configured shared volume mount"
+          fi
+
+      - name: Preflight — verify Headlamp and plugin availability
+        env:
+          HEADLAMP_URL: ${{ secrets.HEADLAMP_URL || 'http://headlamp.kube-system.svc.cluster.local' }}
+        run: |
+          PLUGIN_NAME=$(node -p "require('./package.json').name")
+          EXPECTED=$(node -p "require('./package.json').version")
+          echo "Expecting: $PLUGIN_NAME@$EXPECTED"
+
+          # Wait for Headlamp to be reachable
+          for i in $(seq 1 30); do
+            HTTP_CODE=$(curl -s -o /dev/null -w '%{http_code}' --connect-timeout 5 "$HEADLAMP_URL" || true)
+            if [ "$HTTP_CODE" != "000" ]; then
+              echo "Headlamp responded HTTP $HTTP_CODE"
+              break
+            fi
+            echo "Waiting for Headlamp... ($i/30)"
+            sleep 2
+          done
+
           if [ "$HTTP_CODE" = "000" ]; then
-            echo "::error::Cannot reach Headlamp at $HEADLAMP_URL"
+            echo "::error::Cannot reach Headlamp at $HEADLAMP_URL after 60s"
             exit 1
           fi
-          echo "Headlamp responded HTTP $HTTP_CODE"
 
-          # Check installed plugins and version match
+          # Verify plugin is visible
           PLUGIN_JSON=$(curl -sf --connect-timeout 10 "$HEADLAMP_URL/plugins" 2>/dev/null || echo "[]")
           node -e "
-            const expected = '$EXPECTED';
-            const pluginName = '$PLUGIN_NAME';
             const plugins = JSON.parse(process.argv[1]);
             console.log('Installed plugins:');
             for (const p of plugins) console.log('  ' + p.name + '@' + (p.version||'unknown'));
-            const ours = plugins.find(p => p.name === pluginName || p.name === 'polaris' || p.name.includes('polaris'));
+            const ours = plugins.find(p => p.name === '$PLUGIN_NAME' || p.name === 'polaris' || p.name.includes('polaris'));
             if (!ours) {
-              console.log('::warning::Plugin ' + pluginName + ' not found in Headlamp — data-dependent tests will fail');
+              console.log('::warning::Plugin $PLUGIN_NAME not yet visible — Headlamp may need a restart');
             } else {
               console.log('Found plugin: ' + ours.name + ' at path ' + ours.path);
             }
           " "$PLUGIN_JSON"
-
-          # Fetch deployed plugin version from package.json
-          DEPLOYED_VERSION=$(curl -sf --connect-timeout 10 "$HEADLAMP_URL/plugins/$PLUGIN_NAME/package.json" 2>/dev/null \
-            | node -p "JSON.parse(require('fs').readFileSync(0,'utf8')).version" 2>/dev/null || echo "unknown")
-          echo "Deployed version: $DEPLOYED_VERSION"
-          if [ "$DEPLOYED_VERSION" != "$EXPECTED" ] && [ "$DEPLOYED_VERSION" != "unknown" ]; then
-            echo "::warning::Version mismatch — repo has $EXPECTED but Headlamp runs $DEPLOYED_VERSION. Tests may fail due to stale plugin."
-          fi
 
       - name: Install Playwright browsers
         run: npx playwright install --with-deps chromium
