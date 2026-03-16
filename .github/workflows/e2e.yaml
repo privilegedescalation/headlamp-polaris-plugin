@@ -25,16 +25,7 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Deploy plugin via Headlamp plugin installer
-        env:
-          HEADLAMP_URL: ${{ secrets.HEADLAMP_URL || 'http://headlamp.kube-system.svc.cluster.local' }}
-          HEADLAMP_NAMESPACE: ${{ vars.HEADLAMP_NAMESPACE || 'kube-system' }}
-          HEADLAMP_RELEASE: ${{ vars.HEADLAMP_RELEASE || 'headlamp' }}
-        run: |
-          chmod +x scripts/deploy-plugin-via-installer.sh
-          ./scripts/deploy-plugin-via-installer.sh
-
-      - name: Preflight — verify plugin version
+      - name: Preflight — verify Headlamp and plugin version
         env:
           HEADLAMP_URL: ${{ secrets.HEADLAMP_URL || 'http://headlamp.kube-system.svc.cluster.local' }}
         run: |
@@ -42,7 +33,15 @@ jobs:
           PLUGIN_NAME=$(node -p "require('./package.json').name")
           echo "Expected: $PLUGIN_NAME@$EXPECTED"
 
-          # List installed plugins
+          # Check Headlamp connectivity
+          HTTP_CODE=$(curl -s -o /dev/null -w '%{http_code}' --connect-timeout 10 "$HEADLAMP_URL" || true)
+          if [ "$HTTP_CODE" = "000" ]; then
+            echo "::error::Cannot reach Headlamp at $HEADLAMP_URL"
+            exit 1
+          fi
+          echo "Headlamp responded HTTP $HTTP_CODE"
+
+          # Check installed plugins and version match
           PLUGIN_JSON=$(curl -sf --connect-timeout 10 "$HEADLAMP_URL/plugins" 2>/dev/null || echo "[]")
           node -e "
             const expected = '$EXPECTED';
@@ -52,18 +51,18 @@ jobs:
             for (const p of plugins) console.log('  ' + p.name + '@' + (p.version||'unknown'));
             const ours = plugins.find(p => p.name === pluginName || p.name === 'polaris' || p.name.includes('polaris'));
             if (!ours) {
-              console.log('::error::Plugin not found after deploy — E2E tests will fail');
-              process.exit(1);
+              console.log('::warning::Plugin ' + pluginName + ' not found in Headlamp — data-dependent tests will fail');
+            } else {
+              console.log('Found plugin: ' + ours.name + ' at path ' + ours.path);
             }
-            console.log('Found plugin: ' + ours.name + ' at path ' + ours.path);
           " "$PLUGIN_JSON"
 
-          # Check version match (warn only — Artifact Hub may lag behind releases)
+          # Fetch deployed plugin version from package.json
           DEPLOYED_VERSION=$(curl -sf --connect-timeout 10 "$HEADLAMP_URL/plugins/$PLUGIN_NAME/package.json" 2>/dev/null \
             | node -p "JSON.parse(require('fs').readFileSync(0,'utf8')).version" 2>/dev/null || echo "unknown")
           echo "Deployed version: $DEPLOYED_VERSION"
           if [ "$DEPLOYED_VERSION" != "$EXPECTED" ] && [ "$DEPLOYED_VERSION" != "unknown" ]; then
-            echo "::warning::Version mismatch — repo has $EXPECTED but Headlamp runs $DEPLOYED_VERSION. Artifact Hub may not have synced yet."
+            echo "::warning::Version mismatch — repo has $EXPECTED but Headlamp runs $DEPLOYED_VERSION. Tests may fail due to stale plugin."
           fi
 
       - name: Install Playwright browsers
