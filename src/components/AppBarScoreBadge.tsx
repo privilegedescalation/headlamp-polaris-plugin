@@ -1,7 +1,7 @@
 import { K8s } from '@kinvolk/headlamp-plugin/lib';
 import { useTheme } from '@mui/material/styles';
 import React from 'react';
-import { useHistory } from 'react-router-dom';
+import { useHistory, useLocation } from 'react-router-dom';
 import { computeScore, countResults } from '../api/polaris';
 import { usePolarisDataContext } from '../api/PolarisDataContext';
 
@@ -13,7 +13,13 @@ export default function AppBarScoreBadge() {
   const theme = useTheme();
   const { data, loading } = usePolarisDataContext();
   const history = useHistory();
-  const cluster = K8s.useCluster();
+  const location = useLocation();
+  const clusterFromHook = K8s.useCluster();
+
+  // useCluster() returns null in AppBar context (outside cluster routes),
+  // so extract cluster from the current URL path as primary source.
+  const clusterMatch = location.pathname.match(/^\/c\/([^/]+)/);
+  const cluster = clusterMatch ? clusterMatch[1] : clusterFromHook;
 
   if (loading || !data) {
     return null; // Graceful degradation when Polaris unavailable

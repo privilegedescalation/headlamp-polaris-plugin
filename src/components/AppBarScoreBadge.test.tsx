@@ -29,6 +29,7 @@ vi.mock('@mui/material/styles', () => ({
 const mockPush = vi.fn();
 vi.mock('react-router-dom', () => ({
   useHistory: () => ({ push: mockPush }),
+  useLocation: () => ({ pathname: '/c/test-cluster/some-page', search: '', hash: '' }),
 }));
 
 const mockUsePolarisDataContext = vi.fn();
