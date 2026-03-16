@@ -1,4 +1,4 @@
-import { K8s, Router } from '@kinvolk/headlamp-plugin/lib';
+import { K8s } from '@kinvolk/headlamp-plugin/lib';
 import { useTheme } from '@mui/material/styles';
 import React from 'react';
 import { useHistory } from 'react-router-dom';
@@ -36,7 +36,8 @@ export default function AppBarScoreBadge() {
   };
 
   const handleClick = () => {
-    history.push(Router.createRouteURL('polaris', { cluster: cluster ?? '' }));
+    const prefix = cluster ? `/c/${cluster}` : '';
+    history.push(`${prefix}/polaris`);
   };
 
   return (
