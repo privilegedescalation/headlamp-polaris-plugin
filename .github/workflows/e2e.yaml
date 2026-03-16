@@ -25,6 +25,19 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Build plugin
+        run: npm run build
+
+      - name: Deploy plugin to Headlamp
+        env:
+          HEADLAMP_URL: ${{ secrets.HEADLAMP_URL || 'http://headlamp.kube-system.svc.cluster.local' }}
+          HEADLAMP_NS: kube-system
+          HEADLAMP_DEPLOY: headlamp
+          PLUGIN_NAME: polaris
+        run: |
+          chmod +x scripts/deploy-plugin-to-headlamp.sh
+          ./scripts/deploy-plugin-to-headlamp.sh
+
       - name: Preflight — verify Headlamp and plugin version
         env:
           HEADLAMP_URL: ${{ secrets.HEADLAMP_URL || 'http://headlamp.kube-system.svc.cluster.local' }}
