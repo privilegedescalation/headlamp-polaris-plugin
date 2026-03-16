@@ -25,6 +25,9 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Build plugin
+        run: npm run build
+
       - name: Preflight — verify Headlamp and plugin version
         env:
           HEADLAMP_URL: ${{ secrets.HEADLAMP_URL || 'http://headlamp.kube-system.svc.cluster.local' }}
@@ -64,6 +67,27 @@ jobs:
           if [ "$DEPLOYED_VERSION" != "$EXPECTED" ] && [ "$DEPLOYED_VERSION" != "unknown" ]; then
             echo "::warning::Version mismatch — repo has $EXPECTED but Headlamp runs $DEPLOYED_VERSION. Tests may fail due to stale plugin."
           fi
+
+      - name: Setup kubectl
+        uses: azure/setup-kubectl@v4
+
+      - name: Configure kubeconfig
+        run: |
+          mkdir -p ~/.kube
+          echo "${{ secrets.KUBECONFIG }}" > ~/.kube/config
+          chmod 600 ~/.kube/config
+          kubectl cluster-info
+
+      # CI-only test fixture — NOT a user installation method.
+      # Production plugin distribution is ArtifactHub-only.
+      # Approved under CTO decision PRI-200.
+      - name: Deploy plugin to Headlamp
+        run: ./scripts/deploy-plugin-to-headlamp.sh
+        env:
+          HEADLAMP_URL: ${{ secrets.HEADLAMP_URL || 'http://headlamp.kube-system.svc.cluster.local' }}
+          HEADLAMP_NS: kube-system
+          HEADLAMP_DEPLOY: headlamp
+          PLUGIN_NAME: polaris
 
       - name: Install Playwright browsers
         run: npx playwright install --with-deps chromium
