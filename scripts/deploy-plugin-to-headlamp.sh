@@ -83,7 +83,7 @@ kubectl patch deployment "$HEADLAMP_DEPLOY" -n "$HEADLAMP_NS" --type=strategic -
             "image": "busybox:latest",
             "command": [
               "sh", "-c",
-              "mkdir -p /plugins/${PLUGIN_NAME} && cd /plugins/${PLUGIN_NAME} && tar xzf /plugin-src/plugin.tar.gz && echo 'Plugin extracted successfully' && ls -la"
+              "mkdir -p /plugins/${PLUGIN_NAME} && cd /plugins/${PLUGIN_NAME} && tar xzf /plugin-src/plugin.tar.gz && cp -a dist/* . && rm -rf dist && echo 'Plugin extracted successfully' && ls -la"
             ],
             "volumeMounts": [
               {"name": "static-plugins", "mountPath": "/plugins"},
