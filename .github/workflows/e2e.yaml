@@ -65,6 +65,16 @@ jobs:
             echo "::warning::Version mismatch — repo has $EXPECTED but Headlamp runs $DEPLOYED_VERSION. Tests may fail due to stale plugin."
           fi
 
+      - name: Build plugin
+        run: npm run build
+
+      - name: Deploy plugin to Headlamp
+        env:
+          HEADLAMP_URL: ${{ secrets.HEADLAMP_URL || 'http://headlamp.kube-system.svc.cluster.local' }}
+          HEADLAMP_NS: ${{ secrets.HEADLAMP_NS || 'kube-system' }}
+          HEADLAMP_PLUGIN_DIR: ${{ secrets.HEADLAMP_PLUGIN_DIR || '/headlamp/static-plugins/polaris' }}
+        run: ./scripts/deploy-plugin-to-headlamp.sh
+
       - name: Install Playwright browsers
         run: npx playwright install --with-deps chromium
 
