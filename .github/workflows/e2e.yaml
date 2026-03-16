@@ -8,9 +8,9 @@ on:
   workflow_dispatch:
 
 env:
-  SHARED_VOLUME_PATH: /shared/headlamp-plugins
+  PLUGIN_VOLUME_PATH: /mnt/headlamp-plugins
   HEADLAMP_NAMESPACE: kube-system
-  HEADLAMP_RELEASE: headlamp
+  HEADLAMP_DEPLOY: headlamp
 
 jobs:
   e2e:
@@ -34,34 +34,7 @@ jobs:
         run: npm run build
 
       - name: Deploy plugin via shared volume
-        env:
-          HEADLAMP_URL: ${{ secrets.HEADLAMP_URL || 'http://headlamp.kube-system.svc.cluster.local' }}
-        run: |
-          PLUGIN_NAME=$(node -p "require('./package.json').name")
-          PLUGIN_DIR="$SHARED_VOLUME_PATH/$PLUGIN_NAME"
-
-          echo "Deploying $PLUGIN_NAME to shared volume at $SHARED_VOLUME_PATH"
-
-          # Ensure shared volume directory exists
-          mkdir -p "$SHARED_VOLUME_PATH"
-
-          # Remove stale plugin if present, then copy fresh build
-          rm -rf "$PLUGIN_DIR"
-          cp -r dist "$PLUGIN_DIR"
-
-          # Copy package.json for version identification
-          cp package.json "$PLUGIN_DIR/package.json"
-
-          echo "Plugin deployed to $PLUGIN_DIR"
-          ls -la "$PLUGIN_DIR"
-
-          # If Gandalf's deploy script exists, use it for Headlamp rollout
-          if [ -x scripts/deploy-plugin-via-volume.sh ]; then
-            echo "Running deploy script..."
-            scripts/deploy-plugin-via-volume.sh
-          else
-            echo "::warning::deploy-plugin-via-volume.sh not found — relying on pre-configured shared volume mount"
-          fi
+        run: scripts/deploy-plugin-via-volume.sh
 
       - name: Preflight — verify Headlamp and plugin availability
         env:
