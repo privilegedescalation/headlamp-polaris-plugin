@@ -1,9 +1,20 @@
-import { K8s, Router } from '@kinvolk/headlamp-plugin/lib';
 import { useTheme } from '@mui/material/styles';
 import React from 'react';
 import { useHistory } from 'react-router-dom';
 import { computeScore, countResults } from '../api/polaris';
 import { usePolarisDataContext } from '../api/PolarisDataContext';
+
+/**
+ * Extract the cluster name from the current browser URL.
+ * Headlamp cluster routes follow the pattern /c/<cluster>/...
+ * We read window.location.pathname directly because the AppBar renders
+ * outside the cluster route context, so useCluster() returns null and
+ * React Router's useLocation() may not reflect the cluster prefix.
+ */
+function getClusterFromUrl(): string | null {
+  const match = window.location.pathname.match(/\/c\/([^/]+)/);
+  return match ? match[1] : null;
+}
 
 /**
  * App bar badge showing cluster Polaris score
@@ -13,7 +24,6 @@ export default function AppBarScoreBadge() {
   const theme = useTheme();
   const { data, loading } = usePolarisDataContext();
   const history = useHistory();
-  const cluster = K8s.useCluster();
 
   if (loading || !data) {
     return null; // Graceful degradation when Polaris unavailable
@@ -36,7 +46,9 @@ export default function AppBarScoreBadge() {
   };
 
   const handleClick = () => {
-    history.push(Router.createRouteURL('polaris', { cluster: cluster ?? '' }));
+    const cluster = getClusterFromUrl();
+    const prefix = cluster ? `/c/${cluster}` : '';
+    history.push(`${prefix}/polaris`);
   };
 
   return (
