@@ -28,6 +28,9 @@ jobs:
       - name: Build plugin
         run: npm run build
 
+      - name: Setup kubectl
+        uses: azure/setup-kubectl@v4
+
       - name: Deploy plugin to Headlamp
         env:
           HEADLAMP_URL: ${{ secrets.HEADLAMP_URL || 'http://headlamp.kube-system.svc.cluster.local' }}
