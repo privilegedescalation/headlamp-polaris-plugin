@@ -5,7 +5,7 @@ async function goToPolarisSettings(page: Page) {
   await page.goto('/c/main/settings/plugins');
 
   // Find and click the Polaris plugin entry to open its settings
-  const pluginEntry = page.locator('text=polaris').first();
+  const pluginEntry = page.locator('text=headlamp-polaris').first();
   await expect(pluginEntry).toBeVisible({ timeout: 15_000 });
   await pluginEntry.click();
 
