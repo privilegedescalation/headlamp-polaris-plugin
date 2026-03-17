@@ -2,10 +2,12 @@ import { test, expect, Page } from '@playwright/test';
 
 /** Navigate to the Polaris plugin settings page and wait for settings to render. */
 async function goToPolarisSettings(page: Page) {
-  // Load the main page first so Headlamp fetches the plugin list and stores
-  // it in localStorage (headlampPluginSettings). The PluginSettings component
-  // initializes its state from localStorage on mount, so the data must already
-  // be there before we navigate to the settings page.
+  // Load the main page first so all plugin scripts execute and call
+  // registerPluginSettings(). Headlamp loads plugins asynchronously — the
+  // PluginSettings component reads the plugin registry once on mount and
+  // never re-renders when new plugins register. A full page.goto() to the
+  // settings URL would re-initialize the SPA, causing PluginSettings to
+  // mount before plugin scripts finish executing.
   await page.goto('/');
   const sidebar = page.getByRole('navigation', { name: 'Navigation' });
   await expect(sidebar).toBeVisible({ timeout: 15_000 });
@@ -13,8 +15,14 @@ async function goToPolarisSettings(page: Page) {
     timeout: 15_000,
   });
 
-  // Now navigate to plugin settings — localStorage has the plugin list
-  await page.goto('/c/main/settings/plugins');
+  // Navigate to plugin settings via client-side routing (pushState + popstate)
+  // instead of page.goto(). This preserves the already-loaded plugin scripts
+  // and their registerPluginSettings() registrations. React Router's history
+  // listener picks up the popstate event and re-renders with the new route.
+  await page.evaluate(() => {
+    window.history.pushState({}, '', '/c/main/settings/plugins');
+    window.dispatchEvent(new PopStateEvent('popstate', { state: {} }));
+  });
 
   // Find and click the Polaris plugin entry to open its settings
   const pluginEntry = page.locator('text=headlamp-polaris').first();
