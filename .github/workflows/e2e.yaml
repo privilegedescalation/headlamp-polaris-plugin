@@ -43,22 +43,30 @@ jobs:
           NS="$HEADLAMP_NAMESPACE"
           DEPLOY="$HEADLAMP_DEPLOY"
 
-          # Add the PVC volume if not already present
-          HAS_VOL=$(kubectl get deploy "$DEPLOY" -n "$NS" \
-            -o jsonpath='{.spec.template.spec.volumes[?(@.name=="plugins")].name}')
+          # Check if the plugins volume and mount already exist (by name or mountPath)
+          DEPLOY_JSON=$(kubectl get deploy "$DEPLOY" -n "$NS" -o json)
+          HAS_VOL=$(echo "$DEPLOY_JSON" | \
+            python3 -c "import sys,json; d=json.load(sys.stdin); vols=d['spec']['template']['spec'].get('volumes',[]); print('yes' if any(v.get('persistentVolumeClaim',{}).get('claimName')=='headlamp-plugins' or v.get('name')=='plugins' for v in vols) else '')")
+          HAS_MOUNT=$(echo "$DEPLOY_JSON" | \
+            python3 -c "import sys,json; d=json.load(sys.stdin); mounts=d['spec']['template']['spec']['containers'][0].get('volumeMounts',[]); print('yes' if any(m.get('mountPath')=='/headlamp/plugins' or m.get('name')=='plugins' for m in mounts) else '')")
+
+          NEEDS_PATCH=false
+
           if [ -z "$HAS_VOL" ]; then
+            echo "Adding plugins PVC volume..."
             kubectl patch deploy "$DEPLOY" -n "$NS" --type=json -p '[
               {"op":"add","path":"/spec/template/spec/volumes/-","value":{
                 "name":"plugins",
                 "persistentVolumeClaim":{"claimName":"headlamp-plugins"}
               }}
             ]'
+            NEEDS_PATCH=true
+          else
+            echo "Plugins volume already present, skipping."
           fi
 
-          # Add the volume mount to the first container if not already present
-          HAS_MOUNT=$(kubectl get deploy "$DEPLOY" -n "$NS" \
-            -o jsonpath='{.spec.template.spec.containers[0].volumeMounts[?(@.name=="plugins")].name}')
           if [ -z "$HAS_MOUNT" ]; then
+            echo "Adding plugins volume mount..."
             kubectl patch deploy "$DEPLOY" -n "$NS" --type=json -p '[
               {"op":"add","path":"/spec/template/spec/containers/0/volumeMounts/-","value":{
                 "name":"plugins",
@@ -66,6 +74,9 @@ jobs:
                 "readOnly":true
               }}
             ]'
+            NEEDS_PATCH=true
+          else
+            echo "Plugins volume mount already present, skipping."
           fi
 
           # Set the plugins directory via env var
