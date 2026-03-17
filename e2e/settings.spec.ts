@@ -2,31 +2,17 @@ import { test, expect, Page } from '@playwright/test';
 
 /** Navigate to the Polaris plugin settings page and wait for settings to render. */
 async function goToPolarisSettings(page: Page) {
-  // Load the main page first so all plugin scripts execute and call
-  // registerPluginSettings(). Headlamp loads plugins asynchronously — the
-  // PluginSettings component reads the plugin registry once on mount and
-  // never re-renders when new plugins register. A full page.goto() to the
-  // settings URL would re-initialize the SPA, causing PluginSettings to
-  // mount before plugin scripts finish executing.
-  await page.goto('/');
-  const sidebar = page.getByRole('navigation', { name: 'Navigation' });
-  await expect(sidebar).toBeVisible({ timeout: 15_000 });
-  await expect(sidebar.getByRole('button', { name: 'Polaris' })).toBeVisible({
-    timeout: 15_000,
-  });
+  // Headlamp's plugin settings page is a HOME-context route at /settings/plugins,
+  // not an in-cluster route (/c/main/settings/plugins would 404). Headlamp loads
+  // plugin scripts asynchronously on SPA init. When registerPluginSettings() fires,
+  // it dispatches a Redux action — PluginSettings uses useTypedSelector so it
+  // re-renders automatically once the plugin registers. No preloading needed.
+  await page.goto('/settings/plugins');
 
-  // Navigate to plugin settings via client-side routing (pushState + popstate)
-  // instead of page.goto(). This preserves the already-loaded plugin scripts
-  // and their registerPluginSettings() registrations. React Router's history
-  // listener picks up the popstate event and re-renders with the new route.
-  await page.evaluate(() => {
-    window.history.pushState({}, '', '/c/main/settings/plugins');
-    window.dispatchEvent(new PopStateEvent('popstate', { state: {} }));
-  });
-
-  // Find and click the Polaris plugin entry to open its settings
+  // Wait for the plugin to appear in the settings list. The timeout covers
+  // async plugin script loading + registration.
   const pluginEntry = page.locator('text=headlamp-polaris').first();
-  await expect(pluginEntry).toBeVisible({ timeout: 15_000 });
+  await expect(pluginEntry).toBeVisible({ timeout: 30_000 });
   await pluginEntry.click();
 
   // Wait for the PolarisSettings component to render
