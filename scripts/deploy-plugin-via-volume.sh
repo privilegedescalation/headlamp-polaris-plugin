@@ -55,19 +55,20 @@ else
   NODE_SELECTOR=""
 fi
 
-# Base64-encode the tarball so we can embed it in the pod command
-# (avoids unreliable kubectl run --rm -i stdin piping)
-TARBALL_B64=$(base64 -w0 "$TAR_FILE")
-echo "  Encoded size: $(echo -n "$TARBALL_B64" | wc -c) bytes"
-
-# Clean up any previous deploy job/pod
+# Clean up any previous deploy resources
 kubectl delete job plugin-deploy -n "$HEADLAMP_NAMESPACE" --ignore-not-found 2>/dev/null || true
-kubectl delete pod plugin-deploy -n "$HEADLAMP_NAMESPACE" --ignore-not-found 2>/dev/null || true
+kubectl delete configmap plugin-tarball -n "$HEADLAMP_NAMESPACE" --ignore-not-found 2>/dev/null || true
 sleep 2
 
-# Create a Job that decodes the tarball and extracts to the PVC
+# Store the tarball in a ConfigMap (binary-safe via --from-file)
+echo "Creating ConfigMap with plugin tarball..."
+kubectl create configmap plugin-tarball \
+  -n "$HEADLAMP_NAMESPACE" \
+  --from-file=plugin.tar.gz="$TAR_FILE"
+
+# Create a Job that extracts the tarball from the ConfigMap to the PVC
 echo "Starting deploy job..."
-cat <<JOBEOF | kubectl apply -n "$HEADLAMP_NAMESPACE" -f -
+kubectl apply -n "$HEADLAMP_NAMESPACE" -f - <<JOBEOF
 apiVersion: batch/v1
 kind: Job
 metadata:
@@ -82,24 +83,28 @@ spec:
       containers:
         - name: deploy
           image: busybox:1.36
-          command:
-            - sh
-            - -c
+          command: ["sh", "-c"]
+          args:
             - |
-              echo "Decoding and extracting plugin..."
-              echo "${TARBALL_B64}" | base64 -d > /tmp/plugin.tar.gz
+              echo "Extracting plugin to shared volume..."
               rm -rf /plugins/${PLUGIN_DIR_NAME}
               mkdir -p /plugins/${PLUGIN_DIR_NAME}
-              tar -xzf /tmp/plugin.tar.gz -C /plugins/${PLUGIN_DIR_NAME}
+              tar -xzf /tarball/plugin.tar.gz -C /plugins/${PLUGIN_DIR_NAME}
               echo "Files deployed:"
               ls -la /plugins/${PLUGIN_DIR_NAME}/
           volumeMounts:
             - name: plugins
               mountPath: /plugins
+            - name: tarball
+              mountPath: /tarball
+              readOnly: true
       volumes:
         - name: plugins
           persistentVolumeClaim:
             claimName: headlamp-plugins
+        - name: tarball
+          configMap:
+            name: plugin-tarball
 JOBEOF
 
 # Wait for the job to complete
@@ -112,6 +117,7 @@ kubectl logs job/plugin-deploy -n "$HEADLAMP_NAMESPACE" 2>/dev/null || true
 
 # Clean up
 kubectl delete job plugin-deploy -n "$HEADLAMP_NAMESPACE" --ignore-not-found 2>/dev/null || true
+kubectl delete configmap plugin-tarball -n "$HEADLAMP_NAMESPACE" --ignore-not-found 2>/dev/null || true
 
 rm -f "$TAR_FILE"
 
