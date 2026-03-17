@@ -8,7 +8,6 @@ on:
   workflow_dispatch:
 
 env:
-  PLUGIN_VOLUME_PATH: /mnt/headlamp-plugins
   HEADLAMP_NAMESPACE: kube-system
   HEADLAMP_DEPLOY: headlamp
 
@@ -32,6 +31,17 @@ jobs:
 
       - name: Build plugin
         run: npm run build
+
+      - name: Ensure PVC exists
+        run: kubectl apply -f deployment/headlamp-plugins-pvc.yaml
+
+      - name: Upgrade Headlamp with shared volume mount
+        run: |
+          helm upgrade headlamp headlamp/headlamp \
+            --namespace "$HEADLAMP_NAMESPACE" \
+            --reuse-values \
+            -f deployment/headlamp-e2e-values.yaml \
+            --wait --timeout 120s
 
       - name: Deploy plugin via shared volume
         run: scripts/deploy-plugin-via-volume.sh
