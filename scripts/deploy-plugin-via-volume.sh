@@ -37,6 +37,25 @@ TAR_FILE=$(mktemp /tmp/plugin-XXXXXX.tar.gz)
 tar -czf "$TAR_FILE" -C "$DIST_DIR" . -C "$REPO_ROOT" package.json
 echo "  Tarball:   $TAR_FILE ($(du -h "$TAR_FILE" | cut -f1))"
 
+# Find the node where Headlamp is running — the PVC is ReadWriteOnce so
+# the deploy pod must land on the same node to mount it.
+HEADLAMP_NODE=$(kubectl get pods -n "$HEADLAMP_NAMESPACE" \
+  -l "app.kubernetes.io/name=headlamp" \
+  -o jsonpath='{.items[0].spec.nodeName}' 2>/dev/null || true)
+if [ -z "$HEADLAMP_NODE" ]; then
+  # Fallback: try by deployment label
+  HEADLAMP_NODE=$(kubectl get pods -n "$HEADLAMP_NAMESPACE" \
+    -l "app.kubernetes.io/instance=headlamp" \
+    -o jsonpath='{.items[0].spec.nodeName}' 2>/dev/null || true)
+fi
+if [ -n "$HEADLAMP_NODE" ]; then
+  echo "  Headlamp node: $HEADLAMP_NODE (scheduling deploy pod there)"
+  NODE_OVERRIDE="\"nodeName\": \"$HEADLAMP_NODE\","
+else
+  echo "  WARNING: Could not determine Headlamp node, deploy pod may fail if PVC is ReadWriteOnce"
+  NODE_OVERRIDE=""
+fi
+
 # Clean up any previous deploy pod
 kubectl delete pod plugin-deploy -n "$HEADLAMP_NAMESPACE" --ignore-not-found --wait=false 2>/dev/null || true
 sleep 2
@@ -50,6 +69,7 @@ kubectl run plugin-deploy \
   --namespace="$HEADLAMP_NAMESPACE" \
   --overrides="{
     \"spec\": {
+      ${NODE_OVERRIDE}
       \"containers\": [{
         \"name\": \"plugin-deploy\",
         \"image\": \"busybox:1.36\",
