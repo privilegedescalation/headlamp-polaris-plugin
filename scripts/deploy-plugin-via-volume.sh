@@ -2,7 +2,7 @@
 # deploy-plugin-via-volume.sh
 #
 # Copies the built plugin into the shared PVC so Headlamp picks it up.
-# Uses a temporary Kubernetes pod to write to the PVC — the CI runner
+# Uses a temporary Kubernetes Job to write to the PVC — the CI runner
 # does NOT need the PVC mounted locally.
 #
 # Usage:
@@ -27,7 +27,7 @@ if [ ! -d "$DIST_DIR" ]; then
   exit 1
 fi
 
-echo "Deploying plugin to shared volume via temporary pod..."
+echo "Deploying plugin to shared volume via temporary job..."
 echo "  Source:    $DIST_DIR"
 echo "  PVC:       headlamp-plugins"
 echo "  Plugin:    $PLUGIN_DIR_NAME"
@@ -38,7 +38,7 @@ tar -czf "$TAR_FILE" -C "$DIST_DIR" . -C "$REPO_ROOT" package.json
 echo "  Tarball:   $TAR_FILE ($(du -h "$TAR_FILE" | cut -f1))"
 
 # Find the node where Headlamp is running — the PVC is ReadWriteOnce so
-# the deploy pod must land on the same node to mount it.
+# the deploy job must land on the same node to mount it.
 HEADLAMP_NODE=$(kubectl get pods -n "$HEADLAMP_NAMESPACE" \
   -l "app.kubernetes.io/name=headlamp" \
   -o jsonpath='{.items[0].spec.nodeName}' 2>/dev/null || true)
@@ -49,10 +49,6 @@ if [ -z "$HEADLAMP_NODE" ]; then
 fi
 if [ -n "$HEADLAMP_NODE" ]; then
   echo "  Headlamp node: $HEADLAMP_NODE (scheduling deploy job there)"
-  NODE_SELECTOR="\"nodeName\": \"$HEADLAMP_NODE\","
-else
-  echo "  WARNING: Could not determine Headlamp node"
-  NODE_SELECTOR=""
 fi
 
 # Clean up any previous deploy resources
@@ -66,9 +62,10 @@ kubectl create configmap plugin-tarball \
   -n "$HEADLAMP_NAMESPACE" \
   --from-file=plugin.tar.gz="$TAR_FILE"
 
-# Create a Job that extracts the tarball from the ConfigMap to the PVC
-echo "Starting deploy job..."
-kubectl apply -n "$HEADLAMP_NAMESPACE" -f - <<JOBEOF
+# Build the Job manifest as a temp file to avoid heredoc YAML escaping issues
+JOB_FILE=$(mktemp /tmp/plugin-deploy-job-XXXXXX.yaml)
+
+cat > "$JOB_FILE" <<'YAMLDOC'
 apiVersion: batch/v1
 kind: Job
 metadata:
@@ -78,7 +75,6 @@ spec:
   ttlSecondsAfterFinished: 60
   template:
     spec:
-      ${NODE_SELECTOR}
       restartPolicy: Never
       containers:
         - name: deploy
@@ -87,11 +83,11 @@ spec:
           args:
             - |
               echo "Extracting plugin to shared volume..."
-              rm -rf /plugins/${PLUGIN_DIR_NAME}
-              mkdir -p /plugins/${PLUGIN_DIR_NAME}
-              tar -xzf /tarball/plugin.tar.gz -C /plugins/${PLUGIN_DIR_NAME}
+              rm -rf /plugins/PLUGIN_DIR_PLACEHOLDER
+              mkdir -p /plugins/PLUGIN_DIR_PLACEHOLDER
+              tar -xzf /tarball/plugin.tar.gz -C /plugins/PLUGIN_DIR_PLACEHOLDER
               echo "Files deployed:"
-              ls -la /plugins/${PLUGIN_DIR_NAME}/
+              ls -la /plugins/PLUGIN_DIR_PLACEHOLDER/
           volumeMounts:
             - name: plugins
               mountPath: /plugins
@@ -105,7 +101,19 @@ spec:
         - name: tarball
           configMap:
             name: plugin-tarball
-JOBEOF
+YAMLDOC
+
+# Substitute plugin dir name
+sed -i "s/PLUGIN_DIR_PLACEHOLDER/${PLUGIN_DIR_NAME}/g" "$JOB_FILE"
+
+# Add nodeName if we know which node Headlamp is on
+if [ -n "$HEADLAMP_NODE" ]; then
+  sed -i "/restartPolicy: Never/i\\      nodeName: ${HEADLAMP_NODE}" "$JOB_FILE"
+fi
+
+echo "Starting deploy job..."
+kubectl apply -n "$HEADLAMP_NAMESPACE" -f "$JOB_FILE"
+rm -f "$JOB_FILE"
 
 # Wait for the job to complete
 echo "Waiting for deploy job to complete..."
