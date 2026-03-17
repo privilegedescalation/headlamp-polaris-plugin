@@ -7,10 +7,6 @@ on:
     branches: [main]
   workflow_dispatch:
 
-env:
-  HEADLAMP_NAMESPACE: kube-system
-  HEADLAMP_DEPLOY: headlamp
-
 jobs:
   e2e:
     runs-on: local-ubuntu-latest
@@ -29,69 +25,45 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Build plugin
-        run: npm run build
-
-      - name: Setup kubectl
-        uses: azure/setup-kubectl@v4
-
-      - name: Setup Helm
-        uses: azure/setup-helm@v4
-
-      - name: Add Headlamp Helm repo
-        run: helm repo add headlamp https://kubernetes-sigs.github.io/headlamp/ && helm repo update
-
-      - name: Ensure PVC exists
-        run: kubectl apply -f deployment/headlamp-plugins-pvc.yaml
-
-      - name: Upgrade Headlamp with shared volume mount
-        run: |
-          helm upgrade headlamp headlamp/headlamp \
-            --namespace "$HEADLAMP_NAMESPACE" \
-            --reuse-values \
-            -f deployment/headlamp-e2e-values.yaml \
-            --wait --timeout 120s
-
-      - name: Deploy plugin via shared volume
-        run: scripts/deploy-plugin-via-volume.sh
-
-      - name: Preflight — verify Headlamp and plugin availability
+      - name: Preflight — verify Headlamp and plugin version
         env:
           HEADLAMP_URL: ${{ secrets.HEADLAMP_URL || 'http://headlamp.kube-system.svc.cluster.local' }}
         run: |
-          PLUGIN_NAME=$(node -p "require('./package.json').name")
           EXPECTED=$(node -p "require('./package.json').version")
-          echo "Expecting: $PLUGIN_NAME@$EXPECTED"
+          PLUGIN_NAME=$(node -p "require('./package.json').artifacthub?.name || require('./package.json').name")
+          echo "Expected: $PLUGIN_NAME@$EXPECTED"
 
-          # Wait for Headlamp to be reachable
-          for i in $(seq 1 30); do
-            HTTP_CODE=$(curl -s -o /dev/null -w '%{http_code}' --connect-timeout 5 "$HEADLAMP_URL" || true)
-            if [ "$HTTP_CODE" != "000" ]; then
-              echo "Headlamp responded HTTP $HTTP_CODE"
-              break
-            fi
-            echo "Waiting for Headlamp... ($i/30)"
-            sleep 2
-          done
-
+          # Check Headlamp connectivity
+          HTTP_CODE=$(curl -s -o /dev/null -w '%{http_code}' --connect-timeout 10 "$HEADLAMP_URL" || true)
           if [ "$HTTP_CODE" = "000" ]; then
-            echo "::error::Cannot reach Headlamp at $HEADLAMP_URL after 60s"
+            echo "::error::Cannot reach Headlamp at $HEADLAMP_URL"
             exit 1
           fi
+          echo "Headlamp responded HTTP $HTTP_CODE"
 
-          # Verify plugin is visible
+          # Check installed plugins and version match
           PLUGIN_JSON=$(curl -sf --connect-timeout 10 "$HEADLAMP_URL/plugins" 2>/dev/null || echo "[]")
           node -e "
+            const expected = '$EXPECTED';
+            const pluginName = '$PLUGIN_NAME';
             const plugins = JSON.parse(process.argv[1]);
             console.log('Installed plugins:');
             for (const p of plugins) console.log('  ' + p.name + '@' + (p.version||'unknown'));
-            const ours = plugins.find(p => p.name === '$PLUGIN_NAME' || p.name === 'polaris' || p.name.includes('polaris'));
+            const ours = plugins.find(p => p.name === pluginName || p.name === 'polaris' || p.name.includes('polaris'));
             if (!ours) {
-              console.log('::warning::Plugin $PLUGIN_NAME not yet visible — Headlamp may need a restart');
+              console.log('::warning::Plugin ' + pluginName + ' not found in Headlamp — data-dependent tests will fail');
             } else {
               console.log('Found plugin: ' + ours.name + ' at path ' + ours.path);
             }
           " "$PLUGIN_JSON"
+
+          # Fetch deployed plugin version from package.json
+          DEPLOYED_VERSION=$(curl -sf --connect-timeout 10 "$HEADLAMP_URL/plugins/$PLUGIN_NAME/package.json" 2>/dev/null \
+            | node -p "JSON.parse(require('fs').readFileSync(0,'utf8')).version" 2>/dev/null || echo "unknown")
+          echo "Deployed version: $DEPLOYED_VERSION"
+          if [ "$DEPLOYED_VERSION" != "$EXPECTED" ] && [ "$DEPLOYED_VERSION" != "unknown" ]; then
+            echo "::warning::Version mismatch — repo has $EXPECTED but Headlamp runs $DEPLOYED_VERSION. Tests may fail due to stale plugin."
+          fi
 
       - name: Install Playwright browsers
         run: npx playwright install --with-deps chromium
