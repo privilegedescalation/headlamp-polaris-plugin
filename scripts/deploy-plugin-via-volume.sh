@@ -52,7 +52,7 @@ if [ -n "$HEADLAMP_NODE" ]; then
 fi
 
 # Clean up any previous deploy resources
-kubectl delete job plugin-deploy -n "$HEADLAMP_NAMESPACE" --ignore-not-found 2>/dev/null || true
+kubectl delete pod plugin-deploy -n "$HEADLAMP_NAMESPACE" --ignore-not-found --wait=true 2>/dev/null || true
 kubectl delete configmap plugin-tarball -n "$HEADLAMP_NAMESPACE" --ignore-not-found 2>/dev/null || true
 sleep 2
 
@@ -62,69 +62,65 @@ kubectl create configmap plugin-tarball \
   -n "$HEADLAMP_NAMESPACE" \
   --from-file=plugin.tar.gz="$TAR_FILE"
 
-# Build the Job manifest as a temp file to avoid heredoc YAML escaping issues
-JOB_FILE=$(mktemp /tmp/plugin-deploy-job-XXXXXX.yaml)
+# Build the Pod manifest as a temp file to avoid heredoc YAML escaping issues
+POD_FILE=$(mktemp /tmp/plugin-deploy-pod-XXXXXX.yaml)
 
-cat > "$JOB_FILE" <<'YAMLDOC'
-apiVersion: batch/v1
-kind: Job
+cat > "$POD_FILE" <<'YAMLDOC'
+apiVersion: v1
+kind: Pod
 metadata:
   name: plugin-deploy
 spec:
-  backoffLimit: 0
-  ttlSecondsAfterFinished: 60
-  template:
-    spec:
-      restartPolicy: Never
-      containers:
-        - name: deploy
-          image: busybox:1.36
-          command: ["sh", "-c"]
-          args:
-            - |
-              echo "Extracting plugin to shared volume..."
-              rm -rf /plugins/PLUGIN_DIR_PLACEHOLDER
-              mkdir -p /plugins/PLUGIN_DIR_PLACEHOLDER
-              tar -xzf /tarball/plugin.tar.gz -C /plugins/PLUGIN_DIR_PLACEHOLDER
-              echo "Files deployed:"
-              ls -la /plugins/PLUGIN_DIR_PLACEHOLDER/
-          volumeMounts:
-            - name: plugins
-              mountPath: /plugins
-            - name: tarball
-              mountPath: /tarball
-              readOnly: true
-      volumes:
+  restartPolicy: Never
+  containers:
+    - name: deploy
+      image: busybox:1.36
+      command: ["sh", "-c"]
+      args:
+        - |
+          echo "Extracting plugin to shared volume..."
+          rm -rf /plugins/PLUGIN_DIR_PLACEHOLDER
+          mkdir -p /plugins/PLUGIN_DIR_PLACEHOLDER
+          tar -xzf /tarball/plugin.tar.gz -C /plugins/PLUGIN_DIR_PLACEHOLDER
+          echo "Files deployed:"
+          ls -la /plugins/PLUGIN_DIR_PLACEHOLDER/
+      volumeMounts:
         - name: plugins
-          persistentVolumeClaim:
-            claimName: headlamp-plugins
+          mountPath: /plugins
         - name: tarball
-          configMap:
-            name: plugin-tarball
+          mountPath: /tarball
+          readOnly: true
+  volumes:
+    - name: plugins
+      persistentVolumeClaim:
+        claimName: headlamp-plugins
+    - name: tarball
+      configMap:
+        name: plugin-tarball
 YAMLDOC
 
 # Substitute plugin dir name
-sed -i "s/PLUGIN_DIR_PLACEHOLDER/${PLUGIN_DIR_NAME}/g" "$JOB_FILE"
+sed -i "s/PLUGIN_DIR_PLACEHOLDER/${PLUGIN_DIR_NAME}/g" "$POD_FILE"
 
 # Add nodeName if we know which node Headlamp is on
 if [ -n "$HEADLAMP_NODE" ]; then
-  sed -i "/restartPolicy: Never/i\\      nodeName: ${HEADLAMP_NODE}" "$JOB_FILE"
+  sed -i "/restartPolicy: Never/i\\  nodeName: ${HEADLAMP_NODE}" "$POD_FILE"
 fi
 
-echo "Starting deploy job..."
-kubectl apply -n "$HEADLAMP_NAMESPACE" -f "$JOB_FILE"
-rm -f "$JOB_FILE"
+echo "Starting deploy pod..."
+kubectl apply -n "$HEADLAMP_NAMESPACE" -f "$POD_FILE"
+rm -f "$POD_FILE"
 
-# Wait for the job to complete
-echo "Waiting for deploy job to complete..."
-kubectl wait --for=condition=complete job/plugin-deploy \
+# Wait for the pod to complete (Succeeded phase)
+echo "Waiting for deploy pod to complete..."
+kubectl wait --for=jsonpath='{.status.phase}'=Succeeded pod/plugin-deploy \
   -n "$HEADLAMP_NAMESPACE" --timeout=120s
 
 # Show logs
-kubectl logs job/plugin-deploy -n "$HEADLAMP_NAMESPACE" 2>/dev/null || true
+kubectl logs plugin-deploy -n "$HEADLAMP_NAMESPACE" 2>/dev/null || true
 
 # Clean up
-kubectl delete job plugin-deploy -n "$HEADLAMP_NAMESPACE" --ignore-not-found 2>/dev/null || true
+kubectl delete pod plugin-deploy -n "$HEADLAMP_NAMESPACE" --ignore-not-found 2>/dev/null || true
 kubectl delete configmap plugin-tarball -n "$HEADLAMP_NAMESPACE" --ignore-not-found 2>/dev/null || true
 
 rm -f "$TAR_FILE"
