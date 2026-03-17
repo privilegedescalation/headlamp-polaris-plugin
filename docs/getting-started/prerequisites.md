@@ -84,7 +84,7 @@ kubectl -n kube-system get deployment headlamp -o jsonpath='{.spec.template.spec
 
 ```bash
 # Add Headlamp Helm repository
-helm repo add headlamp https://headlamp-k8s.github.io/headlamp/
+helm repo add headlamp https://kubernetes-sigs.github.io/headlamp/
 helm repo update
 
 # Install Headlamp
