@@ -50,7 +50,7 @@ jobs:
             --namespace "$HEADLAMP_NAMESPACE" \
             --reuse-values \
             -f deployment/headlamp-e2e-values.yaml \
-            --set config.sessionTTL=0 \
+            --set config.sessionTTL=1 \
             --wait --timeout 120s
 
       - name: Deploy plugin via shared volume
