@@ -32,6 +32,15 @@ jobs:
       - name: Build plugin
         run: npm run build
 
+      - name: Setup kubectl
+        uses: azure/setup-kubectl@v4
+
+      - name: Setup Helm
+        uses: azure/setup-helm@v4
+
+      - name: Add Headlamp Helm repo
+        run: helm repo add headlamp https://headlamp-k8s.github.io/headlamp/ && helm repo update
+
       - name: Ensure PVC exists
         run: kubectl apply -f deployment/headlamp-plugins-pvc.yaml
 
