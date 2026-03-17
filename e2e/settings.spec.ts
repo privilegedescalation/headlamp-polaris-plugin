@@ -2,6 +2,18 @@ import { test, expect, Page } from '@playwright/test';
 
 /** Navigate to the Polaris plugin settings page and wait for settings to render. */
 async function goToPolarisSettings(page: Page) {
+  // Load the main page first so Headlamp fetches the plugin list and stores
+  // it in localStorage (headlampPluginSettings). The PluginSettings component
+  // initializes its state from localStorage on mount, so the data must already
+  // be there before we navigate to the settings page.
+  await page.goto('/');
+  const sidebar = page.getByRole('navigation', { name: 'Navigation' });
+  await expect(sidebar).toBeVisible({ timeout: 15_000 });
+  await expect(sidebar.getByRole('button', { name: 'Polaris' })).toBeVisible({
+    timeout: 15_000,
+  });
+
+  // Now navigate to plugin settings — localStorage has the plugin list
   await page.goto('/c/main/settings/plugins');
 
   // Find and click the Polaris plugin entry to open its settings
