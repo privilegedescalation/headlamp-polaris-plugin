@@ -48,9 +48,14 @@ Polaris must be deployed in the `polaris` namespace with the dashboard component
 
 ## Installing
 
-### Option 1: Headlamp Plugin Manager (Recommended)
+The plugin is published on [Artifact Hub](https://artifacthub.io/packages/headlamp/polaris/headlamp-polaris-plugin). Install via the Headlamp UI:
 
-The plugin is published on [Artifact Hub](https://artifacthub.io/packages/headlamp/polaris/headlamp-polaris-plugin). Configure Headlamp via Helm:
+1. Go to **Settings → Plugins**
+2. Click **Catalog** tab
+3. Search for "Polaris"
+4. Click **Install**
+
+Or configure Headlamp via Helm:
 
 ```yaml
 config:
@@ -61,56 +66,6 @@ pluginsManager:
     - name: headlamp-polaris-plugin
       url: https://github.com/privilegedescalation/headlamp-polaris-plugin/releases/download/v0.3.10/polaris-0.3.10.tar.gz
 ```
-
-Or install via the Headlamp UI:
-
-1. Go to **Settings → Plugins**
-2. Click **Catalog** tab
-3. Search for "Polaris"
-4. Click **Install**
-
-### Option 2: Sidecar Container (Alternative)
-
-For detailed sidecar installation instructions, see [docs/DEPLOYMENT.md#installation-method-2-sidecar-container](docs/DEPLOYMENT.md#installation-method-2-sidecar-container).
-
-```yaml
-sidecars:
-  - name: headlamp-plugin
-    image: node:lts-alpine
-    command: ['/bin/sh']
-    args:
-      - -c
-      - |
-        npm install -g @kinvolk/headlamp-plugin
-        headlamp-plugin install --config /config/plugin.yml
-        tail -f /dev/null
-    volumeMounts:
-      - name: plugins
-        mountPath: /headlamp/plugins
-      - name: plugin-config
-        mountPath: /config
-```
-
-### Option 3: Manual Tarball Install
-
-Download the `.tar.gz` from the [GitHub releases page](https://github.com/privilegedescalation/headlamp-polaris-plugin/releases), then extract into Headlamp's plugin directory:
-
-```bash
-wget https://github.com/privilegedescalation/headlamp-polaris-plugin/releases/download/v0.3.10/polaris-0.3.10.tar.gz
-tar xzf polaris-0.3.10.tar.gz -C /headlamp/plugins/
-```
-
-### Option 4: Build from Source
-
-```bash
-git clone https://github.com/privilegedescalation/headlamp-polaris-plugin.git
-cd headlamp-polaris-plugin
-npm install
-npm run build
-npx @kinvolk/headlamp-plugin extract . /headlamp/plugins
-```
-
-For complete installation instructions including Helm integration, FluxCD examples, and production deployment checklist, see **[docs/DEPLOYMENT.md](docs/DEPLOYMENT.md)**.
 
 ## RBAC / Security Setup
 
