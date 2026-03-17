@@ -124,7 +124,10 @@ describe('AppBarScoreBadge', () => {
   });
 
   it('navigates to /polaris when no cluster in URL', async () => {
-    window.location = { pathname: '/settings' } as Location;
+    Object.defineProperty(window, 'location', {
+      value: { pathname: '/settings' },
+      writable: true,
+    });
     const user = userEvent.setup();
     const data = makeAuditData([
       makeResult({
