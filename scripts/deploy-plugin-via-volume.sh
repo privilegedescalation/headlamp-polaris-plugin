@@ -17,9 +17,10 @@ REPO_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 HEADLAMP_NAMESPACE="${HEADLAMP_NAMESPACE:-kube-system}"
 HEADLAMP_DEPLOY="${HEADLAMP_DEPLOY:-headlamp}"
 
-# The deployed directory name must match the plugin's registered name.
-# PR #56 aligns registerPluginSettings to "polaris"; the directory must match.
-PLUGIN_DIR_NAME="polaris"
+# The deployed directory name must match the package.json name and
+# the registerPluginSettings name. Headlamp identifies plugins by
+# reading package.json from each subdirectory of the plugins dir.
+PLUGIN_DIR_NAME="headlamp-polaris"
 DIST_DIR="$REPO_ROOT/dist"
 
 if [ ! -d "$DIST_DIR" ]; then
@@ -78,8 +79,9 @@ spec:
       command: ["sh", "-c"]
       args:
         - |
+          echo "Cleaning up stale plugin directories..."
+          rm -rf /plugins/polaris /plugins/headlamp-polaris
           echo "Extracting plugin to shared volume..."
-          rm -rf /plugins/PLUGIN_DIR_PLACEHOLDER
           mkdir -p /plugins/PLUGIN_DIR_PLACEHOLDER
           tar -xzf /tarball/plugin.tar.gz -C /plugins/PLUGIN_DIR_PLACEHOLDER
           echo "Files deployed:"
