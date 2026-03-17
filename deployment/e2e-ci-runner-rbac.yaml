@@ -1,0 +1,53 @@
+---
+# RBAC for the GitHub Actions CI runner to perform E2E test setup.
+# CI-only test fixture — NOT for production use.
+#
+# Grants the ARC runner service account permissions in kube-system to:
+# - Create/manage PVCs (shared plugin volume)
+# - Run temporary pods (plugin deploy helper)
+# - Manage Helm release resources (secrets, configmaps, services)
+# - Restart deployments (Headlamp rollout after plugin deploy)
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: e2e-ci-runner
+  namespace: kube-system
+rules:
+  - apiGroups: [""]
+    resources: ["persistentvolumeclaims"]
+    verbs: ["get", "list", "create", "update", "patch", "delete"]
+  - apiGroups: [""]
+    resources: ["pods"]
+    verbs: ["get", "list", "create", "delete", "watch"]
+  - apiGroups: [""]
+    resources: ["pods/attach"]
+    verbs: ["create", "get"]
+  - apiGroups: ["apps"]
+    resources: ["deployments"]
+    verbs: ["get", "list", "patch"]
+  - apiGroups: [""]
+    resources: ["secrets"]
+    verbs: ["get", "list", "create", "update", "patch", "delete"]
+  - apiGroups: [""]
+    resources: ["configmaps"]
+    verbs: ["get", "list", "create", "update", "patch", "delete"]
+  - apiGroups: [""]
+    resources: ["services"]
+    verbs: ["get", "list", "create", "update", "patch", "delete"]
+  - apiGroups: [""]
+    resources: ["serviceaccounts"]
+    verbs: ["get", "list"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: e2e-ci-runner-binding
+  namespace: kube-system
+subjects:
+  - kind: ServiceAccount
+    name: local-ubuntu-latest-gha-rs-no-permission
+    namespace: arc-runners
+roleRef:
+  kind: Role
+  name: e2e-ci-runner
+  apiGroup: rbac.authorization.k8s.io
