@@ -7,13 +7,7 @@ import { makeAuditData, makeResult } from '../test-utils';
 // Mock Headlamp lib
 vi.mock('@kinvolk/headlamp-plugin/lib', () => ({
   ApiProxy: { request: vi.fn() },
-  K8s: {
-    useCluster: () => 'test-cluster',
-  },
-  Router: {
-    createRouteURL: (name: string, params?: { cluster?: string }) =>
-      `/c/${params?.cluster ?? 'default'}/${name}`,
-  },
+  K8s: {},
 }));
 
 vi.mock('@mui/material/styles', () => ({
@@ -30,6 +24,15 @@ const mockPush = vi.fn();
 vi.mock('react-router-dom', () => ({
   useHistory: () => ({ push: mockPush }),
 }));
+
+// Set window.location.pathname for cluster extraction
+beforeEach(() => {
+  Object.defineProperty(window, 'location', {
+    value: { pathname: '/c/test-cluster/some-page' },
+    writable: true,
+  });
+  mockPush.mockClear();
+});
 
 const mockUsePolarisDataContext = vi.fn();
 vi.mock('../api/PolarisDataContext', () => ({
@@ -97,7 +100,7 @@ describe('AppBarScoreBadge', () => {
     expect(button.style.backgroundColor).toBe('rgb(244, 67, 54)');
   });
 
-  it('navigates to /polaris on click', async () => {
+  it('navigates to /c/<cluster>/polaris on click', async () => {
     const user = userEvent.setup();
     const data = makeAuditData([
       makeResult({
@@ -118,6 +121,33 @@ describe('AppBarScoreBadge', () => {
     render(<AppBarScoreBadge />);
     await user.click(screen.getByRole('button'));
     expect(mockPush).toHaveBeenCalledWith('/c/test-cluster/polaris');
+  });
+
+  it('navigates to /polaris when no cluster in URL', async () => {
+    Object.defineProperty(window, 'location', {
+      value: { pathname: '/settings' },
+      writable: true,
+    });
+    const user = userEvent.setup();
+    const data = makeAuditData([
+      makeResult({
+        Results: {
+          c1: {
+            ID: 'c1',
+            Message: '',
+            Details: [],
+            Success: true,
+            Severity: 'warning',
+            Category: 'X',
+          },
+        },
+      }),
+    ]);
+    mockUsePolarisDataContext.mockReturnValue({ data, loading: false });
+
+    render(<AppBarScoreBadge />);
+    await user.click(screen.getByRole('button'));
+    expect(mockPush).toHaveBeenCalledWith('/polaris');
   });
 
   it('has correct aria-label', () => {
