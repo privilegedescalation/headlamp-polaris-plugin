@@ -2,11 +2,37 @@
 # RBAC for the GitHub Actions CI runner to perform E2E test setup.
 # CI-only test fixture — NOT for production use.
 #
-# Grants the ARC runner service account permissions in kube-system to:
-# - Create/manage PVCs (shared plugin volume)
-# - Run temporary pods (plugin deploy helper)
-# - Manage Helm release resources (secrets, configmaps, services)
-# - Restart deployments (Headlamp rollout after plugin deploy)
+# The Headlamp Helm chart manages cluster-scoped resources (ClusterRole,
+# ClusterRoleBinding). The CI runner SA needs cluster-level read/write on
+# these resources for `helm upgrade` to succeed, plus namespace-scoped
+# permissions in kube-system for PVCs, pods, Helm secrets, etc.
+#
+# Apply with: kubectl apply -f deployment/e2e-ci-runner-rbac.yaml
+
+# --- Cluster-scoped permissions (for Headlamp Helm chart resources) ---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: e2e-ci-runner
+rules:
+  - apiGroups: ["rbac.authorization.k8s.io"]
+    resources: ["clusterroles", "clusterrolebindings"]
+    verbs: ["get", "list", "create", "update", "patch", "delete"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: e2e-ci-runner-binding
+subjects:
+  - kind: ServiceAccount
+    name: local-ubuntu-latest-gha-rs-no-permission
+    namespace: arc-runners
+roleRef:
+  kind: ClusterRole
+  name: e2e-ci-runner
+  apiGroup: rbac.authorization.k8s.io
+---
+# --- Namespace-scoped permissions (kube-system) ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
 metadata:
