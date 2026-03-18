@@ -1,0 +1,14 @@
+---
+# PVC for sharing built plugin artifacts between the CI runner and Headlamp.
+# Used only in E2E test environments — not for production.
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: headlamp-plugins
+  namespace: kube-system
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 128Mi

@@ -19,7 +19,7 @@ Helm provides the easiest way to deploy and manage the plugin in production. Thi
 
 ```bash
 # Add Headlamp Helm repository
-helm repo add headlamp https://headlamp-k8s.github.io/headlamp/
+helm repo add headlamp https://kubernetes-sigs.github.io/headlamp/
 helm repo update
 ```
 
@@ -210,7 +210,7 @@ metadata:
   namespace: flux-system
 spec:
   interval: 1h
-  url: https://headlamp-k8s.github.io/headlamp/
+  url: https://kubernetes-sigs.github.io/headlamp/
 ```
 
 ### HelmRelease

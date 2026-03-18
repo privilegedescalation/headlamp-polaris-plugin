@@ -2,11 +2,17 @@ import { test, expect, Page } from '@playwright/test';
 
 /** Navigate to the Polaris plugin settings page and wait for settings to render. */
 async function goToPolarisSettings(page: Page) {
-  await page.goto('/c/main/settings/plugins');
+  // Headlamp's plugin settings page is a HOME-context route at /settings/plugins,
+  // not an in-cluster route (/c/main/settings/plugins would 404). Headlamp loads
+  // plugin scripts asynchronously on SPA init. When registerPluginSettings() fires,
+  // it dispatches a Redux action — PluginSettings uses useTypedSelector so it
+  // re-renders automatically once the plugin registers. No preloading needed.
+  await page.goto('/settings/plugins');
 
-  // Find and click the Polaris plugin entry to open its settings
-  const pluginEntry = page.locator('text=polaris').first();
-  await expect(pluginEntry).toBeVisible({ timeout: 15_000 });
+  // Wait for the plugin to appear in the settings list. The timeout covers
+  // async plugin script loading + registration.
+  const pluginEntry = page.locator('text=headlamp-polaris').first();
+  await expect(pluginEntry).toBeVisible({ timeout: 30_000 });
   await pluginEntry.click();
 
   // Wait for the PolarisSettings component to render
