@@ -13,7 +13,7 @@ env:
 
 jobs:
   e2e:
-    runs-on: local-ubuntu-latest
+    runs-on: runners-privilegedescalation
     timeout-minutes: 15
 
     steps:
