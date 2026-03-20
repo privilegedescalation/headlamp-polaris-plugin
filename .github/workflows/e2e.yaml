@@ -7,15 +7,16 @@ on:
     branches: [main]
   workflow_dispatch:
 
-env:
-  HEADLAMP_NAMESPACE: kube-system
-  HEADLAMP_DEPLOY: headlamp
+permissions:
+  contents: read
+  packages: write
 
 jobs:
-  e2e:
-    runs-on: runners-privilegedescalation
-    timeout-minutes: 15
-
+  build-image:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    outputs:
+      image-tag: ${{ steps.meta.outputs.tag }}
     steps:
       - name: Checkout
         uses: actions/checkout@v6
@@ -32,100 +33,83 @@ jobs:
       - name: Build plugin
         run: npm run build
 
-      - name: Setup kubectl
-        uses: azure/setup-kubectl@v4
+      - name: Set image tag
+        id: meta
+        run: echo "tag=sha-$(git rev-parse --short HEAD)" >> "$GITHUB_OUTPUT"
 
-      - name: Ensure PVC exists
-        run: kubectl apply -f deployment/headlamp-plugins-pvc.yaml
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
 
-      - name: Patch Headlamp deployment with shared volume mount
+      - name: Log in to ghcr.io
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push E2E image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: Dockerfile.e2e
+          push: true
+          tags: ghcr.io/privilegedescalation/headlamp-polaris-e2e:${{ steps.meta.outputs.tag }}
+
+  e2e:
+    needs: build-image
+    runs-on: runners-privilegedescalation
+    timeout-minutes: 15
+    env:
+      E2E_NAMESPACE: headlamp-e2e
+      E2E_RELEASE: headlamp-e2e
+      IMAGE_TAG: ${{ needs.build-image.outputs.image-tag }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Setup Helm
+        uses: azure/setup-helm@v4
+        with:
+          version: v3.17.0
+
+      - name: Deploy E2E Headlamp
         run: |
-          NS="$HEADLAMP_NAMESPACE"
-          DEPLOY="$HEADLAMP_DEPLOY"
+          helm repo add headlamp https://headlamp-k8s.github.io/headlamp/ --force-update
+          helm repo update
 
-          # Check if the plugins volume and mount already exist (by name or mountPath)
-          DEPLOY_JSON=$(kubectl get deploy "$DEPLOY" -n "$NS" -o json)
-          HAS_VOL=$(echo "$DEPLOY_JSON" | \
-            python3 -c "import sys,json; d=json.load(sys.stdin); vols=d['spec']['template']['spec'].get('volumes',[]); print('yes' if any(v.get('persistentVolumeClaim',{}).get('claimName')=='headlamp-plugins' or v.get('name')=='plugins' for v in vols) else '')")
-          HAS_MOUNT=$(echo "$DEPLOY_JSON" | \
-            python3 -c "import sys,json; d=json.load(sys.stdin); mounts=d['spec']['template']['spec']['containers'][0].get('volumeMounts',[]); print('yes' if any(m.get('mountPath')=='/headlamp/plugins' or m.get('name')=='plugins' for m in mounts) else '')")
+          kubectl create namespace "$E2E_NAMESPACE" --dry-run=client -o yaml | kubectl apply -f -
 
-          NEEDS_PATCH=false
+          helm upgrade --install "$E2E_RELEASE" headlamp/headlamp \
+            -n "$E2E_NAMESPACE" \
+            -f deployment/headlamp-e2e-values.yaml \
+            --set "image.registry=ghcr.io" \
+            --set "image.repository=privilegedescalation/headlamp-polaris-e2e" \
+            --set "image.tag=${IMAGE_TAG}" \
+            --wait \
+            --timeout 120s
 
-          if [ -z "$HAS_VOL" ]; then
-            echo "Adding plugins PVC volume..."
-            kubectl patch deploy "$DEPLOY" -n "$NS" --type=json -p '[
-              {"op":"add","path":"/spec/template/spec/volumes/-","value":{
-                "name":"plugins",
-                "persistentVolumeClaim":{"claimName":"headlamp-plugins"}
-              }}
-            ]'
-            NEEDS_PATCH=true
-          else
-            echo "Plugins volume already present, skipping."
-          fi
+          kubectl rollout status "deployment/${E2E_RELEASE}-headlamp" \
+            -n "$E2E_NAMESPACE" --timeout=120s
 
-          if [ -z "$HAS_MOUNT" ]; then
-            echo "Adding plugins volume mount..."
-            kubectl patch deploy "$DEPLOY" -n "$NS" --type=json -p '[
-              {"op":"add","path":"/spec/template/spec/containers/0/volumeMounts/-","value":{
-                "name":"plugins",
-                "mountPath":"/headlamp/plugins",
-                "readOnly":true
-              }}
-            ]'
-            NEEDS_PATCH=true
-          else
-            echo "Plugins volume mount already present, skipping."
-          fi
-
-          # Set the plugins directory via env var
-          kubectl set env deploy/"$DEPLOY" -n "$NS" \
-            HEADLAMP_CONFIG_PLUGIN_DIR=/headlamp/plugins
-
-          # Wait for rollout
-          kubectl rollout status deploy/"$DEPLOY" -n "$NS" --timeout=120s
-
-      - name: Deploy plugin via shared volume
-        run: scripts/deploy-plugin-via-volume.sh
-
-      - name: Preflight — verify Headlamp and plugin availability
-        env:
-          HEADLAMP_URL: ${{ secrets.HEADLAMP_URL || 'http://headlamp.kube-system.svc.cluster.local' }}
+      - name: Generate E2E auth token
+        id: token
         run: |
-          PLUGIN_NAME=$(node -p "require('./package.json').name")
-          EXPECTED=$(node -p "require('./package.json').version")
-          echo "Expecting: $PLUGIN_NAME@$EXPECTED"
+          kubectl create serviceaccount headlamp-e2e-test \
+            -n "$E2E_NAMESPACE" --dry-run=client -o yaml | kubectl apply -f -
+          TOKEN=$(kubectl create token headlamp-e2e-test -n "$E2E_NAMESPACE" --duration=1h)
+          echo "::add-mask::${TOKEN}"
+          echo "token=${TOKEN}" >> "$GITHUB_OUTPUT"
+          echo "url=http://${E2E_RELEASE}-headlamp.${E2E_NAMESPACE}.svc.cluster.local" >> "$GITHUB_OUTPUT"
 
-          # Wait for Headlamp to be reachable
-          for i in $(seq 1 30); do
-            HTTP_CODE=$(curl -s -o /dev/null -w '%{http_code}' --connect-timeout 5 "$HEADLAMP_URL" || true)
-            if [ "$HTTP_CODE" != "000" ]; then
-              echo "Headlamp responded HTTP $HTTP_CODE"
-              break
-            fi
-            echo "Waiting for Headlamp... ($i/30)"
-            sleep 2
-          done
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
 
-          if [ "$HTTP_CODE" = "000" ]; then
-            echo "::error::Cannot reach Headlamp at $HEADLAMP_URL after 60s"
-            exit 1
-          fi
-
-          # Verify plugin is visible
-          PLUGIN_JSON=$(curl -sf --connect-timeout 10 "$HEADLAMP_URL/plugins" 2>/dev/null || echo "[]")
-          node -e "
-            const plugins = JSON.parse(process.argv[1]);
-            console.log('Installed plugins:');
-            for (const p of plugins) console.log('  ' + p.name + '@' + (p.version||'unknown'));
-            const ours = plugins.find(p => p.name === '$PLUGIN_NAME' || p.name === 'polaris' || p.name.includes('polaris'));
-            if (!ours) {
-              console.log('::warning::Plugin $PLUGIN_NAME not yet visible — Headlamp may need a restart');
-            } else {
-              console.log('Found plugin: ' + ours.name + ' at path ' + ours.path);
-            }
-          " "$PLUGIN_JSON"
+      - name: Install dependencies
+        run: npm ci
 
       - name: Install Playwright browsers
         run: npx playwright install --with-deps chromium
@@ -133,10 +117,14 @@ jobs:
       - name: Run E2E tests
         run: npm run e2e
         env:
-          HEADLAMP_URL: ${{ secrets.HEADLAMP_URL || 'http://headlamp.kube-system.svc.cluster.local' }}
-          HEADLAMP_TOKEN: ${{ secrets.HEADLAMP_TOKEN }}
-          AUTHENTIK_USERNAME: ${{ secrets.AUTHENTIK_USERNAME }}
-          AUTHENTIK_PASSWORD: ${{ secrets.AUTHENTIK_PASSWORD }}
+          HEADLAMP_URL: ${{ steps.token.outputs.url }}
+          HEADLAMP_TOKEN: ${{ steps.token.outputs.token }}
+
+      - name: Teardown E2E Headlamp
+        if: always()
+        run: |
+          helm uninstall "$E2E_RELEASE" -n "$E2E_NAMESPACE" 2>/dev/null || true
+          kubectl delete namespace "$E2E_NAMESPACE" --ignore-not-found --wait=false
 
       - name: Upload Playwright report
         uses: actions/upload-artifact@v4
