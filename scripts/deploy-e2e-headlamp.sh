@@ -1,25 +1,19 @@
 #!/usr/bin/env bash
 # deploy-e2e-headlamp.sh
 #
-# Builds a custom Headlamp image with the polaris plugin pre-installed,
-# pushes it to ghcr.io, and deploys a dedicated E2E Headlamp instance.
-#
-# This replaces the old PVC + kubectl-patch approach. The plugin is part
-# of the container image — no PVCs, no kubectl exec/cp, no deployment
-# patching required.
+# Deploys a stock Headlamp instance with the polaris plugin loaded via
+# a ConfigMap volume mount. No custom Docker images — the plugin is built
+# in CI and injected as a ConfigMap.
 #
 # Prerequisites:
-#   - Plugin built (dist/ exists)
-#   - Docker or buildx available
-#   - GHCR_TOKEN set (or GH_TOKEN with packages:write)
+#   - Plugin built (dist/ exists with plugin-main.js + package.json)
 #   - kubectl configured with cluster access
 #   - Helm 3 installed
 #
 # Environment:
 #   E2E_NAMESPACE     — namespace for E2E Headlamp (default: headlamp-e2e)
 #   E2E_RELEASE       — Helm release name (default: headlamp-e2e)
-#   HEADLAMP_VERSION  — base Headlamp image tag (default: latest)
-#   IMAGE_TAG         — tag for the E2E image (default: git SHA)
+#   HEADLAMP_VERSION  — Headlamp image tag (default: latest)
 set -euo pipefail
 
 REPO_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
@@ -28,9 +22,6 @@ DIST_DIR="$REPO_ROOT/dist"
 E2E_NAMESPACE="${E2E_NAMESPACE:-headlamp-e2e}"
 E2E_RELEASE="${E2E_RELEASE:-headlamp-e2e}"
 HEADLAMP_VERSION="${HEADLAMP_VERSION:-latest}"
-IMAGE_REPO="ghcr.io/privilegedescalation/headlamp-polaris-e2e"
-IMAGE_TAG="${IMAGE_TAG:-$(git -C "$REPO_ROOT" rev-parse --short HEAD)}"
-IMAGE="${IMAGE_REPO}:${IMAGE_TAG}"
 
 if [ ! -d "$DIST_DIR" ]; then
   echo "ERROR: dist/ not found. Run 'npm run build' first." >&2
@@ -38,20 +29,28 @@ if [ ! -d "$DIST_DIR" ]; then
 fi
 
 echo "=== E2E Headlamp Deployment ==="
-echo "  Image:     $IMAGE"
+echo "  Image:     ghcr.io/headlamp-k8s/headlamp:${HEADLAMP_VERSION}"
 echo "  Namespace: $E2E_NAMESPACE"
 echo "  Release:   $E2E_RELEASE"
 
-# --- Build and push the custom image ---
+# --- Create namespace ---
 echo ""
-echo "Building E2E Headlamp image..."
-docker build -f "$REPO_ROOT/Dockerfile.e2e" \
-  --build-arg "HEADLAMP_VERSION=${HEADLAMP_VERSION}" \
-  -t "$IMAGE" \
-  "$REPO_ROOT"
+echo "Creating namespace ${E2E_NAMESPACE} (if needed)..."
+kubectl create namespace "$E2E_NAMESPACE" --dry-run=client -o yaml | kubectl apply -f -
 
-echo "Pushing image to ghcr.io..."
-docker push "$IMAGE"
+# --- Create ConfigMap from built plugin ---
+echo ""
+echo "Creating ConfigMap with plugin files..."
+
+# Delete existing ConfigMap if present (idempotent redeploy)
+kubectl delete configmap headlamp-polaris-plugin \
+  -n "$E2E_NAMESPACE" --ignore-not-found
+
+# Create ConfigMap from dist/ contents and package.json
+kubectl create configmap headlamp-polaris-plugin \
+  -n "$E2E_NAMESPACE" \
+  --from-file="$DIST_DIR" \
+  --from-file=package.json="$REPO_ROOT/package.json"
 
 # --- Deploy with Helm ---
 echo ""
@@ -59,16 +58,13 @@ echo "Adding Headlamp Helm repo..."
 helm repo add headlamp https://headlamp-k8s.github.io/headlamp/ --force-update
 helm repo update
 
-echo "Creating namespace ${E2E_NAMESPACE} (if needed)..."
-kubectl create namespace "$E2E_NAMESPACE" --dry-run=client -o yaml | kubectl apply -f -
-
 echo "Installing/upgrading Headlamp E2E instance..."
 helm upgrade --install "$E2E_RELEASE" headlamp/headlamp \
   -n "$E2E_NAMESPACE" \
   -f "$REPO_ROOT/deployment/headlamp-e2e-values.yaml" \
   --set "image.registry=ghcr.io" \
-  --set "image.repository=privilegedescalation/headlamp-polaris-e2e" \
-  --set "image.tag=${IMAGE_TAG}" \
+  --set "image.repository=headlamp-k8s/headlamp" \
+  --set "image.tag=${HEADLAMP_VERSION}" \
   --wait \
   --timeout 120s
 

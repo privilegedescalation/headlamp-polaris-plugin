@@ -6,7 +6,7 @@
 # namespace to deploy and tear down a dedicated Headlamp instance via Helm.
 #
 # No kube-system access needed — E2E tests use a separate namespace.
-# No PVC management — plugin is baked into the Docker image.
+# Plugin is loaded via ConfigMap volume mount — no custom Docker images.
 #
 # Prerequisites:
 #   kubectl create namespace headlamp-e2e
