@@ -13,6 +13,12 @@ REPO_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 E2E_NAMESPACE="${E2E_NAMESPACE:-headlamp-e2e}"
 E2E_RELEASE="${E2E_RELEASE:-headlamp-e2e}"
 
+# Exit early if the namespace does not exist — nothing to tear down.
+if ! kubectl get namespace "$E2E_NAMESPACE" >/dev/null 2>&1; then
+  echo "Namespace $E2E_NAMESPACE does not exist, nothing to tear down."
+  exit 0
+fi
+
 echo "=== E2E Headlamp Teardown ==="
 echo "  Namespace: $E2E_NAMESPACE"
 echo "  Release:   $E2E_RELEASE"
