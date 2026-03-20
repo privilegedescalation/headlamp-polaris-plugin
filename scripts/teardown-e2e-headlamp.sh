@@ -20,8 +20,14 @@ echo "  Release:   $E2E_RELEASE"
 echo "Uninstalling Helm release..."
 helm uninstall "$E2E_RELEASE" -n "$E2E_NAMESPACE" 2>/dev/null || echo "Release not found (already removed?)"
 
-echo "Deleting namespace..."
-kubectl delete namespace "$E2E_NAMESPACE" --ignore-not-found --wait=false
+echo "Cleaning up ConfigMap..."
+kubectl delete configmap headlamp-polaris-plugin -n "$E2E_NAMESPACE" --ignore-not-found
+
+echo "Cleaning up service account..."
+kubectl delete serviceaccount headlamp-e2e-test -n "$E2E_NAMESPACE" --ignore-not-found
+
+# Note: namespace is NOT deleted — it is managed by a cluster admin.
+# The runner SA only has namespace-scoped permissions (see deployment/e2e-ci-runner-rbac.yaml).
 
 # Clean up local env file
 rm -f "$REPO_ROOT/.env.e2e"

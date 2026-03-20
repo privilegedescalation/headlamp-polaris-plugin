@@ -9,6 +9,7 @@
 #   - Plugin built (dist/ exists with plugin-main.js + package.json)
 #   - kubectl configured with cluster access
 #   - Helm 3 installed
+#   - E2E namespace pre-created by cluster admin (see deployment/e2e-ci-runner-rbac.yaml)
 #
 # Environment:
 #   E2E_NAMESPACE     — namespace for E2E Headlamp (default: headlamp-e2e)
@@ -33,10 +34,15 @@ echo "  Image:     ghcr.io/headlamp-k8s/headlamp:${HEADLAMP_VERSION}"
 echo "  Namespace: $E2E_NAMESPACE"
 echo "  Release:   $E2E_RELEASE"
 
-# --- Create namespace ---
+# --- Verify namespace exists (must be pre-created by cluster admin) ---
 echo ""
-echo "Creating namespace ${E2E_NAMESPACE} (if needed)..."
-kubectl create namespace "$E2E_NAMESPACE" --dry-run=client -o yaml | kubectl apply -f -
+echo "Verifying namespace ${E2E_NAMESPACE} exists..."
+if ! kubectl get namespace "$E2E_NAMESPACE" >/dev/null 2>&1; then
+  echo "ERROR: Namespace ${E2E_NAMESPACE} does not exist." >&2
+  echo "A cluster admin must create it first: kubectl create namespace ${E2E_NAMESPACE}" >&2
+  echo "Then apply RBAC: kubectl apply -f deployment/e2e-ci-runner-rbac.yaml" >&2
+  exit 1
+fi
 
 # --- Create ConfigMap from built plugin ---
 echo ""
