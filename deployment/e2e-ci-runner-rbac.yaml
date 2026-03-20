@@ -31,6 +31,9 @@ rules:
   - apiGroups: ["apps"]
     resources: ["deployments/scale"]
     verbs: ["patch"]
+  - apiGroups: ["apps"]
+    resources: ["replicasets"]
+    verbs: ["get", "list"]
   - apiGroups: [""]
     resources: ["secrets"]
     verbs: ["get", "list", "create", "update", "patch", "delete"]
@@ -51,7 +54,7 @@ metadata:
   namespace: kube-system
 subjects:
   - kind: ServiceAccount
-    name: local-ubuntu-latest-gha-rs-no-permission
+    name: runners-privilegedescalation-gha-rs-no-permission
     namespace: arc-runners
 roleRef:
   kind: Role
