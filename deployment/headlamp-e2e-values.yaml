@@ -1,22 +1,23 @@
 ---
-# Headlamp Helm values for E2E testing with shared volume plugin deployment.
+# Headlamp Helm values for E2E testing.
 #
-# The CI runner and Headlamp pod share a PVC so that the runner can copy
-# built plugin artifacts directly into Headlamp's plugins directory.
-# This is a CI-only mechanism — production plugin distribution uses ArtifactHub.
+# Uses a custom Docker image (built from Dockerfile.e2e) with the plugin
+# pre-installed. No PVCs, no volume mounts, no deployment patching.
+#
+# The E2E workflow builds the image, pushes to ghcr.io, and deploys this
+# Helm release in the headlamp-e2e namespace.
+#
+# Usage:
+#   helm install headlamp-e2e headlamp/headlamp \
+#     -n headlamp-e2e --create-namespace \
+#     -f deployment/headlamp-e2e-values.yaml \
+#     --set image.registry=ghcr.io \
+#     --set image.repository=privilegedescalation/headlamp-polaris-e2e \
+#     --set image.tag=<sha>
 
-# Point Headlamp at the shared plugins mount
 config:
   pluginsDir: /headlamp/plugins
+  watchPlugins: false
 
-# PVC-backed volume shared with the CI runner
-volumes:
-  - name: plugins
-    persistentVolumeClaim:
-      claimName: headlamp-plugins
-
-# Mount into the Headlamp container
-volumeMounts:
-  - name: plugins
-    mountPath: /headlamp/plugins
-    readOnly: true
+service:
+  type: ClusterIP
