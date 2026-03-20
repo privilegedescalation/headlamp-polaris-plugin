@@ -7,9 +7,14 @@ on:
     branches: [main]
   workflow_dispatch:
 
+permissions:
+  contents: read
+  packages: write
+
 env:
-  HEADLAMP_NAMESPACE: kube-system
-  HEADLAMP_DEPLOY: headlamp
+  E2E_NAMESPACE: headlamp-e2e
+  E2E_RELEASE: headlamp-e2e
+  IMAGE_REPO: ghcr.io/privilegedescalation/headlamp-polaris-e2e
 
 jobs:
   e2e:
@@ -30,102 +35,34 @@ jobs:
         run: npm ci
 
       - name: Build plugin
-        run: npm run build
+        run: npx @kinvolk/headlamp-plugin build
 
-      - name: Setup kubectl
-        uses: azure/setup-kubectl@v4
-
-      - name: Ensure PVC exists
-        run: kubectl apply -f deployment/headlamp-plugins-pvc.yaml
-
-      - name: Patch Headlamp deployment with shared volume mount
+      - name: Build E2E Headlamp image
         run: |
-          NS="$HEADLAMP_NAMESPACE"
-          DEPLOY="$HEADLAMP_DEPLOY"
+          IMAGE_TAG="sha-$(git rev-parse --short HEAD)"
+          echo "IMAGE_TAG=$IMAGE_TAG" >> "$GITHUB_ENV"
+          docker build -f Dockerfile.e2e \
+            -t "${IMAGE_REPO}:${IMAGE_TAG}" .
 
-          # Check if the plugins volume and mount already exist (by name or mountPath)
-          DEPLOY_JSON=$(kubectl get deploy "$DEPLOY" -n "$NS" -o json)
-          HAS_VOL=$(echo "$DEPLOY_JSON" | \
-            python3 -c "import sys,json; d=json.load(sys.stdin); vols=d['spec']['template']['spec'].get('volumes',[]); print('yes' if any(v.get('persistentVolumeClaim',{}).get('claimName')=='headlamp-plugins' or v.get('name')=='plugins' for v in vols) else '')")
-          HAS_MOUNT=$(echo "$DEPLOY_JSON" | \
-            python3 -c "import sys,json; d=json.load(sys.stdin); mounts=d['spec']['template']['spec']['containers'][0].get('volumeMounts',[]); print('yes' if any(m.get('mountPath')=='/headlamp/plugins' or m.get('name')=='plugins' for m in mounts) else '')")
+      - name: Log in to ghcr.io
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u "${{ github.actor }}" --password-stdin
 
-          NEEDS_PATCH=false
+      - name: Push E2E image
+        run: docker push "${IMAGE_REPO}:${IMAGE_TAG}"
 
-          if [ -z "$HAS_VOL" ]; then
-            echo "Adding plugins PVC volume..."
-            kubectl patch deploy "$DEPLOY" -n "$NS" --type=json -p '[
-              {"op":"add","path":"/spec/template/spec/volumes/-","value":{
-                "name":"plugins",
-                "persistentVolumeClaim":{"claimName":"headlamp-plugins"}
-              }}
-            ]'
-            NEEDS_PATCH=true
-          else
-            echo "Plugins volume already present, skipping."
-          fi
-
-          if [ -z "$HAS_MOUNT" ]; then
-            echo "Adding plugins volume mount..."
-            kubectl patch deploy "$DEPLOY" -n "$NS" --type=json -p '[
-              {"op":"add","path":"/spec/template/spec/containers/0/volumeMounts/-","value":{
-                "name":"plugins",
-                "mountPath":"/headlamp/plugins",
-                "readOnly":true
-              }}
-            ]'
-            NEEDS_PATCH=true
-          else
-            echo "Plugins volume mount already present, skipping."
-          fi
-
-          # Set the plugins directory via env var
-          kubectl set env deploy/"$DEPLOY" -n "$NS" \
-            HEADLAMP_CONFIG_PLUGIN_DIR=/headlamp/plugins
-
-          # Wait for rollout
-          kubectl rollout status deploy/"$DEPLOY" -n "$NS" --timeout=120s
-
-      - name: Deploy plugin via shared volume
-        run: scripts/deploy-plugin-via-volume.sh
-
-      - name: Preflight — verify Headlamp and plugin availability
-        env:
-          HEADLAMP_URL: ${{ secrets.HEADLAMP_URL || 'http://headlamp.kube-system.svc.cluster.local' }}
+      - name: Deploy E2E Headlamp instance
         run: |
-          PLUGIN_NAME=$(node -p "require('./package.json').name")
-          EXPECTED=$(node -p "require('./package.json').version")
-          echo "Expecting: $PLUGIN_NAME@$EXPECTED"
+          export IMAGE_TAG="${IMAGE_TAG}"
+          scripts/deploy-e2e-headlamp.sh
 
-          # Wait for Headlamp to be reachable
-          for i in $(seq 1 30); do
-            HTTP_CODE=$(curl -s -o /dev/null -w '%{http_code}' --connect-timeout 5 "$HEADLAMP_URL" || true)
-            if [ "$HTTP_CODE" != "000" ]; then
-              echo "Headlamp responded HTTP $HTTP_CODE"
-              break
-            fi
-            echo "Waiting for Headlamp... ($i/30)"
-            sleep 2
-          done
-
-          if [ "$HTTP_CODE" = "000" ]; then
-            echo "::error::Cannot reach Headlamp at $HEADLAMP_URL after 60s"
+      - name: Load E2E environment
+        run: |
+          if [ -f .env.e2e ]; then
+            cat .env.e2e >> "$GITHUB_ENV"
+          else
+            echo "::error::deploy-e2e-headlamp.sh did not produce .env.e2e"
             exit 1
           fi
-
-          # Verify plugin is visible
-          PLUGIN_JSON=$(curl -sf --connect-timeout 10 "$HEADLAMP_URL/plugins" 2>/dev/null || echo "[]")
-          node -e "
-            const plugins = JSON.parse(process.argv[1]);
-            console.log('Installed plugins:');
-            for (const p of plugins) console.log('  ' + p.name + '@' + (p.version||'unknown'));
-            const ours = plugins.find(p => p.name === '$PLUGIN_NAME' || p.name === 'polaris' || p.name.includes('polaris'));
-            if (!ours) {
-              console.log('::warning::Plugin $PLUGIN_NAME not yet visible — Headlamp may need a restart');
-            } else {
-              console.log('Found plugin: ' + ours.name + ' at path ' + ours.path);
-            }
-          " "$PLUGIN_JSON"
 
       - name: Install Playwright browsers
         run: npx playwright install --with-deps chromium
@@ -133,10 +70,14 @@ jobs:
       - name: Run E2E tests
         run: npm run e2e
         env:
-          HEADLAMP_URL: ${{ secrets.HEADLAMP_URL || 'http://headlamp.kube-system.svc.cluster.local' }}
-          HEADLAMP_TOKEN: ${{ secrets.HEADLAMP_TOKEN }}
+          HEADLAMP_URL: ${{ env.HEADLAMP_URL }}
+          HEADLAMP_TOKEN: ${{ env.HEADLAMP_TOKEN }}
           AUTHENTIK_USERNAME: ${{ secrets.AUTHENTIK_USERNAME }}
           AUTHENTIK_PASSWORD: ${{ secrets.AUTHENTIK_PASSWORD }}
+
+      - name: Teardown E2E instance
+        if: always()
+        run: scripts/teardown-e2e-headlamp.sh
 
       - name: Upload Playwright report
         uses: actions/upload-artifact@v4
