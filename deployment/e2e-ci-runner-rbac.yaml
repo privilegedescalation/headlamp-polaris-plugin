@@ -1,59 +1,73 @@
 ---
-# RBAC for the GitHub Actions CI runner to perform E2E test setup.
+# RBAC for the GitHub Actions CI runner to manage the E2E Headlamp instance.
 # CI-only test fixture — NOT for production use.
 #
-# Grants the ARC runner service account namespace-scoped permissions in
-# kube-system to patch the Headlamp deployment (add shared volume mount),
-# manage PVCs, run temporary pods, and restart deployments.
+# Grants the ARC runner service account permissions in the headlamp-e2e
+# namespace to deploy and tear down a dedicated Headlamp instance via Helm.
 #
-# No cluster-scoped permissions needed — the E2E workflow uses kubectl patch
-# instead of helm upgrade, avoiding the need to read ClusterRole/ClusterRoleBinding.
+# No kube-system access needed — E2E tests use a separate namespace.
+# Plugin is loaded via ConfigMap volume mount — no custom Docker images.
 #
-# Apply with: kubectl apply -f deployment/e2e-ci-runner-rbac.yaml
+# Prerequisites:
+#   kubectl create namespace headlamp-e2e
+#   kubectl apply -f deployment/e2e-ci-runner-rbac.yaml
 apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
 metadata:
   name: e2e-ci-runner
-  namespace: kube-system
+  namespace: headlamp-e2e
 rules:
+  # Helm needs to manage these resources for the Headlamp chart
+  - apiGroups: ["apps"]
+    resources: ["deployments"]
+    verbs: ["get", "list", "create", "update", "patch", "delete", "watch"]
   - apiGroups: [""]
-    resources: ["persistentvolumeclaims"]
+    resources: ["services", "serviceaccounts", "configmaps", "secrets"]
     verbs: ["get", "list", "create", "update", "patch", "delete"]
   - apiGroups: [""]
     resources: ["pods"]
-    verbs: ["get", "list", "create", "delete", "watch"]
+    verbs: ["get", "list", "watch"]
+  # Token creation for E2E test auth
   - apiGroups: [""]
-    resources: ["pods/attach"]
-    verbs: ["create", "get"]
-  - apiGroups: ["apps"]
-    resources: ["deployments"]
-    verbs: ["get", "list", "patch", "watch"]
-  - apiGroups: ["apps"]
-    resources: ["deployments/scale"]
-    verbs: ["patch"]
-  - apiGroups: [""]
-    resources: ["secrets"]
-    verbs: ["get", "list", "create", "update", "patch", "delete"]
-  - apiGroups: [""]
-    resources: ["configmaps"]
-    verbs: ["get", "list", "create", "update", "patch", "delete"]
-  - apiGroups: [""]
-    resources: ["services"]
-    verbs: ["get", "list", "create", "update", "patch", "delete"]
-  - apiGroups: [""]
-    resources: ["serviceaccounts"]
-    verbs: ["get", "list"]
+    resources: ["serviceaccounts/token"]
+    verbs: ["create"]
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
 metadata:
   name: e2e-ci-runner-binding
-  namespace: kube-system
+  namespace: headlamp-e2e
 subjects:
   - kind: ServiceAccount
-    name: local-ubuntu-latest-gha-rs-no-permission
+    name: runners-privilegedescalation-gha-rs-no-permission
     namespace: arc-runners
 roleRef:
   kind: Role
   name: e2e-ci-runner
+  apiGroup: rbac.authorization.k8s.io
+---
+# ClusterRole to allow the runner SA to verify the headlamp-e2e namespace
+# exists before attempting namespaced operations. kubectl get namespace is a
+# cluster-scoped operation not coverable by a namespaced Role.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: e2e-ci-namespace-reader
+rules:
+  - apiGroups: [""]
+    resources: ["namespaces"]
+    verbs: ["get"]
+    resourceNames: ["headlamp-e2e"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: e2e-ci-namespace-reader-binding
+subjects:
+  - kind: ServiceAccount
+    name: runners-privilegedescalation-gha-rs-no-permission
+    namespace: arc-runners
+roleRef:
+  kind: ClusterRole
+  name: e2e-ci-namespace-reader
   apiGroup: rbac.authorization.k8s.io
