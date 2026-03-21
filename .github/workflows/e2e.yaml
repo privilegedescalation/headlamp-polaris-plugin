@@ -35,6 +35,9 @@ jobs:
       - name: Setup Helm
         uses: azure/setup-helm@v4
 
+      - name: Apply RBAC
+        run: kubectl apply -f deployment/e2e-ci-runner-rbac.yaml
+
       - name: Install dependencies
         run: npm ci
 
