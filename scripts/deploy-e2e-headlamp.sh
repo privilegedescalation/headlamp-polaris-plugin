@@ -62,7 +62,7 @@ kubectl create configmap headlamp-polaris-plugin \
 # --- Deploy with Helm ---
 echo ""
 echo "Adding Headlamp Helm repo..."
-helm repo add headlamp https://headlamp-k8s.github.io/headlamp/ --force-update
+helm repo add headlamp https://kubernetes-sigs.github.io/headlamp/ --force-update
 helm repo update
 
 echo "Installing/upgrading Headlamp E2E instance..."
