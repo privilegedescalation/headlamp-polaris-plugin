@@ -11,12 +11,11 @@
 # Prerequisites:
 #   - Plugin built (dist/ exists with plugin-main.js + package.json)
 #   - kubectl configured with cluster access
-#   - Helm 3 installed
 #   - RBAC applied: kubectl apply -f deployment/e2e-ci-runner-rbac.yaml
 #
 # Environment:
 #   E2E_NAMESPACE     — namespace for E2E Headlamp (default: privilegedescalation-dev)
-#   E2E_RELEASE       — Helm release name (default: headlamp-e2e)
+#   E2E_RELEASE       — release/resource name prefix (default: headlamp-e2e)
 #   HEADLAMP_VERSION  — Headlamp image tag (default: latest)
 set -euo pipefail
 
@@ -59,28 +58,105 @@ kubectl create configmap headlamp-polaris-plugin \
   --from-file="$DIST_DIR" \
   --from-file=package.json="$REPO_ROOT/package.json"
 
-# --- Deploy with Helm ---
+# --- Deploy Headlamp via kubectl apply ---
 echo ""
-echo "Adding Headlamp Helm repo..."
-helm repo add headlamp https://kubernetes-sigs.github.io/headlamp/ --force-update
-helm repo update
+echo "Deploying Headlamp E2E instance..."
 
-echo "Installing/upgrading Headlamp E2E instance..."
-helm upgrade --install "$E2E_RELEASE" headlamp/headlamp \
-  -n "$E2E_NAMESPACE" \
-  -f "$REPO_ROOT/deployment/headlamp-e2e-values.yaml" \
-  --set "image.registry=ghcr.io" \
-  --set "image.repository=headlamp-k8s/headlamp" \
-  --set "image.tag=${HEADLAMP_VERSION}" \
-  --wait \
-  --timeout 120s
+kubectl apply -f - <<EOF
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: ${E2E_RELEASE}
+  namespace: ${E2E_NAMESPACE}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ${E2E_RELEASE}
+  namespace: ${E2E_NAMESPACE}
+  labels:
+    app.kubernetes.io/name: headlamp
+    app.kubernetes.io/instance: ${E2E_RELEASE}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: headlamp
+      app.kubernetes.io/instance: ${E2E_RELEASE}
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: headlamp
+        app.kubernetes.io/instance: ${E2E_RELEASE}
+    spec:
+      serviceAccountName: ${E2E_RELEASE}
+      automountServiceAccountToken: true
+      securityContext: {}
+      containers:
+        - name: headlamp
+          image: ghcr.io/headlamp-k8s/headlamp:${HEADLAMP_VERSION}
+          imagePullPolicy: IfNotPresent
+          securityContext:
+            runAsNonRoot: true
+            privileged: false
+            runAsUser: 100
+            runAsGroup: 101
+          args:
+            - "-in-cluster"
+            - "-in-cluster-context-name=main"
+            - "-plugins-dir=/headlamp/plugins"
+          ports:
+            - name: http
+              containerPort: 4466
+              protocol: TCP
+          readinessProbe:
+            httpGet:
+              path: /
+              port: http
+            initialDelaySeconds: 5
+            periodSeconds: 5
+            failureThreshold: 6
+          livenessProbe:
+            httpGet:
+              path: /
+              port: http
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          volumeMounts:
+            - name: polaris-plugin
+              mountPath: /headlamp/plugins/headlamp-polaris
+              readOnly: true
+      volumes:
+        - name: polaris-plugin
+          configMap:
+            name: headlamp-polaris-plugin
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ${E2E_RELEASE}
+  namespace: ${E2E_NAMESPACE}
+  labels:
+    app.kubernetes.io/name: headlamp
+    app.kubernetes.io/instance: ${E2E_RELEASE}
+spec:
+  type: ClusterIP
+  selector:
+    app.kubernetes.io/name: headlamp
+    app.kubernetes.io/instance: ${E2E_RELEASE}
+  ports:
+    - name: http
+      port: 80
+      targetPort: http
+      protocol: TCP
+EOF
 
 echo "Waiting for rollout..."
-kubectl rollout status "deployment/${E2E_RELEASE}-headlamp" \
+kubectl rollout status "deployment/${E2E_RELEASE}" \
   -n "$E2E_NAMESPACE" --timeout=120s
 
 # --- Generate a service URL for tests ---
-SVC_URL="http://${E2E_RELEASE}-headlamp.${E2E_NAMESPACE}.svc.cluster.local"
+SVC_URL="http://${E2E_RELEASE}.${E2E_NAMESPACE}.svc.cluster.local"
 echo ""
 echo "E2E Headlamp is ready at: ${SVC_URL}"
 echo "  export HEADLAMP_URL=${SVC_URL}"
