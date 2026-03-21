@@ -17,6 +17,9 @@ config:
   pluginsDir: /headlamp/plugins
   watchPlugins: false
 
+clusterRoleBinding:
+  create: false
+
 service:
   type: ClusterIP
 
