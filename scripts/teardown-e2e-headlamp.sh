@@ -5,7 +5,7 @@
 #
 # Environment:
 #   E2E_NAMESPACE  — namespace to clean up (default: privilegedescalation-dev)
-#   E2E_RELEASE    — Helm release to uninstall (default: headlamp-e2e)
+#   E2E_RELEASE    — release/resource name prefix (default: headlamp-e2e)
 set -euo pipefail
 
 REPO_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
@@ -17,13 +17,15 @@ echo "=== E2E Headlamp Teardown ==="
 echo "  Namespace: $E2E_NAMESPACE"
 echo "  Release:   $E2E_RELEASE"
 
-echo "Uninstalling Helm release..."
-helm uninstall "$E2E_RELEASE" -n "$E2E_NAMESPACE" 2>/dev/null || echo "Release not found (already removed?)"
+echo "Removing Headlamp Deployment, Service, and ServiceAccount..."
+kubectl delete deployment "${E2E_RELEASE}" -n "$E2E_NAMESPACE" --ignore-not-found
+kubectl delete service "${E2E_RELEASE}" -n "$E2E_NAMESPACE" --ignore-not-found
+kubectl delete serviceaccount "${E2E_RELEASE}" -n "$E2E_NAMESPACE" --ignore-not-found
 
 echo "Cleaning up ConfigMap..."
 kubectl delete configmap headlamp-polaris-plugin -n "$E2E_NAMESPACE" --ignore-not-found
 
-echo "Cleaning up service account..."
+echo "Cleaning up test service account..."
 kubectl delete serviceaccount headlamp-e2e-test -n "$E2E_NAMESPACE" --ignore-not-found
 
 # Clean up local env file

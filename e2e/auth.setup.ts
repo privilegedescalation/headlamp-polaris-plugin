@@ -39,13 +39,16 @@ async function authenticateWithOIDC(page: Page, username: string, password: stri
 }
 
 async function authenticateWithToken(page: Page, token: string): Promise<void> {
-  // Navigate to login — Headlamp redirects / to /c/main/login
   await page.goto('/');
-  await page.waitForURL('**/login');
+  // Headlamp goes to /token directly when no OIDC is configured,
+  // or through /login when OIDC is configured
+  await page.waitForURL(/\/(login|token)$/);
 
-  // Click the token auth option
-  await page.getByRole('button', { name: /use a token/i }).click();
-  await page.waitForURL('**/token');
+  if (page.url().includes('/login')) {
+    // OIDC login page — click "use a token" to reach token auth
+    await page.getByRole('button', { name: /use a token/i }).click();
+    await page.waitForURL('**/token');
+  }
 
   // Fill the "ID token" field and submit
   await page.getByRole('textbox', { name: /id token/i }).fill(token);
