@@ -148,9 +148,7 @@ describe('ExemptionManager', () => {
     });
 
     it('collects failing checks from container-level results', () => {
-      render(
-        <ExemptionManager {...defaultProps} workloadResult={resultWithContainerFailures} />
-      );
+      render(<ExemptionManager {...defaultProps} workloadResult={resultWithContainerFailures} />);
       fireEvent.click(screen.getByRole('button', { name: /add exemption/i }));
       expect(screen.getByText('CPU Requests')).toBeInTheDocument();
     });
@@ -311,11 +309,7 @@ describe('ExemptionManager', () => {
     it('uses core API path for Pod kind (no api group)', async () => {
       mockApiRequest.mockResolvedValue({});
       render(
-        <ExemptionManager
-          {...defaultProps}
-          kind="Pod"
-          workloadResult={resultWithPodFailures}
-        />
+        <ExemptionManager {...defaultProps} kind="Pod" workloadResult={resultWithPodFailures} />
       );
       fireEvent.click(screen.getByRole('button', { name: /add exemption/i }));
       fireEvent.click(screen.getByRole('checkbox', { name: /exempt from all checks/i }));
@@ -332,11 +326,7 @@ describe('ExemptionManager', () => {
     it('uses batch API group for Job kind', async () => {
       mockApiRequest.mockResolvedValue({});
       render(
-        <ExemptionManager
-          {...defaultProps}
-          kind="Job"
-          workloadResult={resultWithPodFailures}
-        />
+        <ExemptionManager {...defaultProps} kind="Job" workloadResult={resultWithPodFailures} />
       );
       fireEvent.click(screen.getByRole('button', { name: /add exemption/i }));
       fireEvent.click(screen.getByRole('checkbox', { name: /exempt from all checks/i }));
@@ -353,11 +343,7 @@ describe('ExemptionManager', () => {
     it('uses batch API group for CronJob kind', async () => {
       mockApiRequest.mockResolvedValue({});
       render(
-        <ExemptionManager
-          {...defaultProps}
-          kind="CronJob"
-          workloadResult={resultWithPodFailures}
-        />
+        <ExemptionManager {...defaultProps} kind="CronJob" workloadResult={resultWithPodFailures} />
       );
       fireEvent.click(screen.getByRole('button', { name: /add exemption/i }));
       fireEvent.click(screen.getByRole('checkbox', { name: /exempt from all checks/i }));
