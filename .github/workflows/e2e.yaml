@@ -32,9 +32,6 @@ jobs:
       - name: Setup kubectl
         uses: azure/setup-kubectl@v4
 
-      - name: Setup Helm
-        uses: azure/setup-helm@v4
-
       - name: Install dependencies
         run: npm ci
 
@@ -61,8 +58,6 @@ jobs:
         env:
           HEADLAMP_URL: ${{ env.HEADLAMP_URL }}
           HEADLAMP_TOKEN: ${{ env.HEADLAMP_TOKEN }}
-          AUTHENTIK_USERNAME: ${{ secrets.AUTHENTIK_USERNAME }}
-          AUTHENTIK_PASSWORD: ${{ secrets.AUTHENTIK_PASSWORD }}
 
       - name: Teardown E2E instance
         if: always()
