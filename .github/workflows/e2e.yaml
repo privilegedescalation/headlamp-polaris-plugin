@@ -11,7 +11,7 @@ permissions:
   contents: read
 
 env:
-  E2E_NAMESPACE: default
+  E2E_NAMESPACE: privilegedescalation-dev
   E2E_RELEASE: headlamp-e2e
 
 jobs:
