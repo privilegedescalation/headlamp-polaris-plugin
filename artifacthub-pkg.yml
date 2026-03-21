@@ -11,6 +11,7 @@ description: >-
   `polaris-dashboard` service in the `polaris` namespace.
 license: Apache-2.0
 homeURL: "https://github.com/privilegedescalation/headlamp-polaris-plugin"
+appVersion: "5.0"
 category: security
 keywords:
   - polaris
@@ -24,6 +25,43 @@ links:
     url: "https://github.com/privilegedescalation/headlamp-polaris-plugin"
   - name: Polaris
     url: "https://polaris.docs.fairwinds.com/"
+install: |
+  ## Installation
+
+  ### Prerequisites
+
+  1. [Headlamp](https://headlamp.dev) v0.26.0 or later
+  2. [Fairwinds Polaris](https://polaris.docs.fairwinds.com/) installed and the dashboard running in your cluster
+
+  ### Install via Headlamp Plugin Catalog
+
+  1. Open Headlamp and navigate to **Settings → Plugin Catalog**
+  2. Search for **"Polaris"**
+  3. Click **Install** and restart Headlamp when prompted
+
+  The plugin is sourced directly from [ArtifactHub](https://artifacthub.io/packages/headlamp/headlamp/headlamp-polaris).
+
+  ## Usage
+
+  After installation, the Polaris plugin adds:
+  - A **cluster score badge** in the Headlamp app bar
+  - A **Polaris** section in the sidebar with the full dashboard and namespace drill-downs
+  - An **inline audit panel** on Deployment, StatefulSet, DaemonSet, Job, and CronJob detail pages
+
+  For more information, see the [README](https://github.com/privilegedescalation/headlamp-polaris-plugin/blob/main/README.md).
+changes:
+  - kind: added
+    description: ExemptionManager — apply Polaris annotation exemptions directly from the resource detail page
+  - kind: added
+    description: Inline audit section on workload detail pages with per-check pass/fail breakdown
+  - kind: added
+    description: Namespace drill-down view with per-resource score list and filterable check table
+  - kind: added
+    description: App bar score badge showing overall cluster Polaris score
+  - kind: added
+    description: PolarisSettings page for configuring dashboard refresh interval
+  - kind: changed
+    description: Stable public API — routes, sidebar entries, settings schema, and app bar action are frozen
 maintainers:
   - name: privilegedescalation
     email: "chris@farhood.org"
@@ -31,4 +69,4 @@ annotations:
   headlamp/plugin/archive-url: "https://github.com/privilegedescalation/headlamp-polaris-plugin/releases/download/v0.7.2/headlamp-polaris-0.7.2.tar.gz"
   headlamp/plugin/version-compat: ">=0.26"
   headlamp/plugin/archive-checksum: sha256:ce75449a05d3d3dd3c546db36a2257fae3e4601e466108182e64310a1a4f6d71
-  headlamp/plugin/distro-compat: in-cluster
+  headlamp/plugin/distro-compat: "in-cluster,web,desktop"
