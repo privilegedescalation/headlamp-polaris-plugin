@@ -32,6 +32,14 @@ if [ ! -d "$DIST_DIR" ]; then
   exit 1
 fi
 
+# --- Preflight: verify RBAC before touching the cluster ---
+echo "Checking RBAC permissions in namespace '${E2E_NAMESPACE}'..."
+if ! kubectl auth can-i delete configmaps -n "$E2E_NAMESPACE" --quiet 2>/dev/null; then
+  echo "ERROR: Missing RBAC — cannot delete configmaps in namespace '${E2E_NAMESPACE}'." >&2
+  echo "  Apply RBAC first: kubectl apply -f deployment/e2e-ci-runner-rbac.yaml" >&2
+  exit 1
+fi
+
 echo "=== E2E Headlamp Deployment ==="
 echo "  Image:     ghcr.io/headlamp-k8s/headlamp:${HEADLAMP_VERSION}"
 echo "  Namespace: $E2E_NAMESPACE"
