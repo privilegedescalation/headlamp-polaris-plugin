@@ -7,7 +7,7 @@
 #
 # Usage:
 #   helm install headlamp-e2e headlamp/headlamp \
-#     -n default \
+#     -n privilegedescalation-dev \
 #     -f deployment/headlamp-e2e-values.yaml \
 #     --set image.registry=ghcr.io \
 #     --set image.repository=headlamp-k8s/headlamp \
