@@ -275,7 +275,6 @@ No custom Docker images, no PVCs, no kubectl exec/cp, no patching of existing de
 One-time setup by a cluster admin:
 
 ```bash
-kubectl create namespace headlamp-e2e
 kubectl apply -f deployment/e2e-ci-runner-rbac.yaml
 ```
 

@@ -5,14 +5,17 @@
 # a ConfigMap volume mount. No custom Docker images — the plugin is built
 # in CI and injected as a ConfigMap.
 #
+# E2E resources are deployed to the `default` namespace. Nothing persists
+# beyond the test run — teardown cleans up all created resources.
+#
 # Prerequisites:
 #   - Plugin built (dist/ exists with plugin-main.js + package.json)
 #   - kubectl configured with cluster access
 #   - Helm 3 installed
-#   - E2E namespace pre-created by cluster admin (see deployment/e2e-ci-runner-rbac.yaml)
+#   - RBAC applied: kubectl apply -f deployment/e2e-ci-runner-rbac.yaml
 #
 # Environment:
-#   E2E_NAMESPACE     — namespace for E2E Headlamp (default: headlamp-e2e)
+#   E2E_NAMESPACE     — namespace for E2E Headlamp (default: default)
 #   E2E_RELEASE       — Helm release name (default: headlamp-e2e)
 #   HEADLAMP_VERSION  — Headlamp image tag (default: latest)
 set -euo pipefail
@@ -20,7 +23,7 @@ set -euo pipefail
 REPO_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 DIST_DIR="$REPO_ROOT/dist"
 
-E2E_NAMESPACE="${E2E_NAMESPACE:-headlamp-e2e}"
+E2E_NAMESPACE="${E2E_NAMESPACE:-default}"
 E2E_RELEASE="${E2E_RELEASE:-headlamp-e2e}"
 HEADLAMP_VERSION="${HEADLAMP_VERSION:-latest}"
 
@@ -29,20 +32,18 @@ if [ ! -d "$DIST_DIR" ]; then
   exit 1
 fi
 
+# --- Preflight: verify RBAC before touching the cluster ---
+echo "Checking RBAC permissions in namespace '${E2E_NAMESPACE}'..."
+if ! kubectl auth can-i delete configmaps -n "$E2E_NAMESPACE" --quiet 2>/dev/null; then
+  echo "ERROR: Missing RBAC — cannot delete configmaps in namespace '${E2E_NAMESPACE}'." >&2
+  echo "  Apply RBAC first: kubectl apply -f deployment/e2e-ci-runner-rbac.yaml" >&2
+  exit 1
+fi
+
 echo "=== E2E Headlamp Deployment ==="
 echo "  Image:     ghcr.io/headlamp-k8s/headlamp:${HEADLAMP_VERSION}"
 echo "  Namespace: $E2E_NAMESPACE"
 echo "  Release:   $E2E_RELEASE"
-
-# --- Verify namespace exists (must be pre-created by cluster admin) ---
-echo ""
-echo "Verifying namespace ${E2E_NAMESPACE} exists..."
-if ! kubectl get namespace "$E2E_NAMESPACE" >/dev/null 2>&1; then
-  echo "ERROR: Namespace ${E2E_NAMESPACE} does not exist." >&2
-  echo "A cluster admin must create it first: kubectl create namespace ${E2E_NAMESPACE}" >&2
-  echo "Then apply RBAC: kubectl apply -f deployment/e2e-ci-runner-rbac.yaml" >&2
-  exit 1
-fi
 
 # --- Create ConfigMap from built plugin ---
 echo ""
