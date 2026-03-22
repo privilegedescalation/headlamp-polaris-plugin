@@ -18,7 +18,6 @@ now frozen — no breaking changes without a new major version.
 ### Added
 - **Dual-approval CI check**: PRs now require approval from both CTO and QA before merging (#98, #76)
 - **ExemptionManager test suite**: Full coverage of annotation-based exemption flows, exemption creation, and inline feedback (#82)
-- **Coverage threshold**: Vitest coverage threshold enforced in CI (#82)
 - **RBAC preflight check**: `deploy-e2e-headlamp.sh` now verifies runner RBAC before attempting E2E deploy (#80)
 
 ### Fixed
@@ -297,7 +296,7 @@ now frozen — no breaking changes without a new major version.
 - Basic CI/CD pipeline
 
 [Unreleased]: https://github.com/privilegedescalation/headlamp-polaris-plugin/compare/v1.0.0...HEAD
-[1.0.0]: https://github.com/privilegedescalation/headlamp-polaris-plugin/compare/v0.6.0...v1.0.0
+[1.0.0]: https://github.com/privilegedescalation/headlamp-polaris-plugin/compare/v0.7.2...v1.0.0
 [0.6.0]: https://github.com/privilegedescalation/headlamp-polaris-plugin/releases/tag/v0.6.0
 [0.3.5]: https://github.com/privilegedescalation/headlamp-polaris-plugin/releases/tag/v0.3.5
 [0.3.4]: https://github.com/privilegedescalation/headlamp-polaris-plugin/releases/tag/v0.3.4
