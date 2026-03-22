@@ -157,6 +157,24 @@ kubectl rollout status "deployment/${E2E_RELEASE}" \
 
 # --- Generate a service URL for tests ---
 SVC_URL="http://${E2E_RELEASE}.${E2E_NAMESPACE}.svc.cluster.local"
+
+# --- Wait for DNS and HTTP reachability ---
+# rollout status only confirms the pod is ready per readinessProbe.
+# Kubernetes Service DNS may still be propagating to the runner pod.
+# Poll until the service is reachable over HTTP before handing off.
+echo ""
+echo "Waiting for ${SVC_URL} to be reachable..."
+ATTEMPTS=0
+MAX_ATTEMPTS=24  # 24 × 5s = 120s max
+until curl -sf --max-time 5 "${SVC_URL}" -o /dev/null 2>/dev/null; do
+  ATTEMPTS=$((ATTEMPTS + 1))
+  if [ "$ATTEMPTS" -ge "$MAX_ATTEMPTS" ]; then
+    echo "ERROR: ${SVC_URL} not reachable after $((MAX_ATTEMPTS * 5))s" >&2
+    exit 1
+  fi
+  echo "  [${ATTEMPTS}/${MAX_ATTEMPTS}] not yet reachable, retrying in 5s..."
+  sleep 5
+done
 echo ""
 echo "E2E Headlamp is ready at: ${SVC_URL}"
 echo "  export HEADLAMP_URL=${SVC_URL}"
