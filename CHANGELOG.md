@@ -7,6 +7,31 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.0.0] - 2026-03-22
+
+First stable release. The plugin API (routes, sidebar entries, settings schema, and app bar action) is
+now frozen — no breaking changes without a new major version.
+
+### Security
+- Patched 8 of 9 npm audit vulnerabilities via `pnpm.overrides` (#92)
+
+### Added
+- **Dual-approval CI check**: PRs now require approval from both CTO and QA before merging (#98, #76)
+- **ExemptionManager test suite**: Full coverage of annotation-based exemption flows, exemption creation, and inline feedback (#82)
+- **RBAC preflight check**: `deploy-e2e-headlamp.sh` now verifies runner RBAC before attempting E2E deploy (#80)
+
+### Fixed
+- **E2E infrastructure overhaul**: Replaced Dockerfile.e2e with ConfigMap volume mount for plugin loading; tests now run in the `privilegedescalation-dev` namespace (#73, #89, #94)
+- **E2E token auth**: Workflow uses GitHub App token auth and handles the `/token` redirect correctly (#97)
+- **E2E HTTP readiness**: `deploy-e2e-headlamp.sh` waits for HTTP reachability after rollout before running tests (#104)
+- **E2E runner label**: Updated to `runners-privilegedescalation` for self-hosted ARC runners (#71)
+- **Direct devDependencies**: Added `typescript`, `eslint`, `prettier`, and `@headlamp-k8s/eslint-config` as explicit direct devDependencies to prevent phantom-dep failures in clean installs (#95, #102)
+
+### Changed
+- **pnpm version pinned**: `packageManager` field in `package.json` pins the pnpm version used in CI (#103)
+- **GitHub Actions SHA pinning**: Renovate `pinDigests` enabled to SHA-pin all GitHub Actions (#105)
+- **ArtifactHub metadata polish**: Improved `install` instructions and `changes` section formatting (#82)
+
 ## [0.6.0] - 2026-03-04
 
 ### Fixed
@@ -270,7 +295,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Automated release workflow
 - Basic CI/CD pipeline
 
-[Unreleased]: https://github.com/privilegedescalation/headlamp-polaris-plugin/compare/v0.6.0...HEAD
+[Unreleased]: https://github.com/privilegedescalation/headlamp-polaris-plugin/compare/v1.0.0...HEAD
+[1.0.0]: https://github.com/privilegedescalation/headlamp-polaris-plugin/compare/v0.7.2...v1.0.0
 [0.6.0]: https://github.com/privilegedescalation/headlamp-polaris-plugin/releases/tag/v0.6.0
 [0.3.5]: https://github.com/privilegedescalation/headlamp-polaris-plugin/releases/tag/v0.3.5
 [0.3.4]: https://github.com/privilegedescalation/headlamp-polaris-plugin/releases/tag/v0.3.4

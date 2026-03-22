@@ -1,4 +1,4 @@
-version: "0.7.2"
+version: "1.0.0"
 name: headlamp-polaris
 displayName: Polaris
 createdAt: "2026-02-05T19:00:00Z"
@@ -50,23 +50,27 @@ install: |
 
   For more information, see the [README](https://github.com/privilegedescalation/headlamp-polaris-plugin/blob/main/README.md).
 changes:
+  - kind: security
+    description: Patched 8 npm audit vulnerabilities via pnpm.overrides
   - kind: added
-    description: ExemptionManager — apply Polaris annotation exemptions directly from the resource detail page
+    description: Dual-approval required CI check — PRs must be approved by both CTO and QA before merge
   - kind: added
-    description: Inline audit section on workload detail pages with per-check pass/fail breakdown
-  - kind: added
-    description: Namespace drill-down view with per-resource score list and filterable check table
-  - kind: added
-    description: App bar score badge showing overall cluster Polaris score
-  - kind: added
-    description: PolarisSettings page for configuring dashboard refresh interval
+    description: ExemptionManager test suite — full coverage of annotation-based exemption flows
+  - kind: fixed
+    description: E2E infrastructure overhauled — ConfigMap volume mount replaces Dockerfile-based approach, tests run in privilegedescalation-dev namespace
+  - kind: fixed
+    description: E2E workflow uses token auth and waits for HTTP reachability before running tests
+  - kind: fixed
+    description: Added explicit direct devDependencies (typescript, eslint, prettier, @headlamp-k8s/eslint-config) to prevent phantom dep failures
   - kind: changed
-    description: Stable public API — routes, sidebar entries, settings schema, and app bar action are frozen
+    description: pnpm version pinned via packageManager field; GitHub Actions SHA-pinned via Renovate pinDigests
+  - kind: changed
+    description: v1.0.0 stable release — plugin API (routes, sidebar, settings schema, app bar action) is stable and will not change without a major version bump
 maintainers:
   - name: privilegedescalation
     email: "chris@farhood.org"
 annotations:
-  headlamp/plugin/archive-url: "https://github.com/privilegedescalation/headlamp-polaris-plugin/releases/download/v0.7.2/headlamp-polaris-0.7.2.tar.gz"
+  headlamp/plugin/archive-url: "https://github.com/privilegedescalation/headlamp-polaris-plugin/releases/download/v1.0.0/headlamp-polaris-1.0.0.tar.gz"
   headlamp/plugin/version-compat: ">=0.26"
   headlamp/plugin/archive-checksum: sha256:ce75449a05d3d3dd3c546db36a2257fae3e4601e466108182e64310a1a4f6d71
   headlamp/plugin/distro-compat: "in-cluster,web,desktop"
