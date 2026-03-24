@@ -72,6 +72,16 @@ jobs:
           HEADLAMP_URL: ${{ env.HEADLAMP_URL }}
           HEADLAMP_TOKEN: ${{ env.HEADLAMP_TOKEN }}
 
+      - name: Collect deployment diagnostics on failure
+        if: failure()
+        run: |
+          echo "=== Pod state ==="
+          kubectl get pods -n "$E2E_NAMESPACE" -l "app.kubernetes.io/instance=$E2E_RELEASE" 2>&1 || true
+          echo "=== Pod describe ==="
+          kubectl describe pods -n "$E2E_NAMESPACE" -l "app.kubernetes.io/instance=$E2E_RELEASE" 2>&1 || true
+          echo "=== Recent namespace events ==="
+          kubectl get events -n "$E2E_NAMESPACE" --sort-by='.lastTimestamp' 2>&1 | tail -20 || true
+
       - name: Teardown E2E instance
         if: always()
         run: scripts/teardown-e2e-headlamp.sh
