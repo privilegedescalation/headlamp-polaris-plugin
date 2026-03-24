@@ -16,7 +16,7 @@
 # Environment:
 #   E2E_NAMESPACE     — namespace for E2E Headlamp (default: privilegedescalation-dev)
 #   E2E_RELEASE       — release/resource name prefix (default: headlamp-e2e)
-#   HEADLAMP_VERSION  — Headlamp image tag (default: latest)
+#   HEADLAMP_VERSION  — Headlamp image tag (default: v0.40.1, pinned to match production)
 set -euo pipefail
 
 REPO_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
@@ -24,7 +24,7 @@ DIST_DIR="$REPO_ROOT/dist"
 
 E2E_NAMESPACE="${E2E_NAMESPACE:-privilegedescalation-dev}"
 E2E_RELEASE="${E2E_RELEASE:-headlamp-e2e}"
-HEADLAMP_VERSION="${HEADLAMP_VERSION:-latest}"
+HEADLAMP_VERSION="${HEADLAMP_VERSION:-v0.40.1}"
 
 if [ ! -d "$DIST_DIR" ]; then
   echo "ERROR: dist/ not found. Run 'npm run build' first." >&2
