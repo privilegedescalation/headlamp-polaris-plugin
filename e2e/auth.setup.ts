@@ -45,8 +45,12 @@ async function authenticateWithToken(page: Page, token: string): Promise<void> {
   await page.waitForURL(/\/(login|token)$/);
 
   if (page.url().includes('/login')) {
-    // OIDC login page — click "use a token" to reach token auth
-    await page.getByRole('button', { name: /use a token/i }).click();
+    // OIDC login page — click "use a token" to reach token auth.
+    // Wait explicitly before clicking so failures surface at 15 s
+    // with a clear message rather than silently timing out at 60 s.
+    const useTokenBtn = page.getByRole('button', { name: /use a token/i });
+    await useTokenBtn.waitFor({ state: 'visible', timeout: 15_000 });
+    await useTokenBtn.click();
     await page.waitForURL('**/token');
   }
 
