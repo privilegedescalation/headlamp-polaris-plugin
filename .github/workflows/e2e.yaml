@@ -21,6 +21,11 @@ concurrency:
 env:
   E2E_NAMESPACE: privilegedescalation-dev
   E2E_RELEASE: headlamp-e2e
+  # Pin to a known-good Headlamp version. Using :latest is risky because
+  # the tag can change between CI runs, causing flaky failures when a newer
+  # image is pulled on some nodes but not others (IfNotPresent pull policy).
+  # Update this when Headlamp is upgraded in production (kube-system).
+  HEADLAMP_VERSION: v0.40.1
 
 jobs:
   e2e:
