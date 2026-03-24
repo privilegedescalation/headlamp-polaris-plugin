@@ -10,6 +10,16 @@ on:
 permissions:
   contents: read
 
+# Serialize E2E runs repo-wide. All concurrent runs share the same
+# E2E_RELEASE name (headlamp-e2e) in a single namespace. Without
+# serialization, one run's teardown (if: always()) deletes the
+# deployment while a concurrent run is still using it, causing auth
+# setup timeouts. cancel-in-progress: false queues rather than kills
+# to avoid leaving dangling cluster resources.
+concurrency:
+  group: e2e-${{ github.repository }}
+  cancel-in-progress: false
+
 env:
   E2E_NAMESPACE: privilegedescalation-dev
   E2E_RELEASE: headlamp-e2e
