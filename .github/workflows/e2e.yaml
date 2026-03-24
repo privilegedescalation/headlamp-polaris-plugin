@@ -10,6 +10,12 @@ on:
 permissions:
   contents: read
 
+# Only one E2E run at a time: the shared E2E_RELEASE (headlamp-e2e) in
+# privilegedescalation-dev cannot be shared across concurrent runs.
+concurrency:
+  group: e2e-${{ github.repository }}
+  cancel-in-progress: true
+
 env:
   E2E_NAMESPACE: privilegedescalation-dev
   E2E_RELEASE: headlamp-e2e
