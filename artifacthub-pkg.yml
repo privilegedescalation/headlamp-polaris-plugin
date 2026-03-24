@@ -11,7 +11,7 @@ description: >-
   `polaris-dashboard` service in the `polaris` namespace.
 license: Apache-2.0
 homeURL: "https://github.com/privilegedescalation/headlamp-polaris-plugin"
-appVersion: "5.0"
+appVersion: "10.1.6"
 category: security
 keywords:
   - polaris
@@ -72,5 +72,5 @@ maintainers:
 annotations:
   headlamp/plugin/archive-url: "https://github.com/privilegedescalation/headlamp-polaris-plugin/releases/download/v1.0.0/headlamp-polaris-1.0.0.tar.gz"
   headlamp/plugin/version-compat: ">=0.26"
-  headlamp/plugin/archive-checksum: sha256:ce75449a05d3d3dd3c546db36a2257fae3e4601e466108182e64310a1a4f6d71
+  headlamp/plugin/archive-checksum: sha256:a165e871b40f11a44950aa9f10eb7f7883276f749026ae7a4f886278ecd9bd7d
   headlamp/plugin/distro-compat: "in-cluster,web,desktop"
