@@ -13,7 +13,9 @@ test.describe('Polaris plugin smoke tests', () => {
     await page.goto('/c/main/polaris');
 
     // SectionHeader renders a heading
-    await expect(page.getByRole('heading', { name: 'Polaris \u2014 Overview' })).toBeVisible();
+    await expect(
+      page.locator('main').getByRole('heading', { name: 'Polaris \u2014 Overview' })
+    ).toBeVisible();
 
     // "Cluster Score" section exists with a percentage
     await expect(page.getByText('Cluster Score')).toBeVisible();
@@ -23,7 +25,9 @@ test.describe('Polaris plugin smoke tests', () => {
   test('namespaces page renders table with namespace buttons', async ({ page }) => {
     await page.goto('/c/main/polaris/namespaces');
 
-    await expect(page.getByRole('heading', { name: 'Polaris \u2014 Namespaces' })).toBeVisible();
+    await expect(
+      page.locator('main').getByRole('heading', { name: 'Polaris \u2014 Namespaces' })
+    ).toBeVisible();
 
     // Table should have at least one row with a namespace button
     const table = page.locator('table');
@@ -48,14 +52,14 @@ test.describe('Polaris plugin smoke tests', () => {
 
     // Drawer should open and show the namespace name in the heading
     await expect(
-      page.getByRole('heading', { name: `Polaris \u2014 ${namespaceName}` })
+      page.locator('main').getByRole('heading', { name: `Polaris \u2014 ${namespaceName}` })
     ).toBeVisible();
 
     // "Namespace Score" section should be present in drawer
-    await expect(page.getByText('Namespace Score')).toBeVisible();
+    await expect(page.locator('main').getByText('Namespace Score')).toBeVisible();
 
     // Resources table should exist in drawer
-    await expect(page.getByRole('heading', { name: 'Resources' })).toBeVisible();
+    await expect(page.locator('main').getByRole('heading', { name: 'Resources' })).toBeVisible();
 
     // URL hash should be updated with namespace name
     await expect(page).toHaveURL(/\/polaris\/namespaces#/);
@@ -73,7 +77,7 @@ test.describe('Polaris plugin smoke tests', () => {
 
     // Verify drawer is open
     await expect(
-      page.getByRole('heading', { name: `Polaris \u2014 ${namespaceName}` })
+      page.locator('main').getByRole('heading', { name: `Polaris \u2014 ${namespaceName}` })
     ).toBeVisible();
 
     // Press Escape key
@@ -81,7 +85,7 @@ test.describe('Polaris plugin smoke tests', () => {
 
     // Drawer should close (heading should not be visible anymore)
     await expect(
-      page.getByRole('heading', { name: `Polaris \u2014 ${namespaceName}` })
+      page.locator('main').getByRole('heading', { name: `Polaris \u2014 ${namespaceName}` })
     ).not.toBeVisible();
 
     // URL hash should be cleared
@@ -101,10 +105,10 @@ test.describe('Polaris plugin smoke tests', () => {
 
     // Drawer should automatically open with the namespace details
     await expect(
-      page.getByRole('heading', { name: `Polaris \u2014 ${namespaceName}` })
+      page.locator('main').getByRole('heading', { name: `Polaris \u2014 ${namespaceName}` })
     ).toBeVisible();
 
     // "Namespace Score" section should be present
-    await expect(page.getByText('Namespace Score')).toBeVisible();
+    await expect(page.locator('main').getByText('Namespace Score')).toBeVisible();
   });
 });
