@@ -18,7 +18,7 @@ test.describe('Polaris plugin smoke tests', () => {
     ).toBeVisible();
 
     // "Cluster Score" section exists with a percentage
-    await expect(page.getByText('Cluster Score')).toBeVisible();
+    await expect(page.locator('main').getByText('Cluster Score')).toBeVisible();
     await expect(page.locator('main').getByText(/%/).first()).toBeVisible();
   });
 
