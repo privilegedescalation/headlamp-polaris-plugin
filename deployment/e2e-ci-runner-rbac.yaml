@@ -44,3 +44,30 @@ roleRef:
   kind: Role
   name: e2e-ci-runner
   apiGroup: rbac.authorization.k8s.io
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: e2e-ci-runner
+  namespace: polaris
+rules:
+  # E2E Headlamp needs to proxy to the Polaris dashboard service to fetch audit results.
+  # The service account in privilegedescalation-dev is granted get+proxy on polaris-dashboard.
+  - apiGroups: [""]
+    resources: ["services/proxy"]
+    verbs: ["get"]
+    resourceNames: ["polaris-dashboard"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: e2e-ci-runner-binding
+  namespace: polaris
+subjects:
+  - kind: ServiceAccount
+    name: runners-privilegedescalation-gha-rs-no-permission
+    namespace: arc-runners
+roleRef:
+  kind: Role
+  name: e2e-ci-runner
+  apiGroup: rbac.authorization.k8s.io
