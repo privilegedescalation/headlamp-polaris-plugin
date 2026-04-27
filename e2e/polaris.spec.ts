@@ -13,17 +13,17 @@ test.describe('Polaris plugin smoke tests', () => {
     await page.goto('/c/main/polaris');
 
     // SectionHeader renders a heading
-    await expect(page.getByRole('heading', { name: /Polaris \u2014 Overview/i })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Polaris \u2014 Overview' })).toBeVisible();
 
     // "Cluster Score" section exists with a percentage
-    await expect(page.locator('main').getByText('Cluster Score')).toBeVisible();
+    await expect(page.getByText('Cluster Score')).toBeVisible();
     await expect(page.locator('main').getByText(/%/).first()).toBeVisible();
   });
 
   test('namespaces page renders table with namespace buttons', async ({ page }) => {
     await page.goto('/c/main/polaris/namespaces');
 
-    await expect(page.getByRole('heading', { name: /Polaris \u2014 Namespaces/i })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Polaris \u2014 Namespaces' })).toBeVisible();
 
     // Table should have at least one row with a namespace button
     const table = page.locator('table');
@@ -52,7 +52,7 @@ test.describe('Polaris plugin smoke tests', () => {
     ).toBeVisible();
 
     // "Namespace Score" section should be present in drawer
-    await expect(page.locator('main').getByText('Namespace Score')).toBeVisible();
+    await expect(page.getByText('Namespace Score')).toBeVisible();
 
     // Resources table should exist in drawer
     await expect(page.getByRole('heading', { name: 'Resources' })).toBeVisible();
@@ -105,6 +105,6 @@ test.describe('Polaris plugin smoke tests', () => {
     ).toBeVisible();
 
     // "Namespace Score" section should be present
-    await expect(page.locator('main').getByText('Namespace Score')).toBeVisible();
+    await expect(page.getByText('Namespace Score')).toBeVisible();
   });
 });
