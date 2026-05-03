@@ -45,6 +45,25 @@ jobs:
       - name: Setup kubectl
         uses: azure/setup-kubectl@v4
 
+      - name: Apply RBAC for E2E workflow
+        run: |
+          kubectl apply -f deployment/e2e-ci-runner-rbac.yaml
+          kubectl apply -f deployment/polaris-rbac.yaml
+
+      - name: RBAC pre-flight check
+        run: |
+          echo "Checking RBAC permissions in namespace '${E2E_NAMESPACE}'..."
+          if ! kubectl auth can-i delete configmaps -n "$E2E_NAMESPACE" --quiet 2>/dev/null; then
+            echo "::error::RBAC not applied or insufficient in ${E2E_NAMESPACE} — cannot proceed."
+            exit 1
+          fi
+          echo "Checking RBAC permissions in polaris namespace..."
+          if ! kubectl auth can-i get services/proxy -n polaris --quiet 2>/dev/null; then
+            echo "::error::RBAC not applied or insufficient in polaris — cannot proceed."
+            exit 1
+          fi
+          echo "All RBAC pre-flight checks passed."
+
       - name: Install dependencies
         run: npm ci
 

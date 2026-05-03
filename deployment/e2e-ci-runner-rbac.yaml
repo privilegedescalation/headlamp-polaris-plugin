@@ -44,3 +44,30 @@ roleRef:
   kind: Role
   name: e2e-ci-runner
   apiGroup: rbac.authorization.k8s.io
+---
+# RBAC for the CI runner to apply and verify Polaris dashboard RBAC.
+# The E2E workflow applies deployment/polaris-rbac.yaml (Role + RoleBinding in polaris ns)
+# and the pre-flight check verifies the proxy-reader role is present.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: e2e-ci-runner-polaris
+  namespace: polaris
+rules:
+  - apiGroups: ["rbac.authorization.k8s.io"]
+    resources: ["roles", "rolebindings"]
+    verbs: ["get", "list", "create", "update", "patch", "delete"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: e2e-ci-runner-polaris-binding
+  namespace: polaris
+subjects:
+  - kind: ServiceAccount
+    name: runners-privilegedescalation-gha-rs-no-permission
+    namespace: arc-runners
+roleRef:
+  kind: Role
+  name: e2e-ci-runner-polaris
+  apiGroup: rbac.authorization.k8s.io
