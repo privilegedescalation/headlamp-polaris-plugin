@@ -30,6 +30,35 @@ rules:
   - apiGroups: [""]
     resources: ["serviceaccounts/token"]
     verbs: ["create"]
+  # RBAC pre-flight check: verify polaris namespace has proxy-reader Role + RoleBinding
+  # before running E2E tests. Required by the "RBAC pre-flight check" workflow step.
+  - apiGroups: ["rbac.authorization.k8s.io"]
+    resources: ["roles", "rolebindings"]
+    verbs: ["get"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: e2e-ci-runner-polaris-reader
+  namespace: polaris
+rules:
+  - apiGroups: ["rbac.authorization.k8s.io"]
+    resources: ["roles", "rolebindings"]
+    verbs: ["get"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: e2e-ci-runner-polaris-reader-binding
+  namespace: polaris
+subjects:
+  - kind: ServiceAccount
+    name: runners-privilegedescalation-gha-rs-no-permission
+    namespace: arc-runners
+roleRef:
+  kind: Role
+  name: e2e-ci-runner-polaris-reader
+  apiGroup: rbac.authorization.k8s.io
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
