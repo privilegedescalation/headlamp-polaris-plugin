@@ -229,7 +229,7 @@ Headlamp v0.39.0 with default `watchPlugins: true` treats catalog-managed plugin
 **Action Items:**
 - [ ] Parallelize test execution
 - [ ] Add npm cache to GitHub Actions
-- [ ] Integrate Dependabot
+- [x] Renovate is configured org-wide via `github>privilegedescalation/.github:renovate-config`
 - [ ] Add semantic-release
 
 ---
