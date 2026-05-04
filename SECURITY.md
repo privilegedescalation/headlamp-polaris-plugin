@@ -212,7 +212,7 @@ If you discover a security vulnerability in this plugin, please report it via:
 
 The project uses:
 - **npm audit**: Runs automatically during `npm install`
-- **Dependabot**: GitHub Dependabot monitors dependencies and creates PRs for updates
+- **Renovate**: Automated dependency updates via Mend Renovate (org-wide configured)
 - **GitHub Actions**: CI workflow runs `npm audit` on every commit
 
 ### Updating Dependencies
