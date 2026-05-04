@@ -2,9 +2,10 @@
 # RBAC for the GitHub Actions CI runner to manage the E2E Headlamp instance.
 # CI-only test fixture — NOT for production use.
 #
-# Grants the ARC runner service account permissions in the privilegedescalation-dev
-# namespace to deploy and tear down a dedicated Headlamp instance via Helm.
-# E2E resources run in `privilegedescalation-dev` — nothing persists beyond a test run.
+# Grants the ARC runner service account permissions in the headlamp-dev
+# namespace to deploy and tear down a dedicated Headlamp instance via Helm,
+# and in the polaris namespace to apply the Polaris dashboard proxy RBAC
+# before the E2E pre-flight check.
 #
 # Plugin is loaded via ConfigMap volume mount — no custom Docker images.
 #
@@ -14,7 +15,7 @@ apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
 metadata:
   name: e2e-ci-runner
-  namespace: privilegedescalation-dev
+  namespace: headlamp-dev
 rules:
   # Helm needs to manage these resources for the Headlamp chart
   - apiGroups: ["apps"]
@@ -39,14 +40,6 @@ kind: Role
 metadata:
   name: e2e-ci-runner-polaris
   namespace: polaris
-subjects:
-  - kind: ServiceAccount
-    name: runners-privilegedescalation-gha-rs-no-permission
-    namespace: arc-runners
-roleRef:
-  kind: Role
-  name: e2e-ci-runner-polaris
-  apiGroup: rbac.authorization.k8s.io
 rules:
   - apiGroups: ["rbac.authorization.k8s.io"]
     resources: ["roles", "rolebindings"]
@@ -70,7 +63,7 @@ apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
 metadata:
   name: e2e-ci-runner-binding
-  namespace: privilegedescalation-dev
+  namespace: headlamp-dev
 subjects:
   - kind: ServiceAccount
     name: runners-privilegedescalation-gha-rs-no-permission
