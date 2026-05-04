@@ -11,7 +11,7 @@ permissions:
   contents: read
 
 # Only one E2E run at a time: the shared E2E_RELEASE (headlamp-e2e) in
-# privilegedescalation-dev cannot be shared across concurrent runs.
+# headlamp-dev cannot be shared across concurrent runs.
 # cancel-in-progress: false (queue, don't cancel) — cancelling in-flight
 # runs may skip the if: always() teardown, leaving dangling cluster resources.
 concurrency:
@@ -19,7 +19,7 @@ concurrency:
   cancel-in-progress: false
 
 env:
-  E2E_NAMESPACE: privilegedescalation-dev
+  E2E_NAMESPACE: headlamp-dev
   E2E_RELEASE: headlamp-e2e
   # Pin to a known-good Headlamp version. Using :latest is risky because
   # the tag can change between CI runs, causing flaky failures when a newer
@@ -44,6 +44,22 @@ jobs:
 
       - name: Setup kubectl
         uses: azure/setup-kubectl@v4
+
+      - name: Apply RBAC for Polaris dashboard proxy
+        run: kubectl apply -f deployment/polaris-rbac.yaml
+
+      - name: RBAC pre-flight check
+        run: |
+          echo "Checking RBAC resources in polaris namespace..."
+          MISSING=0
+          kubectl get role polaris-dashboard-proxy-reader -n polaris -o name >/dev/null 2>&1 || MISSING=1
+          kubectl get rolebinding polaris-dashboard-proxy-reader -n polaris -o name >/dev/null 2>&1 || MISSING=1
+          if [ "$MISSING" -eq 0 ]; then
+            echo "RBAC pre-flight check passed."
+          else
+            echo "::error::Role or RoleBinding not found in polaris namespace after apply."
+            exit 1
+          fi
 
       - name: Install dependencies
         run: npm ci
