@@ -47,7 +47,7 @@ metadata:
 subjects:
   - kind: ServiceAccount
     name: headlamp
-    namespace: kube-system
+    namespace: headlamp
 roleRef:
   kind: Role
   name: polaris-proxy-reader
@@ -71,7 +71,7 @@ kubectl -n polaris get rolebinding headlamp-polaris-proxy
 
 # Test permission
 kubectl auth can-i get services/proxy \
-  --as=system:serviceaccount:kube-system:headlamp \
+  --as=system:serviceaccount:headlamp:headlamp \
   -n polaris \
   --resource-name=polaris-dashboard
 
@@ -90,7 +90,7 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
   name: headlamp-plugin-config
-  namespace: kube-system
+  namespace: headlamp
   labels:
     app.kubernetes.io/name: headlamp
     app.kubernetes.io/component: plugin-config
@@ -109,7 +109,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: headlamp
-  namespace: kube-system
+  namespace: headlamp
   labels:
     app.kubernetes.io/name: headlamp
 spec:
@@ -194,7 +194,7 @@ apiVersion: v1
 kind: ServiceAccount
 metadata:
   name: headlamp
-  namespace: kube-system
+  namespace: headlamp
   labels:
     app.kubernetes.io/name: headlamp
 
@@ -204,7 +204,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: headlamp
-  namespace: kube-system
+  namespace: headlamp
   labels:
     app.kubernetes.io/name: headlamp
 spec:
@@ -235,27 +235,27 @@ kubectl apply -f headlamp-service.yaml
 kubectl apply -f headlamp-serviceaccount.yaml
 
 # Wait for deployment to be ready
-kubectl -n kube-system wait --for=condition=available deployment/headlamp --timeout=300s
+kubectl -n headlamp wait --for=condition=available deployment/headlamp --timeout=300s
 ```
 
 ### 2. Verify Deployment
 
 ```bash
 # Check pods are running
-kubectl -n kube-system get pods -l app.kubernetes.io/name=headlamp
+kubectl -n headlamp get pods -l app.kubernetes.io/name=headlamp
 
 # Expected output:
 # NAME                        READY   STATUS    RESTARTS   AGE
 # headlamp-xxxxxxxxxx-xxxxx   1/1     Running   0          2m
 
 # Check init container logs
-kubectl -n kube-system logs deployment/headlamp -c install-plugins
+kubectl -n headlamp logs deployment/headlamp -c install-plugins
 
 # Expected output:
 # Plugin installation complete
 
 # Verify plugin files exist
-kubectl -n kube-system exec deployment/headlamp -c headlamp -- \
+kubectl -n headlamp exec deployment/headlamp -c headlamp -- \
   ls -la /headlamp/plugins/headlamp-polaris-plugin/
 
 # Expected output:
@@ -273,7 +273,7 @@ kubectl get --raw /api/v1/namespaces/polaris/services/polaris-dashboard:80/proxy
 
 ```bash
 # Port-forward to access locally
-kubectl -n kube-system port-forward service/headlamp 8080:80
+kubectl -n headlamp port-forward service/headlamp 8080:80
 
 # Open browser to http://localhost:8080
 ```
@@ -309,7 +309,7 @@ k8s/
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 
-namespace: kube-system
+namespace: headlamp
 
 commonLabels:
   app.kubernetes.io/name: headlamp
@@ -401,7 +401,7 @@ spec:
     - apiVersion: apps/v1
       kind: Deployment
       name: headlamp
-      namespace: kube-system
+      namespace: headlamp
 ```
 
 ## Upgrading the Plugin
@@ -410,24 +410,24 @@ spec:
 
 ```bash
 # Edit ConfigMap with new version
-kubectl -n kube-system edit configmap headlamp-plugin-config
+kubectl -n headlamp edit configmap headlamp-plugin-config
 
 # Update version and URL:
 # version: 0.3.6
 # url: https://github.com/.../v0.3.6/polaris-0.3.10.tar.gz
 
 # Restart deployment to trigger init container
-kubectl -n kube-system rollout restart deployment/headlamp
+kubectl -n headlamp rollout restart deployment/headlamp
 
 # Wait for rollout to complete
-kubectl -n kube-system rollout status deployment/headlamp
+kubectl -n headlamp rollout status deployment/headlamp
 ```
 
 ### Verify Upgrade
 
 ```bash
 # Check init container logs
-kubectl -n kube-system logs deployment/headlamp -c install-plugins
+kubectl -n headlamp logs deployment/headlamp -c install-plugins
 
 # Verify new version in UI
 # Navigate to Settings → Plugins in Headlamp
@@ -439,7 +439,7 @@ kubectl -n kube-system logs deployment/headlamp -c install-plugins
 
 ```bash
 # Check init container logs
-kubectl -n kube-system logs deployment/headlamp -c install-plugins
+kubectl -n headlamp logs deployment/headlamp -c install-plugins
 
 # Common issues:
 # 1. Network connectivity to GitHub
@@ -451,14 +451,14 @@ kubectl -n kube-system logs deployment/headlamp -c install-plugins
 
 ```bash
 # Verify HEADLAMP_CONFIG_WATCH_PLUGINS is false
-kubectl -n kube-system get deployment headlamp -o yaml | grep WATCH_PLUGINS
+kubectl -n headlamp get deployment headlamp -o yaml | grep WATCH_PLUGINS
 
 # Expected output:
 # - name: HEADLAMP_CONFIG_WATCH_PLUGINS
 #   value: "false"
 
 # If not set or "true", update deployment
-kubectl -n kube-system edit deployment headlamp
+kubectl -n headlamp edit deployment headlamp
 ```
 
 ### RBAC Permissions Denied
@@ -466,7 +466,7 @@ kubectl -n kube-system edit deployment headlamp
 ```bash
 # Test RBAC
 kubectl auth can-i get services/proxy \
-  --as=system:serviceaccount:kube-system:headlamp \
+  --as=system:serviceaccount:headlamp:headlamp \
   -n polaris \
   --resource-name=polaris-dashboard
 
