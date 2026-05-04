@@ -47,11 +47,15 @@ jobs:
 
       - name: Apply RBAC for E2E pipeline
         run: |
-          kubectl apply -f deployment/e2e-ci-runner-rbac.yaml
+          set -x
+          kubectl apply -f deployment/e2e-ci-runner-rbac.yaml --dry-run=server 2>&1 || true
+          kubectl apply -f deployment/e2e-ci-runner-rbac.yaml 2>&1
+          echo "exit code: $?"
           echo "Waiting for RBAC propagation (Kubernetes subject access review caching)..."
           sleep 5
           echo "Verifying CI runner permissions..."
-          kubectl auth can-i create roles -n headlamp-dev --as="system:serviceaccount:arc-runners:runners-privilegedescalation-gha-rs-no-permission" || { echo "::error::CI runner still lacks roles permission after propagation wait"; exit 1; }
+          kubectl auth can-i create roles -n headlamp-dev --as="system:serviceaccount:arc-runners:runners-privilegedescalation-gha-rs-no-permission" 2>&1 || { echo "::error::CI runner still lacks roles permission after propagation wait"; exit 1; }
+          set +x
 
       - name: Apply Polaris dashboard RBAC
         run: kubectl apply -f deployment/polaris-rbac.yaml
