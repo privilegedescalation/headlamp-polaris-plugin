@@ -97,7 +97,7 @@ metadata:
 subjects:
   - kind: ServiceAccount
     name: headlamp # adjust to match your Headlamp service account
-    namespace: kube-system # adjust to match the namespace Headlamp runs in
+    namespace: headlamp # adjust to match the namespace Headlamp runs in
 roleRef:
   kind: Role
   name: polaris-proxy-reader
@@ -197,7 +197,7 @@ npm test
 npm run test:watch
 
 # E2E tests (Playwright)
-export HEADLAMP_TOKEN=$(kubectl create token headlamp -n kube-system --duration=24h)
+export HEADLAMP_TOKEN=$(kubectl create token headlamp -n headlamp --duration=24h)
 npm run e2e
 npm run e2e:headed   # see browser
 ```

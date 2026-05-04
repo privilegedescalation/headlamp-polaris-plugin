@@ -38,7 +38,7 @@ EOF
 
 # Update Headlamp
 helm upgrade --install headlamp headlamp/headlamp \
-  --namespace kube-system \
+  --namespace headlamp \
   --values headlamp-values.yaml
 ```
 
@@ -70,7 +70,7 @@ metadata:
 subjects:
   - kind: ServiceAccount
     name: headlamp
-    namespace: kube-system
+    namespace: headlamp
 roleRef:
   kind: Role
   name: polaris-proxy-reader
@@ -111,7 +111,7 @@ EOF
 
 ```bash
 # Verify plugin files exist
-kubectl -n kube-system exec -it deployment/headlamp -c headlamp -- \
+kubectl -n headlamp exec -it deployment/headlamp -c headlamp -- \
   ls /headlamp/plugins/headlamp-polaris-plugin/dist/
 
 # Expected output:
@@ -119,7 +119,7 @@ kubectl -n kube-system exec -it deployment/headlamp -c headlamp -- \
 
 # Verify RBAC is correct
 kubectl auth can-i get services/proxy \
-  --as=system:serviceaccount:kube-system:headlamp \
+  --as=system:serviceaccount:headlamp:headlamp \
   -n polaris \
   --resource-name=polaris-dashboard
 
@@ -185,7 +185,7 @@ Cluster score badge in top navigation:
 
 ```bash
 # Verify plugin files exist
-kubectl -n kube-system exec -it deployment/headlamp -c headlamp -- \
+kubectl -n headlamp exec -it deployment/headlamp -c headlamp -- \
   ls /headlamp/plugins/headlamp-polaris-plugin/
 
 # If missing, reinstall via Headlamp UI or sidecar method

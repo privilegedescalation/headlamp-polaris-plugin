@@ -67,14 +67,14 @@ kubectl -n polaris wait --for=condition=ready pod -l app.kubernetes.io/name=pola
 
 ```bash
 # Check Headlamp is deployed
-kubectl -n kube-system get pods -l app.kubernetes.io/name=headlamp
+kubectl -n headlamp get pods -l app.kubernetes.io/name=headlamp
 
 # Expected output:
 # NAME                        READY   STATUS    RESTARTS   AGE
 # headlamp-xxxxxxxxxx-xxxxx   1/1     Running   0          1h
 
 # Check Headlamp version (must be v0.26+)
-kubectl -n kube-system get deployment headlamp -o jsonpath='{.spec.template.spec.containers[0].image}'
+kubectl -n headlamp get deployment headlamp -o jsonpath='{.spec.template.spec.containers[0].image}'
 
 # Expected output:
 # ghcr.io/headlamp-k8s/headlamp:v0.39.0  (or similar)
@@ -89,12 +89,12 @@ helm repo update
 
 # Install Headlamp
 helm install headlamp headlamp/headlamp \
-  --namespace kube-system \
+  --namespace headlamp \
   --set config.pluginsDir="/headlamp/plugins" \
   --set pluginsManager.enabled=true
 
 # Wait for pod to be ready
-kubectl -n kube-system wait --for=condition=ready pod -l app.kubernetes.io/name=headlamp --timeout=300s
+kubectl -n headlamp wait --for=condition=ready pod -l app.kubernetes.io/name=headlamp --timeout=300s
 ```
 
 ## RBAC Requirements
@@ -112,7 +112,7 @@ The plugin requires permissions to access the Polaris dashboard via Kubernetes s
 ```bash
 # Test if Headlamp service account has permission
 kubectl auth can-i get services/proxy \
-  --as=system:serviceaccount:kube-system:headlamp \
+  --as=system:serviceaccount:headlamp:headlamp \
   -n polaris \
   --resource-name=polaris-dashboard
 
