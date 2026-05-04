@@ -39,6 +39,13 @@ if ! kubectl auth can-i delete configmaps -n "$E2E_NAMESPACE" --quiet 2>/dev/nul
   exit 1
 fi
 
+echo "Checking RBAC for Polaris dashboard proxy access..."
+if ! kubectl auth can-i get services/proxy -n polaris --quiet 2>/dev/null; then
+  echo "WARNING: Missing RBAC — cannot proxy to polaris-dashboard in namespace 'polaris'." >&2
+  echo "  E2E tests that depend on Polaris data may fail." >&2
+  echo "  Apply the polaris namespace RBAC: kubectl apply -f deployment/e2e-ci-runner-rbac.yaml" >&2
+fi
+
 echo "=== E2E Headlamp Deployment ==="
 echo "  Image:     ghcr.io/headlamp-k8s/headlamp:${HEADLAMP_VERSION}"
 echo "  Namespace: $E2E_NAMESPACE"
