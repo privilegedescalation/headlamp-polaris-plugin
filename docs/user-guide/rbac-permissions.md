@@ -65,7 +65,7 @@ metadata:
 subjects:
   - kind: ServiceAccount
     name: headlamp # Adjust to your Headlamp SA name
-    namespace: kube-system # Adjust to Headlamp's namespace
+    namespace: headlamp # Adjust to Headlamp's namespace
 roleRef:
   kind: Role
   name: polaris-proxy-reader
@@ -75,7 +75,7 @@ roleRef:
 **Adjust for your environment:**
 
 - `subjects[0].name` - Your Headlamp service account name (often `headlamp`)
-- `subjects[0].namespace` - Namespace where Headlamp runs (often `kube-system`)
+- `subjects[0].namespace` - Namespace where Headlamp runs (often `headlamp`)
 
 ### Step 3: Apply and Verify
 
@@ -91,7 +91,7 @@ kubectl -n polaris get rolebinding headlamp-polaris-proxy
 
 # Test permission
 kubectl auth can-i get services/proxy \
-  --as=system:serviceaccount:kube-system:headlamp \
+  --as=system:serviceaccount:headlamp:headlamp \
   -n polaris \
   --resource-name=polaris-dashboard
 
@@ -109,7 +109,7 @@ In token-auth mode, **each user's own identity** is used for Kubernetes API requ
 With service account mode:
 
 - Single RoleBinding grants access to all Headlamp users
-- Kubernetes sees all requests as `system:serviceaccount:kube-system:headlamp`
+- Kubernetes sees all requests as `system:serviceaccount:headlamp:headlamp`
 
 With token-auth mode:
 
@@ -267,7 +267,7 @@ metadata:
 subjects:
   - kind: ServiceAccount
     name: headlamp
-    namespace: kube-system
+    namespace: headlamp
 roleRef:
   kind: Role
   name: polaris-proxy-reader
@@ -281,7 +281,7 @@ metadata:
 subjects:
   - kind: ServiceAccount
     name: headlamp
-    namespace: kube-system
+    namespace: headlamp
 roleRef:
   kind: Role
   name: polaris-proxy-reader
@@ -411,7 +411,7 @@ Every plugin data fetch creates a Kubernetes API audit log entry.
   "level": "Metadata",
   "verb": "get",
   "user": {
-    "username": "system:serviceaccount:kube-system:headlamp"
+    "username": "system:serviceaccount:headlamp:headlamp"
   },
   "sourceIPs": ["10.96.0.1"],
   "objectRef": {
@@ -494,7 +494,7 @@ If using a log aggregator (e.g., Elasticsearch), create filters to exclude or do
    ```bash
    # Service account mode
    kubectl auth can-i get services/proxy \
-     --as=system:serviceaccount:kube-system:headlamp \
+     --as=system:serviceaccount:headlamp:headlamp \
      -n polaris \
      --resource-name=polaris-dashboard
 
