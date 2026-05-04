@@ -33,7 +33,7 @@ This guide covers common issues encountered when using the Headlamp Polaris Plug
 
 ```bash
 # View Headlamp pod logs (plugin sidecar)
-kubectl logs -n kube-system deployment/headlamp -c headlamp-plugin
+kubectl logs -n headlamp deployment/headlamp -c headlamp-plugin
 
 # Expected output:
 # Installing plugin from https://github.com/.../headlamp-polaris-plugin-X.Y.Z.tar.gz
@@ -43,7 +43,7 @@ kubectl logs -n kube-system deployment/headlamp -c headlamp-plugin
 **Verify plugin files exist**:
 
 ```bash
-kubectl exec -n kube-system deployment/headlamp -c headlamp -- ls -la /headlamp/plugins/
+kubectl exec -n headlamp deployment/headlamp -c headlamp -- ls -la /headlamp/plugins/
 # Should show: headlamp-polaris-plugin/
 ```
 
@@ -118,7 +118,7 @@ Expected subjects:
 subjects:
   - kind: ServiceAccount
     name: headlamp
-    namespace: kube-system
+    namespace: headlamp
 ```
 
 For OIDC mode:
@@ -154,7 +154,7 @@ metadata:
 subjects:
   - kind: ServiceAccount
     name: headlamp
-    namespace: kube-system
+    namespace: headlamp
 roleRef:
   kind: Role
   name: polaris-proxy-reader
@@ -169,7 +169,7 @@ Service account mode:
 ```bash
 # Impersonate Headlamp service account
 kubectl auth can-i get services/proxy \
-  --as=system:serviceaccount:kube-system:headlamp \
+  --as=system:serviceaccount:headlamp:headlamp \
   --resource-name=polaris-dashboard \
   -n polaris
 # Expected: yes
@@ -189,7 +189,7 @@ kubectl auth can-i get services/proxy \
 After applying RBAC changes:
 
 ```bash
-kubectl rollout restart deployment headlamp -n kube-system
+kubectl rollout restart deployment headlamp -n headlamp
 ```
 
 ---
@@ -490,7 +490,7 @@ Run this script to test all RBAC components:
 #!/bin/bash
 NS="polaris"
 SA="headlamp"
-SA_NS="kube-system"
+SA_NS="headlamp"
 
 echo "=== Testing RBAC for Polaris Plugin ==="
 
@@ -529,8 +529,8 @@ echo "=== Test complete ==="
 Test connectivity from Headlamp to Polaris:
 
 ```bash
-# Create debug pod in kube-system namespace
-kubectl run netdebug -n kube-system --rm -it --image=nicolaka/netshoot -- bash
+# Create debug pod in headlamp namespace
+kubectl run netdebug -n headlamp --rm -it --image=nicolaka/netshoot -- bash
 
 # Inside pod, test DNS and HTTP
 nslookup polaris-dashboard.polaris.svc.cluster.local
@@ -545,11 +545,11 @@ If you have audit logging enabled, check for denied requests:
 
 ```bash
 # View recent audit logs (location varies by cluster)
-kubectl logs -n kube-system kube-apiserver-* | grep polaris-dashboard
+kubectl logs -n headlamp kube-apiserver-* | grep polaris-dashboard
 
 # Look for lines with:
 # "reason": "Forbidden"
-# "user": "system:serviceaccount:kube-system:headlamp"
+# "user": "system:serviceaccount:headlamp:headlamp"
 ```
 
 ---
@@ -567,7 +567,7 @@ kubectl logs -n kube-system kube-apiserver-* | grep polaris-dashboard
 **Check sidecar logs**:
 
 ```bash
-kubectl logs -n kube-system deployment/headlamp -c headlamp-plugin
+kubectl logs -n headlamp deployment/headlamp -c headlamp-plugin
 ```
 
 **Common errors**:
@@ -591,7 +591,7 @@ Error: 404 Not Found
 **Solution**: Verify `archive-url` in plugin config matches GitHub release:
 
 ```bash
-kubectl get configmap headlamp-plugin-config -n kube-system -o yaml
+kubectl get configmap headlamp-plugin-config -n headlamp -o yaml
 ```
 
 Expected format:
@@ -677,13 +677,13 @@ If none of these solutions work, gather debugging information and open an issue:
 1. **Version Information**:
 
    ```bash
-   kubectl get pods -n kube-system -l app.kubernetes.io/name=headlamp -o yaml | grep image:
+   kubectl get pods -n headlamp -l app.kubernetes.io/name=headlamp -o yaml | grep image:
    ```
 
 2. **Plugin Version**:
 
    - Check Settings → Plugins in Headlamp UI
-   - Or: `kubectl exec -n kube-system deployment/headlamp -c headlamp -- cat /headlamp/plugins/headlamp-polaris-plugin/package.json`
+   - Or: `kubectl exec -n headlamp deployment/headlamp -c headlamp -- cat /headlamp/plugins/headlamp-polaris-plugin/package.json`
 
 3. **Browser Console Output**:
 
@@ -698,7 +698,7 @@ If none of these solutions work, gather debugging information and open an issue:
 5. **Pod Logs**:
 
    ```bash
-   kubectl logs -n kube-system deployment/headlamp -c headlamp --tail=100
+   kubectl logs -n headlamp deployment/headlamp -c headlamp --tail=100
    kubectl logs -n polaris deployment/polaris-dashboard --tail=100
    ```
 

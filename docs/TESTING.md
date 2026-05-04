@@ -268,10 +268,9 @@ npm run e2e
 
 ```bash
 # Create token
-export HEADLAMP_TOKEN=$(kubectl create token headlamp -n kube-system --duration=24h)
+export HEADLAMP_TOKEN=$(kubectl create token headlamp -n headlamp --duration=24h)
 
-# Port-forward for local testing
-kubectl port-forward -n kube-system svc/headlamp 4466:80
+kubectl port-forward -n headlamp svc/headlamp 4466:80
 
 # Run tests
 HEADLAMP_URL=http://localhost:4466 npm run e2e

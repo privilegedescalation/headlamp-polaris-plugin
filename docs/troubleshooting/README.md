@@ -38,17 +38,17 @@ kubectl get --raw /api/v1/namespaces/polaris/services/polaris-dashboard:80/proxy
 
 # 3. Verify RBAC permissions
 kubectl auth can-i get services/proxy \
-  --as=system:serviceaccount:kube-system:headlamp \
+  --as=system:serviceaccount:headlamp:headlamp \
   -n polaris \
   --resource-name=polaris-dashboard
 
 # Expected output: yes
 
 # 4. Check Headlamp pod is running
-kubectl -n kube-system get pods -l app.kubernetes.io/name=headlamp
+kubectl -n headlamp get pods -l app.kubernetes.io/name=headlamp
 
 # 5. Check Headlamp logs for plugin errors
-kubectl -n kube-system logs deployment/headlamp | grep -i polaris
+kubectl -n headlamp logs deployment/headlamp | grep -i polaris
 
 # Expected: No errors
 ```
@@ -57,7 +57,7 @@ kubectl -n kube-system logs deployment/headlamp | grep -i polaris
 
 ```bash
 # Verify plugin files exist
-kubectl -n kube-system exec deployment/headlamp -c headlamp -- \
+kubectl -n headlamp exec deployment/headlamp -c headlamp -- \
   ls -la /headlamp/plugins/headlamp-polaris-plugin/
 
 # Expected output:
@@ -76,7 +76,7 @@ kubectl -n polaris get rolebinding headlamp-polaris-proxy
 
 # Test permission (service account mode)
 kubectl auth can-i get services/proxy \
-  --as=system:serviceaccount:kube-system:headlamp \
+  --as=system:serviceaccount:headlamp:headlamp \
   -n polaris \
   --resource-name=polaris-dashboard
 
