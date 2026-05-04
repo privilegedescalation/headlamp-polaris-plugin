@@ -72,7 +72,7 @@ Deploy or update Headlamp:
 
 ```bash
 helm upgrade --install headlamp headlamp/headlamp \
-  --namespace kube-system \
+  --namespace headlamp \
   --values headlamp-values.yaml
 ```
 
@@ -122,7 +122,7 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
   name: headlamp-plugin-config
-  namespace: kube-system
+  namespace: headlamp
 data:
   plugin.yml: |
     - name: headlamp-polaris-plugin
@@ -138,14 +138,14 @@ kubectl apply -f headlamp-plugin-config.yaml
 
 # Deploy/update Headlamp with sidecar
 helm upgrade --install headlamp headlamp/headlamp \
-  --namespace kube-system \
+  --namespace headlamp \
   --values headlamp-values.yaml
 
 # Wait for pod to be ready
-kubectl -n kube-system wait --for=condition=ready pod -l app.kubernetes.io/name=headlamp --timeout=300s
+kubectl -n headlamp wait --for=condition=ready pod -l app.kubernetes.io/name=headlamp --timeout=300s
 
 # Verify plugin files
-kubectl -n kube-system exec -it deployment/headlamp -c headlamp -- ls -la /headlamp/plugins/headlamp-polaris-plugin/
+kubectl -n headlamp exec -it deployment/headlamp -c headlamp -- ls -la /headlamp/plugins/headlamp-polaris-plugin/
 
 # Expected output:
 # drwxr-xr-x  dist/
@@ -270,7 +270,7 @@ metadata:
 subjects:
   - kind: ServiceAccount
     name: headlamp
-    namespace: kube-system
+    namespace: headlamp
 roleRef:
   kind: Role
   name: polaris-proxy-reader
@@ -284,10 +284,10 @@ See [RBAC Permissions](../user-guide/rbac-permissions.md) for detailed RBAC conf
 
 ```bash
 # If you updated Helm values or ConfigMaps
-kubectl -n kube-system rollout restart deployment/headlamp
+kubectl -n headlamp rollout restart deployment/headlamp
 
 # Wait for pod to be ready
-kubectl -n kube-system wait --for=condition=ready pod -l app.kubernetes.io/name=headlamp --timeout=300s
+kubectl -n headlamp wait --for=condition=ready pod -l app.kubernetes.io/name=headlamp --timeout=300s
 ```
 
 ### 3. Clear Browser Cache
@@ -312,14 +312,14 @@ kubectl -n kube-system wait --for=condition=ready pod -l app.kubernetes.io/name=
 
 ```bash
 # Verify plugin files exist
-kubectl -n kube-system exec -it deployment/headlamp -c headlamp -- ls -la /headlamp/plugins/headlamp-polaris-plugin/
+kubectl -n headlamp exec -it deployment/headlamp -c headlamp -- ls -la /headlamp/plugins/headlamp-polaris-plugin/
 
 # Expected output:
 # drwxr-xr-x  dist/
 # -rw-r--r--  package.json
 
 # Check Headlamp logs for errors
-kubectl -n kube-system logs deployment/headlamp | grep -i polaris
+kubectl -n headlamp logs deployment/headlamp | grep -i polaris
 
 # Expected: No errors related to plugin loading
 
@@ -345,13 +345,13 @@ kubectl get --raw /api/v1/namespaces/polaris/services/polaris-dashboard:80/proxy
 
 ```bash
 # 1. Verify plugin files exist
-kubectl -n kube-system exec deployment/headlamp -c headlamp -- \
+kubectl -n headlamp exec deployment/headlamp -c headlamp -- \
   ls -la /headlamp/plugins/headlamp-polaris-plugin/
 
 # Expected: dist/, package.json present
 
 # 2. Check Headlamp logs for plugin errors
-kubectl -n kube-system logs deployment/headlamp | grep -i polaris
+kubectl -n headlamp logs deployment/headlamp | grep -i polaris
 
 # 3. Hard refresh browser (Cmd+Shift+R or Ctrl+Shift+R)
 
@@ -404,7 +404,7 @@ helm install polaris fairwinds-stable/polaris \
 ```bash
 # Wait 30 minutes for ArtifactHub sync
 # Or manually force Headlamp restart:
-kubectl -n kube-system rollout restart deployment/headlamp
+kubectl -n headlamp rollout restart deployment/headlamp
 ```
 
 ## Next Steps
