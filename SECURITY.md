@@ -17,7 +17,7 @@ The plugin performs **only read operations** via the Kubernetes API server's ser
 
 ### Data Flow
 
-```
+```text
 User Browser
     ↓ (HTTPS)
 Headlamp Pod
@@ -152,6 +152,7 @@ spec:
 Headlamp runs with a dedicated service account (`headlamp` in `kube-system`). All users share the same permissions defined by this service account's RBAC bindings.
 
 **Security Considerations:**
+
 - All users have identical access to the plugin
 - Suitable for trusted internal environments
 - Simpler RBAC management
@@ -161,6 +162,7 @@ Headlamp runs with a dedicated service account (`headlamp` in `kube-system`). Al
 Headlamp can be configured for OIDC authentication, where each user provides their own bearer token. RBAC is enforced per-user.
 
 **Security Considerations:**
+
 - Fine-grained access control per user
 - Users without the `polaris-proxy-reader` role will see 403 errors
 - Requires OIDC provider integration
@@ -198,10 +200,12 @@ If you discover a security vulnerability in this plugin, please report it via:
 2. **Email**: Create a GitHub issue and mark it as "security" if advisories are not available
 
 **Please do not:**
+
 - Open public GitHub issues for security vulnerabilities
 - Disclose vulnerabilities publicly before a fix is available
 
 **Response Timeline:**
+
 - **Acknowledgment**: Within 48 hours
 - **Initial Assessment**: Within 1 week
 - **Fix Timeline**: Depends on severity (critical: 1-2 weeks, high: 2-4 weeks, medium/low: next release cycle)
@@ -211,6 +215,7 @@ If you discover a security vulnerability in this plugin, please report it via:
 ### Dependency Scanning
 
 The project uses:
+
 - **npm audit**: Runs automatically during `npm install`
 - **Dependabot**: GitHub Dependabot monitors dependencies and creates PRs for updates
 - **GitHub Actions**: CI workflow runs `npm audit` on every commit
@@ -262,6 +267,7 @@ The plugin's security posture depends on your cluster's security:
 **Cause**: User or service account lacks `services/proxy` permission on `polaris-dashboard`
 
 **Resolution**:
+
 1. Verify RoleBinding exists in `polaris` namespace
 2. Check RoleBinding references correct subject (service account, group, or user)
 3. Confirm Role includes `resourceNames: ["polaris-dashboard"]`
@@ -273,11 +279,13 @@ The plugin's security posture depends on your cluster's security:
 **Question**: Can I expose Polaris dashboard via Ingress instead of using service proxy?
 
 **Recommendation**: **Avoid exposing Polaris dashboard externally**. The service proxy approach:
+
 - Enforces Kubernetes RBAC on every request
 - Avoids exposing internal services to the internet
 - Prevents authentication bypass attacks
 
 If you must expose Polaris externally:
+
 - Use OAuth2 proxy or similar authentication layer
 - Configure NetworkPolicies to restrict access
 - Enable TLS with valid certificates
@@ -304,6 +312,7 @@ Users not in `team-a` will receive 403 errors when accessing the plugin, prevent
 ### Data Residency
 
 All data remains within your Kubernetes cluster. The plugin does not:
+
 - Send data to external services
 - Store data in browser localStorage (except refresh interval preference)
 - Use third-party analytics or tracking

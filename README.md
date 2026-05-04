@@ -206,7 +206,7 @@ For complete testing guide including CI/CD integration, see **[docs/TESTING.md](
 
 ## Project Structure
 
-```
+```text
 src/
   index.tsx                           -- Entry point. Registers sidebar entries, routes, and error boundaries.
   test-utils.tsx                      -- Shared test fixtures (makeResult, makeAuditData).
@@ -236,7 +236,7 @@ GET /api/v1/namespaces/polaris/services/polaris-dashboard/proxy/results.json
 
 This endpoint is served by the `polaris-dashboard` ClusterIP service, which is created by the Polaris Helm chart when `dashboard.enabled: true`. The JSON response matches Polaris's `AuditData` schema (`pkg/validator/output.go`):
 
-```
+```text
 AuditData
   ClusterInfo      -- nodes, pods, namespaces, controllers
   Results[]        -- per-workload results

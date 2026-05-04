@@ -83,6 +83,7 @@ import { Box, Chip } from '@mui/material';
 ### Headlamp Component Issues
 
 1. **StatusLabel with empty status**
+
    ```typescript
    // ❌ Renders near-invisible (muted background)
    <StatusLabel status="">{value}</StatusLabel>
@@ -92,6 +93,7 @@ import { Box, Chip } from '@mui/material';
    ```
 
 2. **Link component crashes on plugin routes**
+
    ```typescript
    // ❌ Headlamp Link crashes on plugin-registered routes
    import { Link } from '@kinvolk/headlamp-plugin/lib/CommonComponents';
@@ -210,6 +212,7 @@ npm run format:check
 ### Commit Convention
 
 Use Conventional Commits:
+
 - `feat:` - New feature
 - `fix:` - Bug fix
 - `docs:` - Documentation only
@@ -220,6 +223,7 @@ Use Conventional Commits:
 ### PR Process
 
 All PRs must pass:
+
 1. Build (`npm run build`)
 2. Lint (`npm run lint`)
 3. Type-check (`npm run tsc`)
@@ -276,6 +280,7 @@ npm run e2e
 ### CI Workflow (`.github/workflows/ci.yaml`)
 
 Runs on push to main and all PRs:
+
 1. Checkout
 2. `npm ci`
 3. `npm run build`
@@ -289,6 +294,7 @@ Runner: `local-ubuntu-latest`
 ### E2E Workflow (`.github/workflows/e2e.yaml`)
 
 Runs on push, PR, and manual trigger:
+
 1. Checkout
 2. `npm ci`
 3. `npm run e2e`
@@ -306,6 +312,7 @@ gh workflow run release.yaml -f version=0.4.2
 ```
 
 Steps:
+
 1. Validate version format (semver)
 2. Bump `package.json` + `artifacthub-pkg.yml`
 3. Build plugin
@@ -323,6 +330,7 @@ Steps:
 ### Version Bump Requirements
 
 **ALWAYS bump both files in the same commit**:
+
 - `package.json` - `version` field
 - `artifacthub-pkg.yml` - `version` field + `digest` (checksum) + `archive.url`
 
@@ -331,12 +339,14 @@ Steps:
 ### ⚠️ Headlamp v0.39.0 Known Issues
 
 **AutoSizer JavaScript Error**
+
 - **Symptom**: Console shows `TypeError: undefined is not an object (evaluating 'io.AutoSizer')`
 - **Impact**: Cosmetic error in Settings page, doesn't break functionality
 - **Root Cause**: Headlamp core bug, not plugin-related
 - **Workaround**: None needed, can be ignored
 
 **Plugin Loading (RESOLVED)**
+
 - **Old Issue**: Previously thought `config.watchPlugins: false` was required
 - **Resolution**: Plugins load correctly with default `watchPlugins: true`
 - **Note**: If you see old docs mentioning `watchPlugins: false`, ignore them
@@ -344,28 +354,34 @@ Steps:
 ### Polaris Dashboard Behavior
 
 **Stale Audit Data**
+
 - **Symptom**: Plugin shows old audit timestamp
 - **Root Cause**: Polaris dashboard runs audit once at pod startup, then caches results
 - **Does NOT**: Continuously re-audit in real-time
 - **Workaround**: Restart Polaris pods for fresh data
+
   ```bash
   kubectl rollout restart deployment -n polaris polaris-dashboard
   ```
+
 - **Load Balancing**: Service balances across multiple pods - each may have different audit timestamps
 - **Plugin Auto-Refresh**: Works correctly - just fetches whatever Polaris currently has cached
 
 ### Skipped Count Limitation
 
 **What It Shows**:
+
 - Only checks with `Severity: "ignore"` in Polaris API response
 - Does NOT include annotation-based exemptions (`polaris.fairwinds.com/*-exempt`)
 
 **Why**:
+
 - Polaris omits exempted checks from `results.json`
 - Plugin has no access to raw K8s resources to compute exemptions
 - By design: service proxy limitation
 
 **Workaround**:
+
 - Link to native Polaris dashboard for full exemption count
 - UI tooltip explains this limitation
 

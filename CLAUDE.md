@@ -33,7 +33,7 @@ All tests and `tsc` must pass before committing.
 
 ## Architecture
 
-```
+```text
 src/
 ├── index.tsx                           # Plugin entry: registerRoute, registerSidebarEntry, registerDetailsViewSection, registerAppBarAction, registerPluginSettings; PolarisErrorBoundary
 ├── test-utils.tsx                      # Shared test fixtures (makeResult, makeAuditData)
@@ -73,6 +73,7 @@ Data is fetched via `ApiProxy.request` to the Polaris dashboard service proxy an
 ## Testing
 
 Mock pattern for headlamp APIs:
+
 ```typescript
 vi.mock('@kinvolk/headlamp-plugin/lib', () => ({
   ApiProxy: { request: vi.fn().mockResolvedValue({}) },

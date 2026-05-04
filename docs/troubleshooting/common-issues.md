@@ -703,6 +703,7 @@ If none of these solutions work, gather debugging information and open an issue:
    ```
 
 6. **RBAC Configuration**:
+
    ```bash
    kubectl get role,rolebinding -n polaris
    ```

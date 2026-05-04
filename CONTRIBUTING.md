@@ -18,6 +18,7 @@ Thank you for your interest in contributing to the Headlamp Polaris Plugin! This
 ## Code of Conduct
 
 This project follows a standard code of conduct:
+
 - Be respectful and inclusive
 - Welcome newcomers and help them get started
 - Focus on constructive feedback
@@ -35,23 +36,27 @@ This project follows a standard code of conduct:
 ### Development Setup
 
 1. **Fork and clone the repository:**
+
    ```bash
    git clone https://github.com/YOUR_USERNAME/headlamp-polaris-plugin.git
    cd headlamp-polaris-plugin
    ```
 
 2. **Install dependencies:**
+
    ```bash
    npm install
    ```
 
 3. **Start development mode:**
+
    ```bash
    npm start
    # Plugin will be available at http://localhost:4466
    ```
 
 4. **Run tests:**
+
    ```bash
    # Unit tests
    npm test
@@ -61,6 +66,7 @@ This project follows a standard code of conduct:
    ```
 
 5. **Build the plugin:**
+
    ```bash
    npm run build
    ```
@@ -79,18 +85,21 @@ This project follows a standard code of conduct:
 ### Local Testing
 
 **Option 1: Development Mode**
+
 ```bash
 npm start
 # Opens Headlamp at http://localhost:4466 with hot reload
 ```
 
 **Option 2: Production Build**
+
 ```bash
 npm run build
 # Plugin bundle created in dist/
 ```
 
 **Option 3: E2E Testing**
+
 ```bash
 # Set up environment (see e2e/README.md)
 export HEADLAMP_TOKEN=$(kubectl create token headlamp -n kube-system --duration=24h)
@@ -116,6 +125,7 @@ npm run e2e
   - Chores: `chore/description`
 
 **Examples:**
+
 ```bash
 feat/add-exemption-support
 fix/dark-mode-theme-colors
@@ -127,16 +137,19 @@ chore/upgrade-dependencies
 ### Branching Rules
 
 **✅ ALWAYS use feature branches for:**
+
 - Code changes (new features, bug fixes, refactors)
 - Test updates
 - CI/CD workflow changes
 - Package updates
 
 **✅ MAY push directly to main for:**
+
 - Documentation-only changes (README.md, CLAUDE.md, comments)
 - Version bump commits (`package.json` + `artifacthub-pkg.yml`)
 
 **❌ NEVER push directly to main for:**
+
 - Any code changes to `src/`
 - Test file changes
 - Workflow changes
@@ -206,6 +219,7 @@ Co-Authored-By: Happy <yesreply@happy.engineering>
 ### Before Creating a PR
 
 1. **Run all checks locally:**
+
    ```bash
    npm run build      # Verify build succeeds
    npm run lint       # Check for linting errors
@@ -227,6 +241,7 @@ Co-Authored-By: Happy <yesreply@happy.engineering>
 ### Creating a PR
 
 1. **Push your branch:**
+
    ```bash
    git push origin feat/your-feature
    ```
@@ -237,6 +252,7 @@ Co-Authored-By: Happy <yesreply@happy.engineering>
    - Link related issues with `Fixes #123` or `Closes #456`
 
 3. **PR Title Format:**
+
    ```
    feat: add exemption management UI
    fix: correct score calculation for skipped checks
@@ -299,12 +315,14 @@ npm run format:check
 ### Import Organization
 
 Imports are automatically sorted by eslint. Order:
+
 1. React imports
 2. Third-party libraries
 3. Headlamp plugin imports
 4. Local imports (components, API, types)
 
 Example:
+
 ```typescript
 import React from 'react';
 import { SectionBox, StatusLabel } from '@kinvolk/headlamp-plugin/lib/CommonComponents';
@@ -330,6 +348,7 @@ import { computeScore } from '../api/polaris';
 - Use descriptive test names
 
 Example:
+
 ```typescript
 describe('countResults', () => {
   it('counts passing, warning, and danger results correctly', () => {
@@ -371,14 +390,17 @@ npm run e2e:headed
 When making changes, update relevant documentation:
 
 #### Code Changes
+
 - **README.md:** User-facing features, installation, configuration
 - **CLAUDE.md:** Architecture, constraints, MCP integrations
 - **JSDoc:** All public APIs, components, hooks
 
 #### Test Changes
+
 - **e2e/README.md:** New test scenarios or setup changes
 
 #### Build/CI Changes
+
 - **README.md:** Build commands, release process
 - **.github/workflows/*.yaml:** Workflow comments
 
@@ -405,6 +427,7 @@ export function countResults(data: AuditData): ResultCounts {
 ### Version Numbering
 
 We follow [Semantic Versioning](https://semver.org/):
+
 - **Major (1.0.0):** Breaking changes
 - **Minor (0.1.0):** New features, backward compatible
 - **Patch (0.0.1):** Bug fixes, backward compatible
@@ -416,6 +439,7 @@ We follow [Semantic Versioning](https://semver.org/):
 1. **Merge feature PRs to main**
 
 2. **Bump version:**
+
    ```bash
    # Edit package.json and artifacthub-pkg.yml
    # Update version and archive-url
@@ -425,6 +449,7 @@ We follow [Semantic Versioning](https://semver.org/):
    ```
 
 3. **Create and push tag:**
+
    ```bash
    git tag vX.Y.Z
    git push origin vX.Y.Z
@@ -441,6 +466,7 @@ We follow [Semantic Versioning](https://semver.org/):
 ### Pre-release Versions
 
 For testing before stable release:
+
 - Use `-dev.N` suffix: `v0.3.5-dev.1`
 - Follow same process as stable releases
 - Mark as "pre-release" on GitHub

@@ -129,7 +129,7 @@ docs/
 
 ### 3. CHANGELOG.md Standard
 
-**Format**: Keep a Changelog (https://keepachangelog.com/)
+**Format**: Keep a Changelog (<https://keepachangelog.com/>)
 
 **Structure**:
 

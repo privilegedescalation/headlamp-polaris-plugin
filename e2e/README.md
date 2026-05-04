@@ -115,6 +115,7 @@ These are smoke tests against real cluster data. They verify the plugin loads an
 ### Cluster Requirements
 
 1. **Polaris Deployment**
+
    ```bash
    # Verify Polaris is running
    kubectl -n polaris get pods
@@ -122,6 +123,7 @@ These are smoke tests against real cluster data. They verify the plugin loads an
    ```
 
 2. **Polaris Audit Data**
+
    ```bash
    # Check if Polaris has generated audit results
    kubectl get --raw /api/v1/namespaces/polaris/services/polaris-dashboard:80/proxy/results.json | jq '.AuditTime'
@@ -183,21 +185,25 @@ Tests automatically capture screenshots on failure in `test-results/`
 ### Common Issues
 
 **Auth fails with "Sign In button not found":**
+
 - Check HEADLAMP_URL is correct
 - Verify Headlamp is accessible
 - Ensure OIDC is configured if using Authentik
 
 **Polaris sidebar entry not found:**
+
 - Plugin may not be installed: Check Settings → Plugins in Headlamp
 - Plugin may have failed to load: Check browser console
 - Clear browser cache and hard refresh
 
 **Cluster score not displayed:**
+
 - Polaris may not have audit data yet
 - Check Polaris is running: `kubectl -n polaris get pods`
 - Verify service proxy: `kubectl get --raw /api/v1/namespaces/polaris/services/polaris-dashboard:80/proxy/results.json`
 
 **Namespace table empty:**
+
 - Polaris hasn't run audit yet (wait a few minutes)
 - Check Polaris logs: `kubectl -n polaris logs -l app.kubernetes.io/name=polaris`
 
@@ -281,6 +287,7 @@ kubectl apply -f deployment/e2e-ci-runner-rbac.yaml
 ### Manual Trigger
 
 You can manually trigger E2E tests from GitHub Actions:
+
 1. Go to Actions → E2E Tests
 2. Click "Run workflow"
 3. Select branch and run
