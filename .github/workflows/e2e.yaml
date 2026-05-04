@@ -45,6 +45,26 @@ jobs:
       - name: Setup kubectl
         uses: azure/setup-kubectl@v4
 
+      - name: Apply RBAC for E2E pipeline
+        run: kubectl apply -f deployment/e2e-ci-runner-rbac.yaml
+
+      - name: Apply Polaris dashboard RBAC
+        run: kubectl apply -f deployment/polaris-rbac.yaml
+
+      - name: RBAC pre-flight check
+        run: |
+          echo "Checking RBAC resources..."
+          MISSING=0
+          kubectl get role polaris-dashboard-proxy-reader -n polaris -o name >/dev/null 2>&1 || MISSING=1
+          kubectl get rolebinding polaris-dashboard-proxy-reader -n polaris -o name >/dev/null 2>&1 || MISSING=1
+          kubectl auth can-i delete configmaps -n "$E2E_NAMESPACE" --quiet 2>/dev/null || MISSING=1
+          if [ "$MISSING" -eq 0 ]; then
+            echo "RBAC pre-flight check passed."
+          else
+            echo "::error::RBAC pre-flight check failed. Missing required permissions."
+            exit 1
+          fi
+
       - name: Install dependencies
         run: npm ci
 
