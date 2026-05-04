@@ -99,6 +99,7 @@ class KubeObject<T extends KubeObjectInterface> {
 ### ResourceClasses
 
 All standard K8s resource types available (Secret, Namespace, Pod, etc.):
+
 ```typescript
 const [secrets, error, loading] = K8s.ResourceClasses.Secret.useList({ namespace: 'default' });
 const [secret, error] = K8s.ResourceClasses.Secret.useGet('my-secret', 'default');
@@ -127,6 +128,7 @@ ApiProxy.apiFactory(group, version, resource): ApiClient
 ```
 
 **Service proxy URL** (accessing in-cluster services):
+
 ```
 /api/v1/namespaces/${ns}/services/http:${name}:${port}/proxy${path}
 ```
@@ -146,6 +148,7 @@ From `@kinvolk/headlamp-plugin/lib/CommonComponents`:
 `PercentageBar` — bar chart with `data` array of `{ name, value, fill }`
 
 ### SimpleTable (non-obvious props)
+
 ```typescript
 <SimpleTable
   data={items}
@@ -158,6 +161,7 @@ From `@kinvolk/headlamp-plugin/lib/CommonComponents`:
 ```
 
 ### NameValueTable (non-obvious props)
+
 ```typescript
 <NameValueTable
   rows={[
@@ -168,6 +172,7 @@ From `@kinvolk/headlamp-plugin/lib/CommonComponents`:
 ```
 
 ### ConfigStore
+
 ```typescript
 import { ConfigStore } from '@kinvolk/headlamp-plugin/lib';
 const store = new ConfigStore<MyConfig>('plugin-name');
@@ -177,6 +182,7 @@ store.useConfig(): () => MyConfig;
 ```
 
 ### Pre-bundled (no package.json entry needed)
+
 react, react-dom, react-router-dom, @iconify/react, react-redux, @material-ui/core, @material-ui/styles, lodash, notistack, recharts, monaco-editor
 
 ---
@@ -264,6 +270,7 @@ vi.mock('@kinvolk/headlamp-plugin/lib/CommonComponents', () => ({
 Headlamp supports light and dark themes. **Never hardcode colors.** Use CSS custom properties with light-mode fallbacks:
 
 ### Required CSS variables for inline styles
+
 ```typescript
 // Text
 color: 'var(--mui-palette-text-primary)'
@@ -289,6 +296,7 @@ color: 'var(--link-color, #1976d2)'
 ```
 
 ### Common mistakes to avoid
+
 - **NEVER** use raw `#fff`, `#000`, `#333`, `#666` etc. without wrapping in `var(--mui-palette-*)`
 - **NEVER** use `rgba(0,0,0,0.5)` for overlays without a variable — this is the one exception where raw rgba is acceptable (backdrop overlays)
 - **NEVER** assume white backgrounds or dark text — always use `background-paper`/`text-primary`
@@ -296,6 +304,7 @@ color: 'var(--link-color, #1976d2)'
 - Fallback values after the comma are for environments where the variable isn't set — always use the light-mode default
 
 ### Form inputs in custom components
+
 ```typescript
 const inputStyle = {
   border: '1px solid var(--mui-palette-divider, #ccc)',

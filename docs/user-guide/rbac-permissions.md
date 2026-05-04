@@ -508,9 +508,11 @@ If using a log aggregator (e.g., Elasticsearch), create filters to exclude or do
    Expected: `yes`
 
 4. **Verify RoleBinding subjects match:**
+
    ```bash
    kubectl -n polaris get rolebinding headlamp-polaris-proxy -o yaml
    ```
+
    Check `subjects[].name` and `subjects[].namespace` match your Headlamp SA or user
 
 ### "404 Not Found" Error

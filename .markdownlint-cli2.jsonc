@@ -1,0 +1,20 @@
+{
+  "config": {
+    // Line length — not enforced for docs with code examples
+    "MD013": false,
+    // First line heading — files use YAML frontmatter, not headings
+    "MD041": false,
+    // Emphasis as heading — common pattern for Option 1/2/3 sections
+    "MD036": false,
+    // No duplicate heading — changelog files repeat section names intentionally
+    "MD024": false,
+    // Fenced code language — not always applicable for diagram blocks
+    "MD040": false,
+    // Table column style — table alignment is visual, not semantic
+    "MD060": false,
+    // Ordered list item prefix — number resets are intentional in documents
+    "MD029": false,
+    // No inline HTML — each elements are valid in valid Markdown
+    "MD033": false
+  }
+}

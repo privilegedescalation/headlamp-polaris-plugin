@@ -40,6 +40,7 @@ owners:
 ```
 
 **How to get the repositoryID:**
+
 1. Log into artifacthub.io
 2. Go to Control Panel → Repositories → Add
 3. Select repository kind: "Headlamp plugins"
@@ -99,6 +100,7 @@ annotations:                                   # CRITICAL — Headlamp-specific
 These annotations in `artifacthub-pkg.yml` are what make ArtifactHub treat the package as a Headlamp plugin:
 
 ### headlamp/plugin/archive-url
+
 **Required.** Direct download URL to the plugin tarball on GitHub Releases.
 
 Format: `https://github.com/<owner>/<repo>/releases/download/v<VERSION>/<pkgname>-<VERSION>.tar.gz`
@@ -108,6 +110,7 @@ Format: `https://github.com/<owner>/<repo>/releases/download/v<VERSION>/<pkgname
 - The tarball is uploaded as a GitHub Release asset — NOT to ArtifactHub
 
 ### headlamp/plugin/archive-checksum
+
 **Recommended.** SHA256 checksum of the tarball.
 
 Format: `sha256:<hex-digest>`
@@ -117,14 +120,17 @@ Generated via: `sha256sum <tarball> | awk '{print $1}'`
 Can be empty string if not yet computed (release workflow fills it in).
 
 ### headlamp/plugin/version-compat
+
 **Required.** Minimum Headlamp version the plugin works with.
 
 Format: `>=X.Y.Z` (e.g., `>=0.20.0`, `>=0.26`)
 
 ### headlamp/plugin/distro-compat
+
 **Required.** Comma-separated list of supported Headlamp deployment targets.
 
 Valid values:
+
 - `in-cluster` — Headlamp running inside a Kubernetes cluster
 - `web` — Web-based Headlamp deployment
 - `app` — Headlamp desktop application (Electron)
@@ -138,6 +144,7 @@ Example: `"in-cluster,web,app"`
 ## ArtifactHub Categories
 
 Valid `category` values for Headlamp plugins:
+
 - `security` — Secrets, RBAC, policy enforcement
 - `storage` — CSI drivers, persistent volumes, Ceph/Rook
 - `monitoring-logging` — Metrics, GPU monitoring, observability
@@ -148,7 +155,9 @@ Valid `category` values for Headlamp plugins:
 ## Optional Fields
 
 ### containersImages
+
 For plugins associated with a specific container/operator:
+
 ```yaml
 containersImages:
   - name: <component-name>
@@ -156,14 +165,18 @@ containersImages:
 ```
 
 ### recommendations
+
 Link to related ArtifactHub packages:
+
 ```yaml
 recommendations:
   - url: https://artifacthub.io/packages/helm/<repo>/<chart>
 ```
 
 ### install
+
 Custom installation instructions (markdown):
+
 ```yaml
 install: |
   ## Install via Headlamp Plugin Manager
@@ -171,6 +184,7 @@ install: |
 ```
 
 ### logoPath
+
 Path to a logo image file in the repo (relative to root).
 
 ---
@@ -196,6 +210,7 @@ This is the actual flow. There is NO other way to publish:
 ```
 
 **Key points:**
+
 - Steps 1-9 happen in your GitHub Actions workflow
 - Step 10 is entirely controlled by ArtifactHub — you cannot trigger it
 - The tarball lives on GitHub Releases, not ArtifactHub
@@ -233,6 +248,7 @@ The `<pkgname>` directory inside the tarball matches the `name` field from `pack
 ## Validating Metadata
 
 Before committing, check:
+
 1. `version` matches across `package.json` and `artifacthub-pkg.yml`
 2. `archive-url` version tag matches the `version` field
 3. `name` in `artifacthub-pkg.yml` matches `package.json` `name`

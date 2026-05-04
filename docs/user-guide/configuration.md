@@ -286,6 +286,7 @@ localStorage.removeItem('polaris-plugin-dashboard-url');
 2. Check for JavaScript errors
 3. Disable privacy mode or try different browser
 4. Check if localStorage is enabled:
+
    ```javascript
    console.log('localStorage available:', typeof localStorage !== 'undefined');
    ```
