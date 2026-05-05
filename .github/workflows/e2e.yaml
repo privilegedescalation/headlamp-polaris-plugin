@@ -68,20 +68,14 @@ jobs:
           done
           echo ""
           echo "=== In-cluster service account check ==="
+          local in_cluster=false
           if [ -f /var/run/secrets/kubernetes.io/serviceaccount/token ]; then
             echo "Service account token present — in-cluster mode available"
             echo "KUBERNETES_SERVICE_HOST=${KUBERNETES_SERVICE_HOST:-}"
             echo "KUBERNETES_SERVICE_PORT=${KUBERNETES_SERVICE_PORT:-}"
+            in_cluster=true
           else
             echo "No service account token at /var/run/secrets/kubernetes.io/serviceaccount/"
-          fi
-          echo ""
-          echo "=== Attempting kubeconfig from in-cluster env ==="
-          if [ -n "${KUBERNETES_SERVICE_HOST:-}" ]; then
-            echo "In-cluster: yes"
-            kubectl config view --raw 2>&1 | head -5 || echo "kubectl config view failed"
-          else
-            echo "In-cluster: no"
           fi
           echo ""
           if [ -f /runner/config ]; then
@@ -93,8 +87,28 @@ jobs:
           elif [ -f "${HOME:-}/.kube/config" ]; then
             echo "KUBECONFIG=${HOME:-}/.kube/config" >> "$GITHUB_ENV"
             echo "Using kubeconfig from HOME"
+          elif [ "$in_cluster" = true ]; then
+            echo "No static kubeconfig found — generating in-cluster kubeconfig"
+            KUBECFG_DIR="${HOME:-}/.kube"
+            mkdir -p "$KUBECFG_DIR"
+            kubectl config set-cluster in-cluster \
+              --server="https://${KUBERNETES_SERVICE_HOST:-kubernetes.default.svc}:${KUBERNETES_SERVICE_PORT:-443}" \
+              --certificate-authority=/var/run/secrets/kubernetes.io/serviceaccount/ca.crt \
+              --embed-certs=true \
+              --kubeconfig="$KUBECFG_DIR/config" 2>&1
+            kubectl config set-credentials in-cluster \
+              --token="$(cat /var/run/secrets/kubernetes.io/serviceaccount/token)" \
+              --kubeconfig="$KUBECFG_DIR/config" 2>&1
+            kubectl config set-context in-cluster \
+              --cluster=in-cluster \
+              --user=in-cluster \
+              --kubeconfig="$KUBECFG_DIR/config" 2>&1
+            kubectl config use-context in-cluster \
+              --kubeconfig="$KUBECFG_DIR/config" 2>&1
+            echo "KUBECONFIG=$KUBECFG_DIR/config" >> "$GITHUB_ENV"
+            echo "Generated in-cluster kubeconfig at $KUBECFG_DIR/config"
           else
-            echo "::error::No kubeconfig found in /runner/config, /home/runner/.kube/config, or HOME"
+            echo "::error::No kubeconfig found in /runner/config, /home/runner/.kube/config, HOME, or in-cluster service account"
             exit 1
           fi
 
