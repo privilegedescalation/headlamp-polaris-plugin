@@ -45,6 +45,23 @@ jobs:
       - name: Setup kubectl
         uses: azure/setup-kubectl@v4
 
+      - name: Locate kubeconfig for ARC runner
+        run: |
+          set -euo pipefail
+          for dir in /runner /home/runner/.kube /home/github/.kube; do
+            if [ -f "${dir}/config" ]; then
+              echo "Found kubeconfig at ${dir}/config"
+              echo "KUBECONFIG=${dir}/config" >> "$GITHUB_ENV"
+              break
+            fi
+          done
+          if [ -z "${KUBECONFIG:-}" ]; then
+            echo "::error::No kubeconfig found for ARC runner. Checked: /runner, ~/.kube, ~/kube"
+            exit 1
+          fi
+          echo "Using kubeconfig: ${KUBECONFIG}"
+          kubectl cluster-info --request-timeout=5s
+
       - name: Apply RBAC for E2E pipeline
         run: |
           set -x
