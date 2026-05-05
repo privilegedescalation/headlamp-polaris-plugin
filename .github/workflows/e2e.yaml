@@ -48,12 +48,19 @@ jobs:
       - name: Get kubeconfig
         run: |
           set -euo pipefail
-          for path in /runner/config "$HOME/.kube/config" "$HOME/.kube" /home/runner/.kube/config /home/runner/.kube; do
-            if [ -f "$path" ]; then
-              echo "KUBECONFIG=${path}" >> "$GITHUB_ENV"
-              break
-            fi
-          done
+          if [ -f /runner/config ]; then
+            echo "KUBECONFIG=/runner/config" >> "$GITHUB_ENV"
+            echo "Using kubeconfig from /runner/config"
+          elif [ -f /home/runner/.kube/config ]; then
+            echo "KUBECONFIG=/home/runner/.kube/config" >> "$GITHUB_ENV"
+            echo "Using kubeconfig from /home/runner/.kube/config"
+          elif [ -f "$HOME/.kube/config" ]; then
+            echo "KUBECONFIG=$HOME/.kube/config" >> "$GITHUB_ENV"
+            echo "Using kubeconfig from HOME"
+          else
+            echo "::error::No kubeconfig found in /runner/config, /home/runner/.kube/config, or HOME"
+            exit 1
+          fi
 
       - name: Apply RBAC for E2E pipeline
         run: |
