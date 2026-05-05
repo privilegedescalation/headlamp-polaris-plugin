@@ -53,7 +53,7 @@ jobs:
           echo "KUBERNETES_SERVICE_PORT=${KUBERNETES_SERVICE_PORT:-<unset>}"
           echo "Checking service account token..."
           if [ -f /var/run/secrets/kubernetes.io/serviceaccount/token ]; then
-            echo "Service account token found at /var/run/secrets/kubernetes.io/serviceaccount/token"
+            echo "Service account token found"
             KUBECONFIG=/tmp/kubeconfig-incluster
             cat > "$KUBECONFIG" <<EOF
 apiVersion: v1
@@ -75,13 +75,19 @@ users:
   user:
     tokenFile: /var/run/secrets/kubernetes.io/serviceaccount/token
 EOF
-            echo "Created kubeconfig at ${KUBECONFIG}"
             echo "KUBECONFIG=${KUBECONFIG}" >> "$GITHUB_ENV"
           else
-            echo "::error::Service account token not found at /var/run/secrets/kubernetes.io/serviceaccount/token"
+            echo "::error::No service account token found"
             exit 1
           fi
-          kubectl cluster-info --request-timeout=5s
+          echo "Testing kubectl apply dry-run (no KUBECONFIG set)..."
+          kubectl apply -f deployment/e2e-ci-runner-rbac.yaml --dry-run=server 2>&1 | head -5 || true
+          echo "Testing kubectl apply dry-run with KUBECONFIG=${KUBECONFIG}..."
+          KUBECONFIG=/tmp/kubeconfig-incluster kubectl apply -f deployment/e2e-ci-runner-rbac.yaml --dry-run=server 2>&1 | head -5 || true
+          echo "Testing kubectl auth can-i (no KUBECONFIG)..."
+          kubectl auth can-i create roles -n headlamp-dev 2>&1 || true
+          echo "Testing kubectl auth can-i (with KUBECONFIG)..."
+          KUBECONFIG=/tmp/kubeconfig-incluster kubectl auth can-i create roles -n headlamp-dev 2>&1 || true
 
       - name: Apply RBAC for E2E pipeline
         run: |
