@@ -3,7 +3,6 @@
 #
 # Grants the GitHub Actions runner's service account (Arc Runners) the minimum
 # permissions needed to deploy/teardown an E2E Headlamp instance in the
-# privilegedescalation-dev namespace.
 # headlamp-dev namespace (override via E2E_NAMESPACE when needed).
 #
 # Applied automatically by the E2E workflow before deploy-e2e-headlamp.sh runs.
@@ -11,7 +10,7 @@ apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
 metadata:
   name: e2e-ci-runner
-  namespace: privilegedescalation-dev
+  namespace: headlamp-dev
 rules:
   - apiGroups: ["rbac.authorization.k8s.io"]
     resources: ["roles", "rolebindings"]
@@ -33,7 +32,7 @@ apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
 metadata:
   name: e2e-ci-runner
-  namespace: privilegedescalation-dev
+  namespace: headlamp-dev
 subjects:
   - kind: ServiceAccount
     name: runners-privilegedescalation-gha-rs-no-permission
