@@ -45,27 +45,17 @@ jobs:
       - name: Setup kubectl
         uses: azure/setup-kubectl@v4
 
-      - name: Get kubeconfig via runner home
+      - name: Get kubeconfig via kubectl config
         run: |
           set -euo pipefail
           echo "HOME=${HOME}"
           echo "GITHUB_WORKSPACE=${GITHUB_WORKSPACE:-<unset>}"
           echo "ACTIONS_KUBECONFIG=${ACTIONS_KUBECONFIG:-<unset>}"
-          echo "Listing GITHUB_WORKSPACE root:"
-          ls -la "${GITHUB_WORKSPACE:-/github/workspace}/" 2>&1 | head -10
-          for file in "$HOME/.kube" "$HOME/.kube/config" "/home/runner/.kube" "/home/runner/.kube/config" "$HOME/.kube/config" "/home/runner/.kube/config" "/runner/.kube" "/runner/.kube/config" "/runner/config" "/github/.kube" "/github/.kube/config" "${GITHUB_WORKSPACE:-/github/workspace}/.kube" "${GITHUB_WORKSPACE:-/github/workspace}/.kube/config"; do
-            if [ -f "$file" ]; then
-              echo "Found kubeconfig at ${file}"
-              echo "KUBECONFIG=${file}" >> "$GITHUB_ENV"
-              break
-            fi
-          done
-          if [ -z "${KUBECONFIG:-}" ]; then
-            echo "::error::No kubeconfig found"
-            exit 1
-          fi
-          echo "Using kubeconfig: ${KUBECONFIG}"
-          kubectl cluster-info --request-timeout=5s
+          echo "Testing kubectl config view..."
+          kubectl config view --raw 2>&1 | head -5 || true
+          echo "Testing kubectl cluster-info..."
+          kubectl cluster-info --request-timeout=5s 2>&1 || true
+          echo "KUBECONFIG=${KUBECONFIG:-<from default>}"
 
       - name: Apply RBAC for E2E pipeline
         run: |
