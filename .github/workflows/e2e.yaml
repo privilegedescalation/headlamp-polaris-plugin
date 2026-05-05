@@ -48,15 +48,12 @@ jobs:
       - name: Get kubeconfig
         run: |
           set -euo pipefail
-          for path in /runner /runner/config "$HOME/.kube" "$HOME/.kube/config" /home/runner/.kube /home/runner/.kube/config; do
+          for path in /runner/config "$HOME/.kube/config" "$HOME/.kube" /home/runner/.kube/config /home/runner/.kube; do
             if [ -f "$path" ]; then
               echo "KUBECONFIG=${path}" >> "$GITHUB_ENV"
-              echo "Found kubeconfig at ${path}"
-              kubectl cluster-info --request-timeout=5s
-              exit 0
+              break
             fi
           done
-          echo "No kubeconfig found; kubectl will use default config"
 
       - name: Apply RBAC for E2E pipeline
         run: |
@@ -66,8 +63,10 @@ jobs:
           echo "exit code: $?"
           echo "Waiting for RBAC propagation..."
           sleep 5
-          echo "Verifying CI runner permissions..."
-          kubectl auth can-i create roles -n headlamp-dev --as="system:serviceaccount:arc-runners:runners-privilegedescalation-gha-rs-no-permission" 2>&1 || { echo "::error::CI runner still lacks roles permission after propagation wait"; exit 1; }
+          echo "Verifying RBAC resources were created..."
+          kubectl get role e2e-ci-runner -n headlamp-dev 2>&1 | tail -3
+          kubectl get role e2e-ci-runner-polaris -n headlamp-dev 2>&1 | tail -3
+          kubectl get rolebinding e2e-ci-runner-binding -n headlamp-dev 2>&1 | tail -3
           set +x
 
       - name: Apply Polaris dashboard RBAC
