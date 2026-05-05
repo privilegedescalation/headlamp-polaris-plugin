@@ -49,13 +49,39 @@ jobs:
         run: |
           set -euo pipefail
           echo "HOME=${HOME}"
-          echo "GITHUB_WORKSPACE=${GITHUB_WORKSPACE:-<unset>}"
-          echo "ACTIONS_KUBECONFIG=${ACTIONS_KUBECONFIG:-<unset>}"
-          echo "Testing kubectl config view..."
-          kubectl config view --raw 2>&1 | head -5 || true
-          echo "Testing kubectl cluster-info..."
-          kubectl cluster-info --request-timeout=5s 2>&1 || true
-          echo "KUBECONFIG=${KUBECONFIG:-<from default>}"
+          echo "KUBERNETES_SERVICE_HOST=${KUBERNETES_SERVICE_HOST:-<unset>}"
+          echo "KUBERNETES_SERVICE_PORT=${KUBERNETES_SERVICE_PORT:-<unset>}"
+          echo "Checking service account token..."
+          if [ -f /var/run/secrets/kubernetes.io/serviceaccount/token ]; then
+            echo "Service account token found at /var/run/secrets/kubernetes.io/serviceaccount/token"
+            KUBECONFIG=/tmp/kubeconfig-incluster
+            cat > "$KUBECONFIG" <<EOF
+apiVersion: v1
+kind: Config
+clusters:
+- cluster:
+    certificate-authority: /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
+    server: https://${KUBERNETES_SERVICE_HOST:-kubernetes.default.svc}:${KUBERNETES_SERVICE_PORT:-443}
+  name: in-cluster
+contexts:
+- context:
+    cluster: in-cluster
+    namespace: headlamp-dev
+    user: runner-sa
+  name: in-cluster
+current-context: in-cluster
+users:
+- name: runner-sa
+  user:
+    tokenFile: /var/run/secrets/kubernetes.io/serviceaccount/token
+EOF
+            echo "Created kubeconfig at ${KUBECONFIG}"
+            echo "KUBECONFIG=${KUBECONFIG}" >> "$GITHUB_ENV"
+          else
+            echo "::error::Service account token not found at /var/run/secrets/kubernetes.io/serviceaccount/token"
+            exit 1
+          fi
+          kubectl cluster-info --request-timeout=5s
 
       - name: Apply RBAC for E2E pipeline
         run: |
