@@ -1,7 +1,8 @@
 ---
-# RBAC for the GitHub Actions CI runner to manage the E2E Headlamp instance.
+# RBAC for the GitHub Actions CI runner to manage E2E Headlamp instances.
 # CI-only test fixture — NOT for production use.
 #
+<<<<<<< HEAD
 # Grants the ARC runner service account permissions in the headlamp-dev
 # namespace to deploy and tear down a dedicated Headlamp instance via Helm.
 # E2E resources run in `headlamp-dev` — nothing persists beyond a test run.
@@ -44,3 +45,13 @@ roleRef:
   kind: Role
   name: e2e-ci-runner
   apiGroup: rbac.authorization.k8s.io
+=======
+# This file is a REFERENCE ONLY. The canonical manifest lives in:
+#   privilegedescalation/infra/base/rbac/e2e-ci-runner-headlamp-rbac.yaml
+#
+# The infra repo is managed by Flux GitOps and is the source of truth.
+# Do not apply this file directly — it is kept here for developer reference only.
+#
+# E2E resources run in `privilegedescalation-dev` — nothing persists beyond a test run.
+# RBAC is managed via Flux from privilegedescalation/infra — do not apply manually.
+>>>>>>> 1f02811 (Reference shared infra RBAC in deployment scripts)

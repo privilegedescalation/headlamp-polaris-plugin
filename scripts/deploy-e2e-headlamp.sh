@@ -11,7 +11,13 @@
 # Prerequisites:
 #   - Plugin built (dist/ exists with plugin-main.js + package.json)
 #   - kubectl configured with cluster access
+<<<<<<< HEAD
 #   - RBAC applied (managed by Flux GitOps in privilegedescalation/infra)
+=======
+# RBAC is managed via Flux from privilegedescalation/infra/base/rbac/e2e-ci-runner-headlamp-rbac.yaml.
+# The infra repo is the source of truth — do not apply this file directly.
+# Apply RBAC first: kubectl apply -f privilegedescalation/infra/base/rbac/e2e-ci-runner-headlamp-rbac.yaml
+>>>>>>> 1f02811 (Reference shared infra RBAC in deployment scripts)
 #
 # Environment:
 #   E2E_NAMESPACE     — namespace for E2E Headlamp (default: headlamp-dev)
@@ -35,7 +41,7 @@ fi
 echo "Checking RBAC permissions in namespace '${E2E_NAMESPACE}'..."
 if ! kubectl auth can-i delete configmaps -n "$E2E_NAMESPACE" --quiet 2>/dev/null; then
   echo "ERROR: Missing RBAC — cannot delete configmaps in namespace '${E2E_NAMESPACE}'." >&2
-  echo "  Apply RBAC first: kubectl apply -f deployment/e2e-ci-runner-rbac.yaml" >&2
+  echo "  Apply RBAC first: kubectl apply -f privilegedescalation/infra/base/rbac/e2e-ci-runner-headlamp-rbac.yaml" >&2
   exit 1
 fi
 
