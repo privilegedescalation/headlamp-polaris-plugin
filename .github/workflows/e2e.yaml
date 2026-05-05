@@ -68,7 +68,7 @@ jobs:
           done
           echo ""
           echo "=== In-cluster service account check ==="
-          local in_cluster=false
+          in_cluster=false
           if [ -f /var/run/secrets/kubernetes.io/serviceaccount/token ]; then
             echo "Service account token present — in-cluster mode available"
             echo "KUBERNETES_SERVICE_HOST=${KUBERNETES_SERVICE_HOST:-}"
