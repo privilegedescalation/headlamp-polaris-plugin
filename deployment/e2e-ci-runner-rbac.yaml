@@ -8,8 +8,8 @@
 #
 # Plugin is loaded via ConfigMap volume mount — no custom Docker images.
 #
-# Prerequisites:
-#   kubectl apply -f deployment/e2e-ci-runner-rbac.yaml
+# Note: This RBAC is mirrored in privilegedescalation/infra (base/rbac/)
+# and managed by Flux GitOps. The infra repo is the source of truth.
 apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
 metadata:
@@ -21,7 +21,7 @@ rules:
     resources: ["deployments"]
     verbs: ["get", "list", "create", "update", "patch", "delete", "watch"]
   - apiGroups: [""]
-    resources: ["services", "serviceaccounts", "configmaps", "secrets"]
+    resources: ["services", "serviceaccounts", "configmaps", "secrets", "events"]
     verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
   - apiGroups: [""]
     resources: ["pods"]
