@@ -57,7 +57,7 @@ changes:
   - kind: added
     description: ExemptionManager test suite — full coverage of annotation-based exemption flows
   - kind: fixed
-    description: E2E infrastructure overhauled — ConfigMap volume mount replaces Dockerfile-based approach, tests run in privilegedescalation-dev namespace
+    description: E2E infrastructure overhauled — ConfigMap volume mount replaces Dockerfile-based approach, tests run in headlamp-dev namespace
   - kind: fixed
     description: E2E workflow uses token auth and waits for HTTP reachability before running tests
   - kind: fixed
