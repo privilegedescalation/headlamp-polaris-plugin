@@ -49,12 +49,16 @@ jobs:
         run: |
           set -euo pipefail
           echo "HOME=${HOME}"
+          echo "GITHUB_WORKSPACE=${GITHUB_WORKSPACE:-<unset>}"
           echo "ACTIONS_KUBECONFIG=${ACTIONS_KUBECONFIG:-<unset>}"
-          echo "Checking for kubeconfig in HOME and standard paths..."
-          for dir in "$HOME/.kube" "$HOME/.kube/config" "/home/runner/.kube" "/home/runner/.kube/config" "/runner" "/runner/config"; do
-            if [ -f "$dir" ]; then
-              echo "Found kubeconfig at ${dir}"
-              echo "KUBECONFIG=${dir}" >> "$GITHUB_ENV"
+          echo "Listing GITHUB_WORKSPACE root:"
+          ls -la "${GITHUB_WORKSPACE:-/github/workspace}/" 2>&1 | head -10
+          echo "Listing /github:"
+          ls -la /github/ 2>&1 | head -10
+          for file in "$HOME/.kube" "$HOME/.kube/config" "/home/runner/.kube" "/home/runner/.kube/config" "$HOME/.kube/config" "/home/runner/.kube/config" "/runner/.kube" "/runner/.kube/config" "/runner/config" "/github/.kube" "/github/.kube/config" "${GITHUB_WORKSPACE:-/github/workspace}/.kube" "${GITHUB_WORKSPACE:-/github/workspace}/.kube/config"; do
+            if [ -f "$file" ]; then
+              echo "Found kubeconfig at ${file}"
+              echo "KUBECONFIG=${file}" >> "$GITHUB_ENV"
               break
             fi
           done
