@@ -45,24 +45,21 @@ jobs:
       - name: Setup kubectl
         uses: azure/setup-kubectl@v4
 
-      - name: Locate kubeconfig for ARC runner
+      - name: Get kubeconfig via runner home
         run: |
           set -euo pipefail
           echo "HOME=${HOME}"
           echo "ACTIONS_KUBECONFIG=${ACTIONS_KUBECONFIG:-<unset>}"
-          echo "Listing /home/runner/k8s contents:"
-          ls -la /home/runner/k8s/ 2>&1 || echo "/home/runner/k8s does not exist"
-          echo "Listing /home/runner/k8s-novolume contents:"
-          ls -la /home/runner/k8s-novolume/ 2>&1 || echo "/home/runner/k8s-novolume does not exist"
-          for dir in /home/runner/k8s /home/runner/k8s-novolume "$HOME/.kube" /runner; do
-            if [ -f "${dir}/config" ]; then
-              echo "Found kubeconfig at ${dir}/config"
-              echo "KUBECONFIG=${dir}/config" >> "$GITHUB_ENV"
+          echo "Checking for kubeconfig in HOME and standard paths..."
+          for dir in "$HOME/.kube" "$HOME/.kube/config" "/home/runner/.kube" "/home/runner/.kube/config" "/runner" "/runner/config"; do
+            if [ -f "$dir" ]; then
+              echo "Found kubeconfig at ${dir}"
+              echo "KUBECONFIG=${dir}" >> "$GITHUB_ENV"
               break
             fi
           done
           if [ -z "${KUBECONFIG:-}" ]; then
-            echo "::error::No kubeconfig found for ARC runner"
+            echo "::error::No kubeconfig found"
             exit 1
           fi
           echo "Using kubeconfig: ${KUBECONFIG}"
