@@ -48,6 +48,42 @@ jobs:
       - name: Get kubeconfig
         run: |
           set -euo pipefail
+          echo "=== Runner environment diagnostic ==="
+          echo "HOME=$HOME"
+          echo "KUBECONFIG=$KUBECONFIG"
+          echo "ACTIONS_KUBECONFIG=$ACTIONS_KUBECONFIG"
+          echo "RUNNER_CONFIG=$RUNNER_CONFIG"
+          echo "RUNNER_CONFIG_DIR=$RUNNER_CONFIG_DIR"
+          echo ""
+          echo "=== Checking known kubeconfig locations ==="
+          for path in /runner/config /home/runner/.kube/config "$HOME/.kube/config" "$HOME/.kube"; do
+            if [ -f "$path" ]; then
+              echo "FOUND kubeconfig at: $path"
+            elif [ -d "$path" ]; then
+              echo "DIR exists at: $path, contents:"
+              ls -la "$path" 2>&1 || echo "  (cannot list)"
+            else
+              echo "NOT FOUND: $path"
+            fi
+          done
+          echo ""
+          echo "=== In-cluster service account check ==="
+          if [ -f /var/run/secrets/kubernetes.io/serviceaccount/token ]; then
+            echo "Service account token present — in-cluster mode available"
+            echo "KUBERNETES_SERVICE_HOST=$KUBERNETES_SERVICE_HOST"
+            echo "KUBERNETES_SERVICE_PORT=$KUBERNETES_SERVICE_PORT"
+          else
+            echo "No service account token at /var/run/secrets/kubernetes.io/serviceaccount/"
+          fi
+          echo ""
+          echo "=== Attempting kubeconfig from in-cluster env ==="
+          if [ -n "$KUBERNETES_SERVICE_HOST" ]; then
+            echo "In-cluster: yes"
+            kubectl config view --raw 2>&1 | head -5 || echo "kubectl config view failed"
+          else
+            echo "In-cluster: no"
+          fi
+          echo ""
           if [ -f /runner/config ]; then
             echo "KUBECONFIG=/runner/config" >> "$GITHUB_ENV"
             echo "Using kubeconfig from /runner/config"
