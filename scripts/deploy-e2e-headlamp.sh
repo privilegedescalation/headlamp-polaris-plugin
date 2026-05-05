@@ -61,11 +61,14 @@ kubectl create configmap headlamp-polaris-plugin \
 # --- Tear down any existing E2E deployment for a clean start ---
 # kubectl apply without prior deletion only patches in-place: if the pod spec is
 # unchanged between runs, no new rollout is triggered and a degraded pod keeps
-# serving. Delete first to guarantee a fresh pod regardless of prior state.
+# serving. Delete Deployment first to guarantee a fresh pod regardless of prior state.
+# The Service is NOT deleted — leaving it in place avoids an Endpoints UID race
+# (FailedToUpdateEndpoint) that causes DNS resolution failures.
+# kubectl apply below upserts the Service in-place, and the new pod's IP is
+# added to the existing Endpoints automatically.
 echo ""
 echo "Removing any existing E2E deployment (clean-start)..."
 kubectl delete deployment "${E2E_RELEASE}" -n "$E2E_NAMESPACE" --ignore-not-found --wait
-kubectl delete service "${E2E_RELEASE}" -n "$E2E_NAMESPACE" --ignore-not-found --wait
 kubectl delete serviceaccount "${E2E_RELEASE}" -n "$E2E_NAMESPACE" --ignore-not-found --wait
 
 # --- Deploy Headlamp via kubectl apply ---
