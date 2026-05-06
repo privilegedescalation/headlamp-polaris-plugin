@@ -71,7 +71,7 @@ metadata:
 subjects:
   - kind: ServiceAccount
     name: headlamp
-    namespace: kube-system
+    namespace: headlamp
 roleRef:
   kind: Role
   name: polaris-proxy-reader
