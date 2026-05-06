@@ -35,7 +35,7 @@ fi
 echo "Checking RBAC permissions in namespace '${E2E_NAMESPACE}'..."
 if ! kubectl auth can-i delete configmaps -n "$E2E_NAMESPACE" --quiet 2>/dev/null; then
   echo "ERROR: Missing RBAC — cannot delete configmaps in namespace '${E2E_NAMESPACE}'." >&2
-  echo "  Apply RBAC first: kubectl apply -f deployment/e2e-ci-runner-rbac.yaml" >&2
+  echo "  Apply RBAC from infra: kubectl apply -f https://raw.githubusercontent.com/privilegedescalation/infra/main/base/rbac/e2e-ci-runner-headlamp-rbac.yaml" >&2
   exit 1
 fi
 

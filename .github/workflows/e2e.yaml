@@ -112,27 +112,15 @@ jobs:
             exit 1
           fi
 
-      - name: Apply RBAC for E2E pipeline
-        run: |
-          set -x
-          kubectl apply -f deployment/e2e-ci-runner-rbac.yaml --dry-run=server 2>&1 || true
-          kubectl apply -f deployment/e2e-ci-runner-rbac.yaml 2>&1
-          echo "exit code: $?"
-          echo "Waiting for RBAC propagation..."
-          sleep 5
-          echo "Verifying RBAC resources were created..."
-          kubectl get role e2e-ci-runner -n headlamp-dev 2>&1 | tail -3
-          kubectl get role e2e-ci-runner-polaris -n headlamp-dev 2>&1 | tail -3
-          kubectl get rolebinding e2e-ci-runner-binding -n headlamp-dev 2>&1 | tail -3
-          set +x
-
-      - name: Apply Polaris dashboard RBAC
-        run: kubectl apply -f deployment/polaris-rbac.yaml
-
       - name: RBAC pre-flight check
         run: |
           echo "Checking RBAC resources..."
+          echo "RBAC is managed via Flux from privilegedescalation/infra/base/rbac/e2e-ci-runner-headlamp-rbac.yaml"
           MISSING=0
+          kubectl get role e2e-ci-runner -n headlamp-dev -o name >/dev/null 2>&1 || MISSING=1
+          kubectl get rolebinding e2e-ci-runner-binding -n headlamp-dev -o name >/dev/null 2>&1 || MISSING=1
+          kubectl get role e2e-ci-runner-polaris -n polaris -o name >/dev/null 2>&1 || MISSING=1
+          kubectl get rolebinding e2e-ci-runner-polaris-binding -n polaris -o name >/dev/null 2>&1 || MISSING=1
           kubectl get role polaris-dashboard-proxy-reader -n polaris -o name >/dev/null 2>&1 || MISSING=1
           kubectl get rolebinding polaris-dashboard-proxy-reader -n polaris -o name >/dev/null 2>&1 || MISSING=1
           kubectl auth can-i delete configmaps -n "$E2E_NAMESPACE" 2>/dev/null || MISSING=1
@@ -140,6 +128,7 @@ jobs:
             echo "RBAC pre-flight check passed."
           else
             echo "::error::RBAC pre-flight check failed. Missing required permissions."
+            echo "Ensure privilegedescalation/infra/base/rbac/e2e-ci-runner-headlamp-rbac.yaml is applied by Flux."
             exit 1
           fi
 
