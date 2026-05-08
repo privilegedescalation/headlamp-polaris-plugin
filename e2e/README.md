@@ -41,8 +41,8 @@ The default base URL is `https://headlamp.animaniacs.farh.net`. Override with `H
 ### Option 2: K8s bearer token (port-forward)
 
 ```bash
-kubectl port-forward -n kube-system svc/headlamp 4466:80
-export HEADLAMP_TOKEN=$(kubectl create token headlamp -n kube-system)
+kubectl port-forward -n headlamp svc/headlamp 4466:80
+export HEADLAMP_TOKEN=$(kubectl create token headlamp -n headlamp)
 HEADLAMP_URL=http://localhost:4466 npm run e2e
 ```
 
@@ -143,7 +143,7 @@ cp .env.example .env
 
 # 3. Set environment variables
 export HEADLAMP_URL=https://your-headlamp-instance.com
-export HEADLAMP_TOKEN=$(kubectl create token headlamp -n kube-system)
+export HEADLAMP_TOKEN=$(kubectl create token headlamp -n headlamp)
 
 # 4. Run tests
 npm run e2e

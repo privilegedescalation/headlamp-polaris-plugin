@@ -41,7 +41,7 @@ spec:
     - from:
         - namespaceSelector:
             matchLabels:
-              kubernetes.io/metadata.name: kube-system
+              kubernetes.io/metadata.name: headlamp
         - podSelector:
             matchLabels:
               component: kube-apiserver
