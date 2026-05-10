@@ -112,7 +112,7 @@ The plugin requires permissions to access the Polaris dashboard via Kubernetes s
 ```bash
 # Test if Headlamp service account has permission
 kubectl auth can-i get services/proxy \
-  --as=system:serviceaccount:headlamp:headlamp \
+  --as=system:serviceaccount:<your-namespace>:headlamp \
   -n polaris \
   --resource-name=polaris-dashboard
 

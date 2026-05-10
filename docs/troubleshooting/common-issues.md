@@ -169,7 +169,7 @@ Service account mode:
 ```bash
 # Impersonate Headlamp service account
 kubectl auth can-i get services/proxy \
-  --as=system:serviceaccount:headlamp:headlamp \
+  --as=system:serviceaccount:<your-namespace>:headlamp \
   --resource-name=polaris-dashboard \
   -n polaris
 # Expected: yes
@@ -490,7 +490,7 @@ Run this script to test all RBAC components:
 #!/bin/bash
 NS="polaris"
 SA="headlamp"
-SA_NS="headlamp"
+SA_NS="<your-namespace>"
 
 echo "=== Testing RBAC for Polaris Plugin ==="
 
@@ -549,7 +549,7 @@ kubectl logs -n <your-namespace> kube-apiserver-* | grep polaris-dashboard
 
 # Look for lines with:
 # "reason": "Forbidden"
-# "user": "system:serviceaccount:headlamp:headlamp"
+# "user": "system:serviceaccount:<your-namespace>:headlamp"
 ```
 
 ---

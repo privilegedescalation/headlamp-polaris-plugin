@@ -38,7 +38,7 @@ kubectl get --raw /api/v1/namespaces/polaris/services/polaris-dashboard:80/proxy
 
 # 3. Verify RBAC permissions
 kubectl auth can-i get services/proxy \
-  --as=system:serviceaccount:headlamp:headlamp \
+  --as=system:serviceaccount:<your-namespace>:headlamp \
   -n polaris \
   --resource-name=polaris-dashboard
 
@@ -76,7 +76,7 @@ kubectl -n polaris get rolebinding headlamp-polaris-proxy
 
 # Test permission (service account mode)
 kubectl auth can-i get services/proxy \
-  --as=system:serviceaccount:headlamp:headlamp \
+  --as=system:serviceaccount:<your-namespace>:headlamp \
   -n polaris \
   --resource-name=polaris-dashboard
 

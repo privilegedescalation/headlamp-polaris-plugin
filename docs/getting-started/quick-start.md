@@ -119,7 +119,7 @@ kubectl -n <your-namespace> exec -it deployment/headlamp -c headlamp -- \
 
 # Verify RBAC is correct
 kubectl auth can-i get services/proxy \
-  --as=system:serviceaccount:headlamp:headlamp \
+  --as=system:serviceaccount:<your-namespace>:headlamp \
   -n polaris \
   --resource-name=polaris-dashboard
 

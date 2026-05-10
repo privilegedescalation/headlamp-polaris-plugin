@@ -83,7 +83,7 @@ roleRef:
 ```bash
 # Test service account (in-cluster mode)
 kubectl auth can-i get services/proxy \
-  --as=system:serviceaccount:headlamp:headlamp \
+  --as=system:serviceaccount:<your-namespace>:headlamp \
   -n polaris \
   --resource-name=polaris-dashboard
 

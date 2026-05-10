@@ -91,7 +91,7 @@ kubectl -n polaris get rolebinding headlamp-polaris-proxy
 
 # Test permission
 kubectl auth can-i get services/proxy \
-  --as=system:serviceaccount:headlamp:headlamp \
+  --as=system:serviceaccount:<your-namespace>:headlamp \
   -n polaris \
   --resource-name=polaris-dashboard
 
@@ -109,7 +109,7 @@ In token-auth mode, **each user's own identity** is used for Kubernetes API requ
 With service account mode:
 
 - Single RoleBinding grants access to all Headlamp users
-- Kubernetes sees all requests as `system:serviceaccount:headlamp:headlamp`
+- Kubernetes sees all requests as `system:serviceaccount:<your-namespace>:headlamp`
 
 With token-auth mode:
 
@@ -411,7 +411,7 @@ Every plugin data fetch creates a Kubernetes API audit log entry.
   "level": "Metadata",
   "verb": "get",
   "user": {
-    "username": "system:serviceaccount:headlamp:headlamp"
+    "username": "system:serviceaccount:<your-namespace>:headlamp"
   },
   "sourceIPs": ["10.96.0.1"],
   "objectRef": {
@@ -494,7 +494,7 @@ If using a log aggregator (e.g., Elasticsearch), create filters to exclude or do
    ```bash
    # Service account mode
    kubectl auth can-i get services/proxy \
-     --as=system:serviceaccount:headlamp:headlamp \
+     --as=system:serviceaccount:<your-namespace>:headlamp \
      -n polaris \
      --resource-name=polaris-dashboard
 
