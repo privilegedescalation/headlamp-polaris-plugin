@@ -37,8 +37,8 @@ kubectl -n polaris get svc polaris-dashboard
 kubectl get --raw /api/v1/namespaces/polaris/services/polaris-dashboard:80/proxy/results.json | jq .PolarisOutputVersion
 
 # Verify Headlamp
-kubectl -n headlamp get deployment headlamp
-kubectl -n headlamp get svc headlamp
+kubectl -n <your-namespace> get deployment headlamp
+kubectl -n <your-namespace> get svc headlamp
 ```
 
 ## Production Checklist
@@ -60,17 +60,17 @@ kubectl get --raw /api/v1/namespaces/polaris/services/polaris-dashboard:80/proxy
 
 # 2. Verify RBAC permissions
 kubectl auth can-i get services/proxy \
-  --as=system:serviceaccount:headlamp:headlamp \
+  --as=system:serviceaccount:<your-namespace>:headlamp \
   -n polaris \
   --resource-name=polaris-dashboard
 # Expected: yes
 
 # 3. Check Headlamp logs for plugin loading
-kubectl -n headlamp logs deployment/headlamp | grep -i polaris
+kubectl -n <your-namespace> logs deployment/headlamp | grep -i polaris
 # Expected: No errors related to plugin loading
 
 # 4. Verify plugin files exist
-kubectl -n headlamp exec deployment/headlamp -c headlamp -- ls -la /headlamp/plugins/headlamp-polaris-plugin/
+kubectl -n <your-namespace> exec deployment/headlamp -c headlamp -- ls -la /headlamp/plugins/headlamp-polaris-plugin/
 # Expected: dist/, package.json present
 ```
 
@@ -241,7 +241,7 @@ apiVersion: policy/v1
 kind: PodDisruptionBudget
 metadata:
   name: headlamp-pdb
-  namespace: headlamp
+  namespace: <your-namespace>
 spec:
   minAvailable: 1
   selector:
@@ -295,7 +295,7 @@ apiVersion: monitoring.coreos.com/v1
 kind: ServiceMonitor
 metadata:
   name: headlamp
-  namespace: headlamp
+  namespace: <your-namespace>
 spec:
   selector:
     matchLabels:
@@ -312,10 +312,10 @@ spec:
 
 ```bash
 # View logs
-kubectl -n headlamp logs deployment/headlamp -f
+kubectl -n <your-namespace> logs deployment/headlamp -f
 
 # Filter for plugin-related logs
-kubectl -n headlamp logs deployment/headlamp | grep -i polaris
+kubectl -n <your-namespace> logs deployment/headlamp | grep -i polaris
 ```
 
 **Polaris Dashboard Logs:**
@@ -341,14 +341,14 @@ apiVersion: monitoring.coreos.com/v1
 kind: PrometheusRule
 metadata:
   name: headlamp-alerts
-  namespace: headlamp
+  namespace: <your-namespace>
 spec:
   groups:
     - name: headlamp
       interval: 30s
       rules:
         - alert: HeadlampPodNotReady
-          expr: kube_pod_status_ready{namespace="headlamp", pod=~"headlamp-.*"} == 0
+          expr: kube_pod_status_ready{namespace="<your-namespace>", pod=~"headlamp-.*"} == 0
           for: 5m
           labels:
             severity: warning
@@ -423,7 +423,7 @@ If Headlamp or plugin becomes unavailable:
 
    ```bash
 helm upgrade --install headlamp headlamp/headlamp \
-      --namespace headlamp \
+      --namespace <your-namespace> \
       --values headlamp-values.yaml
    ```
 
@@ -436,7 +436,7 @@ helm upgrade --install headlamp headlamp/headlamp \
 4. **Verify plugin files:**
 
    ```bash
-   kubectl -n headlamp exec deployment/headlamp -- \
+   kubectl -n <your-namespace> exec deployment/headlamp -- \
      ls /headlamp/plugins/headlamp-polaris-plugin/
    ```
 

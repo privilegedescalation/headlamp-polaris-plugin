@@ -43,7 +43,7 @@ metadata:
 subjects:
   - kind: ServiceAccount
     name: headlamp
-    namespace: headlamp
+    namespace: <your-namespace>
 roleRef:
   kind: Role
   name: polaris-proxy-reader

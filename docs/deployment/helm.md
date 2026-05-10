@@ -41,11 +41,11 @@ pluginsManager:
 ```bash
 # Install Headlamp
 helm install headlamp headlamp/headlamp \
-  --namespace headlamp \
+  --namespace <your-namespace> \
   --values headlamp-values.yaml
 
 # Wait for deployment
-kubectl -n headlamp wait --for=condition=available deployment/headlamp --timeout=300s
+kubectl -n <your-namespace> wait --for=condition=available deployment/headlamp --timeout=300s
 ```
 
 After installation, install the plugin via Headlamp UI (**Settings → Plugins → Catalog**).
@@ -131,7 +131,7 @@ Deploy:
 
 ```bash
 helm upgrade --install headlamp headlamp/headlamp \
-  --namespace headlamp \
+  --namespace <your-namespace> \
   --values headlamp-values.yaml \
   --wait \
   --timeout 5m
@@ -177,7 +177,7 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
   name: headlamp-plugin-config
-  namespace: headlamp
+  namespace: <your-namespace>
 data:
   plugin.yml: |
     - name: headlamp-polaris-plugin
@@ -191,7 +191,7 @@ Apply ConfigMap then deploy Headlamp:
 kubectl apply -f headlamp-plugin-config.yaml
 
 helm upgrade --install headlamp headlamp/headlamp \
-  --namespace headlamp \
+  --namespace <your-namespace> \
   --values headlamp-values.yaml
 ```
 
@@ -221,7 +221,7 @@ apiVersion: helm.toolkit.fluxcd.io/v2
 kind: HelmRelease
 metadata:
   name: headlamp
-  namespace: headlamp
+  namespace: <your-namespace>
 spec:
   interval: 30m
   chart:
@@ -300,7 +300,7 @@ kubectl apply -f helmrepository.yaml
 kubectl apply -f helmrelease.yaml
 
 # Watch deployment
-flux get helmreleases -n headlamp --watch
+flux get helmreleases -n <your-namespace> --watch
 ```
 
 ## RBAC Configuration
@@ -329,7 +329,7 @@ metadata:
 subjects:
   - kind: ServiceAccount
     name: headlamp
-namespace: headlamp
+namespace: <your-namespace>
 roleRef:
   kind: Role
   name: polaris-proxy-reader
@@ -349,7 +349,7 @@ helm repo update
 
 # Upgrade Headlamp (preserves plugin configuration)
 helm upgrade headlamp headlamp/headlamp \
-  --namespace headlamp \
+  --namespace <your-namespace> \
   --values headlamp-values.yaml \
   --wait
 ```
@@ -365,15 +365,15 @@ helm upgrade headlamp headlamp/headlamp \
 
 ```bash
 # Update ConfigMap with new version
-kubectl -n headlamp edit configmap headlamp-plugin-config
+kubectl -n <your-namespace> edit configmap headlamp-plugin-config
 
 # Update version and URL:
 # version: 0.3.6
 # url: https://github.com/.../v0.3.6/polaris-0.3.10.tar.gz
 
 # Restart deployment to trigger init container
-kubectl -n headlamp rollout restart deployment/headlamp
-kubectl -n headlamp rollout status deployment/headlamp
+kubectl -n <your-namespace> rollout restart deployment/headlamp
+kubectl -n <your-namespace> rollout status deployment/headlamp
 ```
 
 ## Troubleshooting
@@ -382,25 +382,25 @@ kubectl -n headlamp rollout status deployment/headlamp
 
 ```bash
 # Check Headlamp values
-helm get values headlamp -n headlamp
+helm get values headlamp -n <your-namespace>
 
 # Verify plugin files exist
-kubectl -n headlamp exec deployment/headlamp -c headlamp -- \
+kubectl -n <your-namespace> exec deployment/headlamp -c headlamp -- \
   ls -la /headlamp/plugins/headlamp-polaris-plugin/
 
 # If missing, reinstall plugin via UI or check init container logs
-kubectl -n headlamp logs deployment/headlamp -c install-polaris-plugin
+kubectl -n <your-namespace> logs deployment/headlamp -c install-polaris-plugin
 ```
 
 ### Helm Release Stuck
 
 ```bash
 # Check Helm release status
-helm list -n headlamp
+helm list -n <your-namespace>
 
 # If stuck, force upgrade
 helm upgrade headlamp headlamp/headlamp \
-  --namespace headlamp \
+  --namespace <your-namespace> \
   --values headlamp-values.yaml \
   --force \
   --wait
@@ -410,13 +410,13 @@ helm upgrade headlamp headlamp/headlamp \
 
 ```bash
 # Check HelmRelease status
-flux get helmreleases -n headlamp
+flux get helmreleases -n <your-namespace>
 
 # Check events
-kubectl -n headlamp describe helmrelease headlamp
+kubectl -n <your-namespace> describe helmrelease headlamp
 
 # Force reconciliation
-flux reconcile helmrelease headlamp -n headlamp
+flux reconcile helmrelease headlamp -n <your-namespace>
 ```
 
 ## Next Steps

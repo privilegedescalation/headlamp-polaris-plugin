@@ -38,7 +38,7 @@ EOF
 
 # Update Headlamp
 helm upgrade --install headlamp headlamp/headlamp \
-  --namespace headlamp \
+  --namespace <your-namespace> \
   --values headlamp-values.yaml
 ```
 
@@ -70,7 +70,7 @@ metadata:
 subjects:
   - kind: ServiceAccount
     name: headlamp
-    namespace: headlamp
+    namespace: <your-namespace>
 roleRef:
   kind: Role
   name: polaris-proxy-reader
@@ -111,7 +111,7 @@ EOF
 
 ```bash
 # Verify plugin files exist
-kubectl -n headlamp exec -it deployment/headlamp -c headlamp -- \
+kubectl -n <your-namespace> exec -it deployment/headlamp -c headlamp -- \
   ls /headlamp/plugins/headlamp-polaris-plugin/dist/
 
 # Expected output:
@@ -185,7 +185,7 @@ Cluster score badge in top navigation:
 
 ```bash
 # Verify plugin files exist
-kubectl -n headlamp exec -it deployment/headlamp -c headlamp -- \
+kubectl -n <your-namespace> exec -it deployment/headlamp -c headlamp -- \
   ls /headlamp/plugins/headlamp-polaris-plugin/
 
 # If missing, reinstall via Headlamp UI or sidecar method

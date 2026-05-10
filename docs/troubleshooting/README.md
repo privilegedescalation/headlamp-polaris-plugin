@@ -45,10 +45,10 @@ kubectl auth can-i get services/proxy \
 # Expected output: yes
 
 # 4. Check Headlamp pod is running
-kubectl -n headlamp get pods -l app.kubernetes.io/name=headlamp
+kubectl -n <your-namespace> get pods -l app.kubernetes.io/name=headlamp
 
 # 5. Check Headlamp logs for plugin errors
-kubectl -n headlamp logs deployment/headlamp | grep -i polaris
+kubectl -n <your-namespace> logs deployment/headlamp | grep -i polaris
 
 # Expected: No errors
 ```
@@ -57,7 +57,7 @@ kubectl -n headlamp logs deployment/headlamp | grep -i polaris
 
 ```bash
 # Verify plugin files exist
-kubectl -n headlamp exec deployment/headlamp -c headlamp -- \
+kubectl -n <your-namespace> exec deployment/headlamp -c headlamp -- \
   ls -la /headlamp/plugins/headlamp-polaris-plugin/
 
 # Expected output:

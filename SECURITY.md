@@ -71,7 +71,7 @@ metadata:
 subjects:
   - kind: ServiceAccount
     name: headlamp
-    namespace: headlamp
+    namespace: <your-namespace>
 roleRef:
   kind: Role
   name: polaris-proxy-reader
@@ -149,7 +149,7 @@ spec:
 
 ### Service Account (Default)
 
-Headlamp runs with a dedicated service account (`headlamp` in `kube-system`). All users share the same permissions defined by this service account's RBAC bindings.
+Headlamp runs with a dedicated service account (`headlamp` in the namespace where Headlamp is installed). All users share the same permissions defined by this service account's RBAC bindings.
 
 **Security Considerations:**
 - All users have identical access to the plugin
@@ -317,7 +317,7 @@ All service proxy requests are logged in Kubernetes API audit logs (if enabled):
   "verb": "get",
   "requestURI": "/api/v1/namespaces/polaris/services/polaris-dashboard:80/proxy/results.json",
   "user": {
-    "username": "system:serviceaccount:kube-system:headlamp",
+    "username": "system:serviceaccount:<your-namespace>:headlamp",
     "groups": ["system:serviceaccounts", "system:authenticated"]
   }
 }

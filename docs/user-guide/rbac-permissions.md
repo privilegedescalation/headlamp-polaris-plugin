@@ -65,7 +65,7 @@ metadata:
 subjects:
   - kind: ServiceAccount
     name: headlamp # Adjust to your Headlamp SA name
-    namespace: headlamp # Adjust to Headlamp's namespace
+    namespace: <your-namespace>
 roleRef:
   kind: Role
   name: polaris-proxy-reader
@@ -75,7 +75,7 @@ roleRef:
 **Adjust for your environment:**
 
 - `subjects[0].name` - Your Headlamp service account name (often `headlamp`)
-- `subjects[0].namespace` - Namespace where Headlamp runs (often `headlamp`)
+- `subjects[0].namespace` - Namespace where Headlamp is installed
 
 ### Step 3: Apply and Verify
 
@@ -267,7 +267,7 @@ metadata:
 subjects:
   - kind: ServiceAccount
     name: headlamp
-    namespace: headlamp
+    namespace: <your-namespace>
 roleRef:
   kind: Role
   name: polaris-proxy-reader
@@ -281,7 +281,7 @@ metadata:
 subjects:
   - kind: ServiceAccount
     name: headlamp
-    namespace: headlamp
+    namespace: <your-namespace>
 roleRef:
   kind: Role
   name: polaris-proxy-reader
