@@ -25,8 +25,6 @@ npm run format:check # Prettier check
 npm test           # vitest run
 npm run test:watch # vitest watch mode
 npx vitest run src/api/polaris.test.ts  # run a single test file
-npm run e2e        # Playwright E2E tests
-npm run e2e:headed # Playwright headed mode
 ```
 
 All tests and `tsc` must pass before committing.
