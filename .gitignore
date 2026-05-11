@@ -2,10 +2,6 @@ node_modules/
 dist/
 .headlamp-plugin/
 *.tar.gz
-e2e/.auth/
-test-results/
-.playwright-mcp/
 .env
-.env.e2e
 .env.local
 .eslintcache
