@@ -37,11 +37,12 @@
       "lodash": ">=4.18.0",
       "picomatch": ">=4.0.4",
       "vite": ">=6.4.2",
-      "elliptic": ">=6.6.1"
+      "elliptic": ">=6.6.1",
+      "fast-uri": ">=3.1.2"
     }
   },
   "devDependencies": {
-    "@kinvolk/headlamp-plugin": "^0.13.0",
+    "@kinvolk/headlamp-plugin": "^0.14.0",
     "@mui/material": "^5.15.14",
     "@testing-library/jest-dom": "^6.4.8",
     "@testing-library/react": "^16.0.0",

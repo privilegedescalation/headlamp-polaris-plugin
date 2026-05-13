@@ -12,6 +12,7 @@ overrides:
   picomatch: '>=4.0.4'
   vite: '>=6.4.2'
   elliptic: '>=6.6.1'
+  fast-uri: '>=3.1.2'
 
 importers:
 
@@ -21,8 +22,8 @@ importers:
         specifier: ^0.6.0
         version: 0.6.0(@typescript-eslint/eslint-plugin@8.56.1(@typescript-eslint/parser@8.56.1(eslint@8.57.1)(typescript@5.6.2))(eslint@8.57.1)(typescript@5.6.2))(eslint-config-prettier@9.1.2(eslint@8.57.1))(eslint-plugin-import@2.32.0(@typescript-eslint/parser@8.56.1(eslint@8.57.1)(typescript@5.6.2))(eslint@8.57.1))(eslint-plugin-jsx-a11y@6.10.2(eslint@8.57.1))(eslint-plugin-react-hooks@4.6.2(eslint@8.57.1))(eslint-plugin-react@7.35.0(eslint@8.57.1))(eslint-plugin-simple-import-sort@12.1.1(eslint@8.57.1))(eslint-plugin-unused-imports@4.4.1(@typescript-eslint/eslint-plugin@8.56.1(@typescript-eslint/parser@8.56.1(eslint@8.57.1)(typescript@5.6.2))(eslint@8.57.1)(typescript@5.6.2))(eslint@8.57.1))(eslint@8.57.1)
       '@kinvolk/headlamp-plugin':
-        specifier: ^0.13.0
-        version: 0.13.1(@swc/core@1.15.18)(@types/debug@4.1.12)(@typescript-eslint/parser@8.56.1(eslint@8.57.1)(typescript@5.6.2))(csstype@3.2.3)(esbuild@0.25.12)(immer@11.1.4)(openapi-types@12.1.3)(redux@5.0.1)(rollup@4.59.0)(terser@5.46.0)(webpack@5.105.4(@swc/core@1.15.18)(esbuild@0.25.12))
+        specifier: ^0.14.0
+        version: 0.14.0(@swc/core@1.15.18)(@types/debug@4.1.12)(@typescript-eslint/parser@8.56.1(eslint@8.57.1)(typescript@5.6.2))(csstype@3.2.3)(esbuild@0.25.12)(immer@11.1.4)(openapi-types@12.1.3)(redux@5.0.1)(rollup@4.59.0)(terser@5.46.0)(webpack@5.105.4(@swc/core@1.15.18)(esbuild@0.25.12))
       '@mui/material':
         specifier: ^5.15.14
         version: 5.18.0(@emotion/react@11.14.0(@types/react@19.2.14)(react@18.3.1))(@emotion/styled@11.14.1(@emotion/react@11.14.0(@types/react@19.2.14)(react@18.3.1))(@types/react@19.2.14)(react@18.3.1))(@types/react@19.2.14)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
@@ -603,8 +604,8 @@ packages:
     peerDependencies:
       jsep: ^0.4.0||^1.0.0
 
-  '@kinvolk/headlamp-plugin@0.13.1':
-    resolution: {integrity: sha512-aoAGs5w8HIS43p3YBcjzkIWZZlh18b/e02d+r/rr6+99vc48vOd9tKAIBZMVg4j+cVzbPtL1+t1tDE/UdeHcWQ==}
+  '@kinvolk/headlamp-plugin@0.14.0':
+    resolution: {integrity: sha512-oVIqpSzf2zZfZG44gwrGI8xTLImCIKupUJ26k7ZhVrFSUBY9Ga+R66tfCdN4Q/ShYha/8J+qlpy5ac9PjRq2KA==}
     hasBin: true
 
   '@mdx-js/react@3.1.1':
@@ -2939,8 +2940,8 @@ packages:
   fast-levenshtein@2.0.6:
     resolution: {integrity: sha512-DCXu6Ifhqcks7TZKY3Hxp3y6qphY5SJZmrWMDrKcERSOXWQdMhU9Ig/PYrzyw/ul9jOIyh0N4M0tbC5hodg8dw==}
 
-  fast-uri@3.1.0:
-    resolution: {integrity: sha512-iPeeDKJSWf4IEOasVVrknXpaBV0IApz/gp7S2bb7Z4Lljbl2MGJRqInZiUrQwV16cpzw/D3S5j5Julj/gT52AA==}
+  fast-uri@3.1.2:
+    resolution: {integrity: sha512-rVjf7ArG3LTk+FS6Yw81V1DLuZl1bRbNrev6Tmd/9RaroeeRRJhAt7jg/6YFxbvAQXUCavSoZhPPj6oOx+5KjQ==}
 
   fastq@1.20.1:
     resolution: {integrity: sha512-GGToxJ/w1x32s/D2EKND7kTil4n8OVk/9mycTc4VDza13lOvpUZTGX3mFSCtV9ksdGBVzvsyAVLM6mHFThxXxw==}
@@ -4282,10 +4283,6 @@ packages:
 
   postcss@8.5.13:
     resolution: {integrity: sha512-qif0+jGGZoLWdHey3UFHHWP0H7Gbmsk8T5VEqyYFbWqPr1XqvLGBbk/sl8V5exGmcYJklJOhOQq1pV9IcsiFag==}
-    engines: {node: ^10 || ^12 || >=14}
-
-  postcss@8.5.8:
-    resolution: {integrity: sha512-OW/rX8O/jXnm82Ey1k44pObPtdblfiuWnrd8X7GJ7emImCOstunGbXUpp7HdBrFQX6rJzn3sPT397Wp5aCwCHg==}
     engines: {node: ^10 || ^12 || >=14}
 
   prelude-ls@1.2.1:
@@ -6093,7 +6090,7 @@ snapshots:
     dependencies:
       jsep: 1.4.0
 
-  '@kinvolk/headlamp-plugin@0.13.1(@swc/core@1.15.18)(@types/debug@4.1.12)(@typescript-eslint/parser@8.56.1(eslint@8.57.1)(typescript@5.6.2))(csstype@3.2.3)(esbuild@0.25.12)(immer@11.1.4)(openapi-types@12.1.3)(redux@5.0.1)(rollup@4.59.0)(terser@5.46.0)(webpack@5.105.4(@swc/core@1.15.18)(esbuild@0.25.12))':
+  '@kinvolk/headlamp-plugin@0.14.0(@swc/core@1.15.18)(@types/debug@4.1.12)(@typescript-eslint/parser@8.56.1(eslint@8.57.1)(typescript@5.6.2))(csstype@3.2.3)(esbuild@0.25.12)(immer@11.1.4)(openapi-types@12.1.3)(redux@5.0.1)(rollup@4.59.0)(terser@5.46.0)(webpack@5.105.4(@swc/core@1.15.18)(esbuild@0.25.12))':
     dependencies:
       '@apidevtools/swagger-parser': 10.1.1(openapi-types@12.1.3)
       '@emotion/react': 11.14.0(@types/react@18.3.28)(react@18.3.1)
@@ -7686,7 +7683,7 @@ snapshots:
   ajv@8.18.0:
     dependencies:
       fast-deep-equal: 3.1.3
-      fast-uri: 3.1.0
+      fast-uri: 3.1.2
       json-schema-traverse: 1.0.0
       require-from-string: 2.0.2
 
@@ -8225,12 +8222,12 @@ snapshots:
 
   css-loader@6.11.0(webpack@5.105.4(@swc/core@1.15.18)(esbuild@0.25.12)):
     dependencies:
-      icss-utils: 5.1.0(postcss@8.5.8)
-      postcss: 8.5.8
-      postcss-modules-extract-imports: 3.1.0(postcss@8.5.8)
-      postcss-modules-local-by-default: 4.2.0(postcss@8.5.8)
-      postcss-modules-scope: 3.2.1(postcss@8.5.8)
-      postcss-modules-values: 4.0.0(postcss@8.5.8)
+      icss-utils: 5.1.0(postcss@8.5.13)
+      postcss: 8.5.13
+      postcss-modules-extract-imports: 3.1.0(postcss@8.5.13)
+      postcss-modules-local-by-default: 4.2.0(postcss@8.5.13)
+      postcss-modules-scope: 3.2.1(postcss@8.5.13)
+      postcss-modules-values: 4.0.0(postcss@8.5.13)
       postcss-value-parser: 4.2.0
       semver: 7.7.4
     optionalDependencies:
@@ -8934,7 +8931,7 @@ snapshots:
 
   fast-levenshtein@2.0.6: {}
 
-  fast-uri@3.1.0: {}
+  fast-uri@3.1.2: {}
 
   fastq@1.20.1:
     dependencies:
@@ -9392,9 +9389,9 @@ snapshots:
     dependencies:
       safer-buffer: 2.1.2
 
-  icss-utils@5.1.0(postcss@8.5.8):
+  icss-utils@5.1.0(postcss@8.5.13):
     dependencies:
-      postcss: 8.5.8
+      postcss: 8.5.13
 
   ieee754@1.2.1: {}
 
@@ -9647,7 +9644,7 @@ snapshots:
 
   jest-worker@27.5.1:
     dependencies:
-      '@types/node': 20.19.37
+      '@types/node': 22.19.15
       merge-stream: 2.0.0
       supports-color: 8.1.1
 
@@ -9885,7 +9882,7 @@ snapshots:
 
   md5.js@1.3.5:
     dependencies:
-      hash-base: 3.0.5
+      hash-base: 3.1.2
       inherits: 2.0.4
       safe-buffer: 5.2.1
 
@@ -10501,26 +10498,26 @@ snapshots:
 
   possible-typed-array-names@1.1.0: {}
 
-  postcss-modules-extract-imports@3.1.0(postcss@8.5.8):
+  postcss-modules-extract-imports@3.1.0(postcss@8.5.13):
     dependencies:
-      postcss: 8.5.8
+      postcss: 8.5.13
 
-  postcss-modules-local-by-default@4.2.0(postcss@8.5.8):
+  postcss-modules-local-by-default@4.2.0(postcss@8.5.13):
     dependencies:
-      icss-utils: 5.1.0(postcss@8.5.8)
-      postcss: 8.5.8
+      icss-utils: 5.1.0(postcss@8.5.13)
+      postcss: 8.5.13
       postcss-selector-parser: 7.1.1
       postcss-value-parser: 4.2.0
 
-  postcss-modules-scope@3.2.1(postcss@8.5.8):
+  postcss-modules-scope@3.2.1(postcss@8.5.13):
     dependencies:
-      postcss: 8.5.8
+      postcss: 8.5.13
       postcss-selector-parser: 7.1.1
 
-  postcss-modules-values@4.0.0(postcss@8.5.8):
+  postcss-modules-values@4.0.0(postcss@8.5.13):
     dependencies:
-      icss-utils: 5.1.0(postcss@8.5.8)
-      postcss: 8.5.8
+      icss-utils: 5.1.0(postcss@8.5.13)
+      postcss: 8.5.13
 
   postcss-selector-parser@7.1.1:
     dependencies:
@@ -10530,12 +10527,6 @@ snapshots:
   postcss-value-parser@4.2.0: {}
 
   postcss@8.5.13:
-    dependencies:
-      nanoid: 3.3.11
-      picocolors: 1.1.1
-      source-map-js: 1.2.1
-
-  postcss@8.5.8:
     dependencies:
       nanoid: 3.3.11
       picocolors: 1.1.1
@@ -11811,7 +11802,7 @@ snapshots:
       chokidar: 3.6.0
       p-map: 7.0.4
       picocolors: 1.1.1
-      tinyglobby: 0.2.15
+      tinyglobby: 0.2.16
       vite: 8.0.10(@types/node@20.19.37)(esbuild@0.25.12)(terser@5.46.0)(yaml@2.8.2)
 
   vite-plugin-svgr@4.5.0(rollup@4.59.0)(typescript@5.6.2)(vite@8.0.10(@types/node@20.19.37)(esbuild@0.25.12)(terser@5.46.0)(yaml@2.8.2)):
