@@ -43,7 +43,7 @@ metadata:
 subjects:
   - kind: ServiceAccount
     name: headlamp
-    namespace: headlamp
+    namespace: <your-namespace>
 roleRef:
   kind: Role
   name: polaris-proxy-reader
@@ -83,7 +83,7 @@ roleRef:
 ```bash
 # Test service account (in-cluster mode)
 kubectl auth can-i get services/proxy \
-  --as=system:serviceaccount:headlamp:headlamp \
+  --as=system:serviceaccount:<your-namespace>:headlamp \
   -n polaris \
   --resource-name=polaris-dashboard
 

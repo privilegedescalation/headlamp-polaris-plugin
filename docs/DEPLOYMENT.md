@@ -33,7 +33,7 @@ kubectl -n polaris get svc polaris-dashboard
 kubectl get --raw /api/v1/namespaces/polaris/services/polaris-dashboard:80/proxy/results.json | jq .PolarisOutputVersion
 
 # Verify Headlamp is deployed
-kubectl -n headlamp get pods -l app.kubernetes.io/name=headlamp
+kubectl -n <your-namespace> get pods -l app.kubernetes.io/name=headlamp
 ```
 
 ## Installation Methods
@@ -59,7 +59,7 @@ kubectl -n headlamp get pods -l app.kubernetes.io/name=headlamp
 
    ```bash
    helm upgrade --install headlamp headlamp/headlamp \
-     --namespace headlamp \
+     --namespace <your-namespace> \
      --values headlamp-values.yaml
    ```
 
