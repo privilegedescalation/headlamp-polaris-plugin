@@ -28,6 +28,7 @@ jobs:
           PR_NUMBER: ${{ github.event.pull_request.number }}
           REPO: ${{ github.repository }}
           BASE_REF: ${{ github.base_ref }}
+          HEAD_REF: ${{ github.head_ref }}
         run: |
           if [ -z "${PR_NUMBER}" ] || [ "${PR_NUMBER}" = "null" ]; then
             echo "::notice::No PR number in context. Skipping promotion gate."
@@ -59,10 +60,7 @@ jobs:
               GATE_NAME="QA"
               # For plugin repos (Pipeline A), UAT approval is needed for uat→main
               # Check if the source branch is uat
-              SOURCE_REF=$(curl -sf \
-                -H "Authorization: token ${GITEA_TOKEN}" \
-                -H "Accept: application/json" \
-                "https://git.farh.net/api/v1/repos/${REPO}/pulls/${PR_NUMBER}" | jq -r '.head.ref')
+              SOURCE_REF="${HEAD_REF}"
 
               if [ "${SOURCE_REF}" = "uat" ]; then
                 REQUIRED_REVIEWER="pe_patty"
