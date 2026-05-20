@@ -1,76 +1,60 @@
-version: "1.0.0"
+version: 1.0.1
 name: headlamp-polaris
 displayName: Polaris
-createdAt: "2026-02-05T19:00:00Z"
-description: >-
-  Surfaces Fairwinds Polaris audit results inside the Headlamp UI.
-  Shows cluster score, check summary, and per-namespace drill-downs
-  with per-resource pass/warning/danger breakdowns. Data is fetched
-  read-only via the Kubernetes service proxy to the Polaris dashboard.
-  Requires a Role granting `get` on `services/proxy` for the
-  `polaris-dashboard` service in the `polaris` namespace.
+createdAt: '2026-05-20T00:00:00Z'
+description: Surfaces Fairwinds Polaris audit results inside the Headlamp UI. Shows
+  cluster score, check summary, and per-namespace drill-downs with per-resource pass/warning/danger
+  breakdowns. Data is fetched read-only via the Kubernetes service proxy to the Polaris
+  dashboard. Requires a Role granting `get` on `services/proxy` for the `polaris-dashboard`
+  service in the `polaris` namespace.
 license: Apache-2.0
-homeURL: "https://github.com/privilegedescalation/headlamp-polaris-plugin"
-appVersion: "10.1.6"
+homeURL: https://github.com/privilegedescalation/headlamp-polaris-plugin
+appVersion: 10.1.6
 category: security
 keywords:
-  - polaris
-  - fairwinds
-  - security
-  - audit
-  - headlamp
-  - kubernetes
+- polaris
+- fairwinds
+- security
+- audit
+- headlamp
+- kubernetes
 links:
-  - name: Source
-    url: "https://github.com/privilegedescalation/headlamp-polaris-plugin"
-  - name: Polaris
-    url: "https://polaris.docs.fairwinds.com/"
-install: |
-  ## Installation
-
-  ### Prerequisites
-
-  1. [Headlamp](https://headlamp.dev) v0.26.0 or later
-  2. [Fairwinds Polaris](https://polaris.docs.fairwinds.com/) installed and the dashboard running in your cluster
-
-  ### Install via Headlamp Plugin Catalog
-
-  1. Open Headlamp and navigate to **Settings → Plugin Catalog**
-  2. Search for **"Polaris"**
-  3. Click **Install** and restart Headlamp when prompted
-
-  The plugin is sourced directly from [ArtifactHub](https://artifacthub.io/packages/headlamp/headlamp/headlamp-polaris).
-
-  ## Usage
-
-  After installation, the Polaris plugin adds:
-  - A **cluster score badge** in the Headlamp app bar
-  - A **Polaris** section in the sidebar with the full dashboard and namespace drill-downs
-  - An **inline audit panel** on Deployment, StatefulSet, DaemonSet, Job, and CronJob detail pages
-
-  For more information, see the [README](https://github.com/privilegedescalation/headlamp-polaris-plugin/blob/main/README.md).
+- name: Source
+  url: https://github.com/privilegedescalation/headlamp-polaris-plugin
+- name: Polaris
+  url: https://polaris.docs.fairwinds.com/
+install:
+  url: https://github.com/privilegedescalation/headlamp-polaris-plugin/releases/download/v1.0.1/headlamp-polaris-1.0.1.tar.gz
+  digest: sha256:1e05d079c7032cf55ebde85e116cb65b686d207f4b6a3b0f716f0af93f933e7e
 changes:
-  - kind: security
-    description: Patched 8 npm audit vulnerabilities via pnpm.overrides
-  - kind: added
-    description: Dual-approval required CI check — PRs must be approved by both CTO and QA before merge
-  - kind: added
-    description: ExemptionManager test suite — full coverage of annotation-based exemption flows
-  - kind: fixed
-    description: E2E infrastructure overhauled — ConfigMap volume mount replaces Dockerfile-based approach, tests run in privilegedescalation-dev namespace
-  - kind: fixed
-    description: E2E workflow uses token auth and waits for HTTP reachability before running tests
-  - kind: fixed
-    description: Added explicit direct devDependencies (typescript, eslint, prettier, @headlamp-k8s/eslint-config) to prevent phantom dep failures
-  - kind: changed
-    description: pnpm version pinned via packageManager field; GitHub Actions SHA-pinned via Renovate pinDigests
-  - kind: changed
-    description: v1.0.0 stable release — plugin API (routes, sidebar, settings schema, app bar action) is stable and will not change without a major version bump
+- kind: security
+  description: Patched 8 npm audit vulnerabilities via pnpm.overrides
+- kind: added
+  description: Dual-approval required CI check — PRs must be approved by both CTO
+    and QA before merge
+- kind: added
+  description: ExemptionManager test suite — full coverage of annotation-based exemption
+    flows
+- kind: fixed
+  description: E2E infrastructure overhauled — ConfigMap volume mount replaces Dockerfile-based
+    approach, tests run in privilegedescalation-dev namespace
+- kind: fixed
+  description: E2E workflow uses token auth and waits for HTTP reachability before
+    running tests
+- kind: fixed
+  description: Added explicit direct devDependencies (typescript, eslint, prettier,
+    @headlamp-k8s/eslint-config) to prevent phantom dep failures
+- kind: changed
+  description: pnpm version pinned via packageManager field; GitHub Actions SHA-pinned
+    via Renovate pinDigests
+- kind: changed
+  description: v1.0.0 stable release — plugin API (routes, sidebar, settings schema,
+    app bar action) is stable and will not change without a major version bump
 maintainers:
-  - name: privilegedescalation
-    email: "chris@farhood.org"
+- name: privilegedescalation
+  email: chris@farhood.org
 annotations:
-  headlamp/plugin/archive-url: "https://github.com/privilegedescalation/headlamp-polaris-plugin/releases/download/v1.0.0/headlamp-polaris-1.0.0.tar.gz"
-  headlamp/plugin/version-compat: ">=0.26"
-  headlamp/plugin/archive-checksum: sha256:a165e871b40f11a44950aa9f10eb7f7883276f749026ae7a4f886278ecd9bd7d
-  headlamp/plugin/distro-compat: "in-cluster,web,desktop"
+  headlamp/plugin/archive-url: https://github.com/privilegedescalation/headlamp-polaris-plugin/releases/download/v1.0.1/headlamp-polaris-1.0.1.tar.gz
+  headlamp/plugin/version-compat: '>=0.26'
+  headlamp/plugin/archive-checksum: sha256:1e05d079c7032cf55ebde85e116cb65b686d207f4b6a3b0f716f0af93f933e7e
+  headlamp/plugin/distro-compat: in-cluster,web,desktop
