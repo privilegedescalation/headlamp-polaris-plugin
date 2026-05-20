@@ -15,13 +15,9 @@ jobs:
   promotion-gate:
     name: Promotion Gate
     runs-on: ubuntu-latest
-    container: ubuntu:latest
     timeout-minutes: 5
 
     steps:
-      - name: Install dependencies
-        run: apt-get update -qq && apt-get install -y --no-install-recommends curl jq
-
       - name: Check promotion approval
         env:
           GITEA_TOKEN: ${{ secrets.GITEA_TOKEN }}
