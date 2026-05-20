@@ -38,11 +38,11 @@ jobs:
         id: tarball
         run: |
           # headlamp-plugin package outputs the tarball path, e.g.:
-          # "Packaged: /path/to/headlamp-polaris-1.0.0.tgz"
+          # "Packaged: /path/to/headlamp-polaris-1.0.0.tar.gz"
           output=$(pnpm run package 2>&1)
           echo "output=$output"
-          # Extract tarball name, e.g. headlamp-polaris-1.0.0.tgz
-          tarball_name=$(echo "$output" | grep -oP 'headlamp-polaris-\d+\.\d+\.\d+\.tgz' | tail -1)
+          # Extract tarball name, e.g. headlamp-polaris-1.0.0.tar.gz
+          tarball_name=$(echo "$output" | grep -oP 'headlamp-polaris-\d+\.\d+\.\d+\.tar\.gz' | tail -1)
           echo "tarball_name=$tarball_name" >> $GITHUB_OUTPUT
 
       - name: Create Gitea Release
