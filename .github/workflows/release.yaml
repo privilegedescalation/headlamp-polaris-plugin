@@ -4,20 +4,77 @@ on:
   workflow_dispatch:
     inputs:
       version:
-        description: 'Release version (e.g. 1.0.0)'
+        description: 'Release version (e.g. 1.0.1)'
         required: true
         type: string
 
 permissions:
   contents: write
-  pull-requests: write
 
 jobs:
   release:
-    uses: privilegedescalation/.github/.github/workflows/plugin-release.yaml@main
-    secrets:
-      RELEASE_APP_ID: ${{ secrets.RELEASE_APP_ID }}
-      RELEASE_APP_PRIVATE_KEY: ${{ secrets.RELEASE_APP_PRIVATE_KEY }}
-    with:
-      version: ${{ inputs.version }}
-      upstream-repo: 'FairwindsOps/polaris'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build
+        run: pnpm run build
+
+      - name: Get tarball path
+        id: tarball
+        run: |
+          # headlamp-plugin package outputs the tarball path, e.g.:
+          # "Packaged: /path/to/headlamp-polaris-1.0.0.tgz"
+          output=$(pnpm run package 2>&1)
+          echo "output=$output"
+          # Extract tarball name, e.g. headlamp-polaris-1.0.0.tgz
+          tarball_name=$(echo "$output" | grep -oP 'headlamp-polaris-\d+\.\d+\.\d+\.tgz' | tail -1)
+          echo "tarball_name=$tarball_name" >> $GITHUB_OUTPUT
+
+      - name: Create Gitea Release
+        env:
+          GITEA_URL: https://git.farh.net
+          GITEA_TOKEN: ${{ secrets.GITEA_TOKEN }}
+          REPO: privilegedescalation/headlamp-polaris-plugin
+        run: |
+          VERSION="${{ inputs.version }}"
+          ASSET_NAME="headlamp-polaris-${VERSION}.tar.gz"
+
+          # Create the release via Gitea API
+          RELEASE_RESPONSE=$(
+            curl -s -X POST \
+              -H "Authorization: token ${GITEA_TOKEN}" \
+              -H "Content-Type: application/json" \
+              "${GITEA_URL}/api/v1/repos/${REPO}/releases" \
+              -d "{
+                \"tag_name\": \"v${VERSION}\",
+                \"name\": \"v${VERSION}\",
+                \"draft\": false,
+                \"prerelease\": false
+              }"
+          )
+          echo "Release response: ${RELEASE_RESPONSE}"
+
+          RELEASE_ID=$(echo "${RELEASE_RESPONSE}" | python3 -c "import sys, json; print(json.load(sys.stdin).get('id', ''))")
+          if [ -z "$RELEASE_ID" ]; then
+            echo "Failed to create release"
+            exit 1
+          fi
+
+          # Upload the tarball asset
+          curl -s -X POST \
+            -H "Authorization: token ${GITEA_TOKEN}" \
+            -H "Content-Type: application/octet-stream" \
+            -T "${{ steps.tarball.outputs.tarball_name }}" \
+            "${GITEA_URL}/api/v1/repos/${REPO}/releases/${RELEASE_ID}/assets?name=${ASSET_NAME}"
