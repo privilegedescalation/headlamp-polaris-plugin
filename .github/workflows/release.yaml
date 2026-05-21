@@ -12,21 +12,125 @@ permissions:
   contents: write
 
 jobs:
+  check-secrets:
+    runs-on: runners-privilegedescalation
+    outputs:
+      ready: ${{ steps.check.outputs.ready }}
+    steps:
+      - name: Verify GITEA_RELEASE_TOKEN is configured
+        id: check
+        env:
+          GITEA_RELEASE_TOKEN: ${{ secrets.GITEA_RELEASE_TOKEN }}
+        run: |
+          if [ -z "$GITEA_RELEASE_TOKEN" ]; then
+            echo "::notice::GITEA_RELEASE_TOKEN org secret is not configured (see PRI-1533). Release skipped — no artifacts will be created."
+            echo "ready=false" >> $GITHUB_OUTPUT
+          else
+            echo "ready=true" >> $GITHUB_OUTPUT
+          fi
+
+  ci:
+    needs: check-secrets
+    if: needs.check-secrets.outputs.ready == 'true'
+    uses: ./.github/workflows/ci.yaml
+    with:
+      node-version: '20'
+
+  check-token-permissions:
+    needs: check-secrets
+    if: needs.check-secrets.outputs.ready == 'true'
+    runs-on: runners-privilegedescalation
+    outputs:
+      has_write: ${{ steps.check.outputs.has_write }}
+    steps:
+      - name: Check write permissions via API
+        id: check
+        env:
+          GITEA_TOKEN: ${{ secrets.GITEA_RELEASE_TOKEN }}
+          REPO: ${{ github.repository }}
+        run: |
+          HTTP_CODE=$(curl -sf -o /dev/null -w "%{http_code}" \
+            -X POST \
+            -H "Authorization: token ${GITEA_TOKEN}" \
+            -H "Accept: application/json" \
+            "https://git.farh.net/api/v1/repos/${REPO}/git/refs" \
+            -d '{"ref":"refs/heads/_release_check","sha":"${{ github.sha }}"}')
+          if [ "$HTTP_CODE" = "201" ]; then
+            echo "::notice::Token has write permission — cleaning up test ref."
+            curl -sf -o /dev/null -w "%{http_code}" \
+              -X DELETE \
+              -H "Authorization: token ${GITEA_TOKEN}" \
+              "https://git.farh.net/api/v1/repos/${REPO}/git/refs/heads/_release_check"
+            echo "has_write=true" >> $GITHUB_OUTPUT
+          elif [ "$HTTP_CODE" = "403" ]; then
+            echo "::error::Token lacks write permission. Release cannot push tags or branches."
+            echo "has_write=false" >> $GITHUB_OUTPUT
+            exit 1
+          else
+            echo "::warning::Unexpected response ($HTTP_CODE) when checking write permission."
+            echo "has_write=false" >> $GITHUB_OUTPUT
+            exit 1
+          fi
+
+  check-tag:
+    needs: check-secrets
+    if: needs.check-secrets.outputs.ready == 'true'
+    runs-on: runners-privilegedescalation
+    outputs:
+      skip: ${{ steps.check.outputs.skip }}
+    steps:
+      - name: Check if tag already exists
+        id: check
+        env:
+          GITEA_TOKEN: ${{ secrets.GITEA_RELEASE_TOKEN }}
+          REPO: ${{ github.repository }}
+        run: |
+          HTTP_CODE=$(curl -sf -o /dev/null -w "%{http_code}" \
+            -H "Authorization: token ${GITEA_TOKEN}" \
+            "https://git.farh.net/api/v1/repos/${REPO}/git/refs/tags/v${{ inputs.version }}")
+          if [ "$HTTP_CODE" = "200" ]; then
+            echo "::notice::Tag v${{ inputs.version }} already exists. Release skipped (not an error)."
+            echo "skip=true" >> $GITHUB_OUTPUT
+          else
+            echo "skip=false" >> $GITHUB_OUTPUT
+          fi
+
   release:
-    runs-on: ubuntu-latest
+    needs: [ci, check-tag, check-secrets, check-token-permissions]
+    if: needs.check-secrets.outputs.ready == 'true' && needs.check-tag.outputs.skip != 'true' && needs.check-token-permissions.outputs.has_write == 'true'
+    runs-on: runners-privilegedescalation
+    timeout-minutes: 10
 
     steps:
+      - name: Validate version format
+        run: |
+          if [[ ! "${{ inputs.version }}" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "Error: Version must be in X.Y.Z format"
+            exit 1
+          fi
+
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
 
       - name: Setup Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
           node-version: '20'
           cache: 'pnpm'
 
       - name: Install pnpm
-        run: npm install -g pnpm
+        run: npm install -g corepack && corepack enable pnpm && corepack install
+
+      - name: Configure Git
+        env:
+          GITEA_TOKEN: ${{ secrets.GITEA_RELEASE_TOKEN }}
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git config --global --add safe.directory "$GITHUB_WORKSPACE"
+          git remote set-url origin "https://x-access-token:${GITEA_TOKEN}@git.farh.net/${{ github.repository }}.git"
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
@@ -36,25 +140,48 @@ jobs:
 
       - name: Get tarball path
         id: tarball
+        env:
+          VERSION: ${{ inputs.version }}
         run: |
-          # headlamp-plugin package outputs the tarball path, e.g.:
-          # "Packaged: /path/to/headlamp-polaris-1.0.0.tar.gz"
           output=$(pnpm run package 2>&1)
           echo "output=$output"
-          # Extract tarball name, e.g. headlamp-polaris-1.0.0.tar.gz
           tarball_name=$(echo "$output" | grep -oP 'headlamp-polaris-\d+\.\d+\.\d+\.tar\.gz' | tail -1)
           echo "tarball_name=$tarball_name" >> $GITHUB_OUTPUT
+          echo "VERSION=$VERSION" >> $GITHUB_ENV
+
+      - name: Compute checksum
+        run: |
+          CHECKSUM=$(sha256sum "${{ steps.tarball.outputs.tarball_name }}" | awk '{print $1}')
+          echo "CHECKSUM=$CHECKSUM" >> $GITHUB_ENV
+          echo "Tarball checksum: $CHECKSUM"
+
+      - name: Commit and tag
+        env:
+          GITEA_TOKEN: ${{ secrets.GITEA_RELEASE_TOKEN }}
+        run: |
+          VERSION="${{ inputs.version }}"
+          BRANCH="release/v${VERSION}"
+          if git ls-remote --exit-code origin "refs/heads/$BRANCH" 2>/dev/null; then
+            echo "::notice::Branch $BRANCH already exists — deleting for clean re-trigger."
+            git push origin --delete "$BRANCH"
+          fi
+          git checkout -b "$BRANCH"
+          git add package.json pnpm-lock.yaml
+          git commit -m "release: v${VERSION}"
+          git tag "v${VERSION}"
+          git push origin "$BRANCH"
+          git push origin "refs/tags/v${VERSION}"
 
       - name: Create Gitea Release
         env:
           GITEA_URL: https://git.farh.net
-          GITEA_TOKEN: ${{ secrets.GITEA_TOKEN }}
-          REPO: privilegedescalation/headlamp-polaris-plugin
+          GITEA_TOKEN: ${{ secrets.GITEA_RELEASE_TOKEN }}
+          REPO: ${{ github.repository }}
         run: |
           VERSION="${{ inputs.version }}"
           ASSET_NAME="headlamp-polaris-${VERSION}.tar.gz"
+          TARBALL="${{ steps.tarball.outputs.tarball_name }}"
 
-          # Create the release via Gitea API
           RELEASE_RESPONSE=$(
             curl -s -X POST \
               -H "Authorization: token ${GITEA_TOKEN}" \
@@ -75,9 +202,8 @@ jobs:
             exit 1
           fi
 
-          # Upload the tarball asset
           curl -s -X POST \
             -H "Authorization: token ${GITEA_TOKEN}" \
             -H "Content-Type: application/octet-stream" \
-            -T "${{ steps.tarball.outputs.tarball_name }}" \
+            -T "$TARBALL" \
             "${GITEA_URL}/api/v1/repos/${REPO}/releases/${RELEASE_ID}/assets?name=${ASSET_NAME}"
