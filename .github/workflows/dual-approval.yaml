@@ -15,20 +15,15 @@ jobs:
   promotion-gate:
     name: Promotion Gate
     runs-on: ubuntu-latest
-    container: ubuntu:latest
     timeout-minutes: 5
 
     steps:
-      - name: Install dependencies
-        run: apt-get update -qq && apt-get install -y --no-install-recommends ca-certificates curl jq
-
       - name: Check promotion approval
         env:
           GITEA_TOKEN: ${{ secrets.GITEA_TOKEN }}
           PR_NUMBER: ${{ github.event.pull_request.number }}
           REPO: ${{ github.repository }}
           BASE_REF: ${{ github.base_ref }}
-          HEAD_REF: ${{ github.head_ref }}
         run: |
           if [ -z "${PR_NUMBER}" ] || [ "${PR_NUMBER}" = "null" ]; then
             echo "::notice::No PR number in context. Skipping promotion gate."
@@ -60,7 +55,10 @@ jobs:
               GATE_NAME="QA"
               # For plugin repos (Pipeline A), UAT approval is needed for uat→main
               # Check if the source branch is uat
-              SOURCE_REF="${HEAD_REF}"
+              SOURCE_REF=$(curl -sf \
+                -H "Authorization: token ${GITEA_TOKEN}" \
+                -H "Accept: application/json" \
+                "https://git.farh.net/api/v1/repos/${REPO}/pulls/${PR_NUMBER}" | jq -r '.head.ref')
 
               if [ "${SOURCE_REF}" = "uat" ]; then
                 REQUIRED_REVIEWER="pe_patty"
@@ -85,7 +83,8 @@ jobs:
           REVIEWS=$(curl -sf \
             -H "Authorization: token ${GITEA_TOKEN}" \
             -H "Accept: application/json" \
-            "https://git.farh.net/api/v1/repos/${REPO}/pulls/${PR_NUMBER}/reviews")
+            "https://git.farh.net/api/v1/repos/${REPO}/pulls/${PR_NUMBER}/reviews" \
+            | python3 -c 'import sys,json; json.dump(json.load(sys.stdin),sys.stdout)')
 
           if [ -z "${REVIEWS}" ] || [ "${REVIEWS}" = "null" ]; then
             echo "::warning::Could not fetch reviews for PR #${PR_NUMBER}."
