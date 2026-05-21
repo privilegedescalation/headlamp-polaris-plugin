@@ -67,6 +67,8 @@ pluginsManager:
       url: https://github.com/privilegedescalation/headlamp-polaris-plugin/releases/download/v0.3.10/polaris-0.3.10.tar.gz
 ```
 
+> See [Plugin Installation Policy](https://git.farh.net/privilegedescalation/org/wiki/Plugin-Installation-Policy) for approved installation methods.
+
 ## RBAC / Security Setup
 
 The plugin fetches audit data through the Kubernetes API server's **service proxy** sub-resource. The identity making the request (Headlamp's service account, or the user's own token in token-auth mode) must be granted:
