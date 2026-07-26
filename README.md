@@ -64,7 +64,7 @@ config:
 pluginsManager:
   sources:
     - name: headlamp-polaris-plugin
-      url: https://github.com/privilegedescalation/headlamp-polaris-plugin/releases/download/v0.3.10/polaris-0.3.10.tar.gz
+      url: https://github.com/privilegedescalation/headlamp-polaris-plugin/releases/download/v1.0.1/headlamp-polaris-1.0.1.tar.gz
 ```
 
 ## RBAC / Security Setup
