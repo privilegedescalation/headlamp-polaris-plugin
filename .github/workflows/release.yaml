@@ -45,6 +45,31 @@ jobs:
           tarball_name=$(echo "$output" | grep -oP 'headlamp-polaris-\d+\.\d+\.\d+\.tar\.gz' | tail -1)
           echo "tarball_name=$tarball_name" >> $GITHUB_OUTPUT
 
+      - name: Update artifacthub-pkg.yml checksum and archive-url
+        run: |
+          version="${{ inputs.version }}"
+          tarball_name="${{ steps.tarball.outputs.tarball_name }}"
+          checksum=$(sha256sum "$tarball_name" | awk '{print $1}')
+          archive_url="https://github.com/${{ github.repository }}/releases/download/v${version}/${tarball_name}"
+
+          sed -i "s|headlamp/plugin/archive-url:.*|headlamp/plugin/archive-url: ${archive_url}|" artifacthub-pkg.yml
+          sed -i "s|headlamp/plugin/archive-checksum:.*|headlamp/plugin/archive-checksum: sha256:${checksum}|" artifacthub-pkg.yml
+
+          echo "Updated artifacthub-pkg.yml:"
+          grep "archive-url\|archive-checksum" artifacthub-pkg.yml
+
+      - name: Commit checksum update to main
+        run: |
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git config user.name "github-actions[bot]"
+          git add artifacthub-pkg.yml
+          if git diff --cached --quiet; then
+            echo "artifacthub-pkg.yml already up to date — no commit needed"
+          else
+            git commit -m "ci(release): update artifacthub-pkg.yml checksum for v${{ inputs.version }}"
+            git push origin HEAD:main
+          fi
+
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
