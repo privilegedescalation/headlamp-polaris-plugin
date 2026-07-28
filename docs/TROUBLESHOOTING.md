@@ -533,8 +533,11 @@ Test connectivity from Headlamp to Polaris:
 kubectl run netdebug -n <your-namespace> --rm -it --image=nicolaka/netshoot -- bash
 
 # Inside pod, test DNS and HTTP
-nslookup polaris-dashboard.polaris.svc.cluster.local
-curl -v http://polaris-dashboard.polaris.svc.cluster.local/results.json
+# Replace <namespace> with your Polaris namespace, and resolve the
+# in-cluster DNS name using your cluster's internal service suffix
+# (do not hardcode it here - it's cluster-specific, not a public value)
+nslookup polaris-dashboard.<namespace>
+curl -v http://polaris-dashboard.<namespace>:8080/results.json
 ```
 
 If this fails, network policies are blocking traffic.
