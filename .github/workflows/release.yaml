@@ -45,39 +45,12 @@ jobs:
           tarball_name=$(echo "$output" | grep -oP 'headlamp-polaris-\d+\.\d+\.\d+\.tar\.gz' | tail -1)
           echo "tarball_name=$tarball_name" >> $GITHUB_OUTPUT
 
-      - name: Create Gitea Release
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: "v${{ inputs.version }}"
+          name: "v${{ inputs.version }}"
+          files: ${{ steps.tarball.outputs.tarball_name }}
+          fail_on_unmatched_files: true
         env:
-          GITEA_URL: https://git.farh.net
-          GITEA_TOKEN: ${{ secrets.GITEA_TOKEN }}
-          REPO: privilegedescalation/headlamp-polaris-plugin
-        run: |
-          VERSION="${{ inputs.version }}"
-          ASSET_NAME="headlamp-polaris-${VERSION}.tar.gz"
-
-          # Create the release via Gitea API
-          RELEASE_RESPONSE=$(
-            curl -s -X POST \
-              -H "Authorization: token ${GITEA_TOKEN}" \
-              -H "Content-Type: application/json" \
-              "${GITEA_URL}/api/v1/repos/${REPO}/releases" \
-              -d "{
-                \"tag_name\": \"v${VERSION}\",
-                \"name\": \"v${VERSION}\",
-                \"draft\": false,
-                \"prerelease\": false
-              }"
-          )
-          echo "Release response: ${RELEASE_RESPONSE}"
-
-          RELEASE_ID=$(echo "${RELEASE_RESPONSE}" | python3 -c "import sys, json; print(json.load(sys.stdin).get('id', ''))")
-          if [ -z "$RELEASE_ID" ]; then
-            echo "Failed to create release"
-            exit 1
-          fi
-
-          # Upload the tarball asset
-          curl -s -X POST \
-            -H "Authorization: token ${GITEA_TOKEN}" \
-            -H "Content-Type: application/octet-stream" \
-            -T "${{ steps.tarball.outputs.tarball_name }}" \
-            "${GITEA_URL}/api/v1/repos/${REPO}/releases/${RELEASE_ID}/assets?name=${ASSET_NAME}"
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
